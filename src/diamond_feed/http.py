@@ -32,6 +32,8 @@ def _retryable_status(status: int) -> bool:
 def _transport_failure(error: Exception) -> tuple[str, bool]:
     if isinstance(error, curl_requests.exceptions.Timeout):
         return "timeout", True
+    if isinstance(error, curl_requests.exceptions.SSLError):
+        return "network_error", False
     if isinstance(error, curl_requests.exceptions.ConnectionError):
         return "network_error", True
     if isinstance(error, TimeoutError):
@@ -40,7 +42,9 @@ def _transport_failure(error: Exception) -> tuple[str, bool]:
         reason = getattr(error, "reason", None)
         if isinstance(reason, TimeoutError):
             return "timeout", True
-        if isinstance(reason, (socket.gaierror, ConnectionError)):
+        if isinstance(reason, socket.gaierror):
+            return "url_error", reason.errno == socket.EAI_AGAIN
+        if isinstance(reason, ConnectionError):
             return "url_error", True
         return "url_error", False
     return "network_error", False

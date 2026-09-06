@@ -34,7 +34,7 @@ def test_failure_taxonomy_distinguishes_hard_and_soft_failures():
     ("error", "expected_attempts"),
     [
         (TimeoutError("slow"), 3),
-        (URLError(socket.gaierror("temporary DNS failure")), 3),
+        (URLError(socket.gaierror(socket.EAI_AGAIN, "temporary DNS failure")), 3),
     ],
 )
 def test_fetch_bytes_retries_only_transient_transport_errors(monkeypatch, error, expected_attempts):
@@ -190,25 +190,6 @@ def test_fetch_bytes_retries_mdpi_transient_transport_errors(monkeypatch, error,
     assert raised.value.category == category
 
 
-def test_fetch_bytes_retries_only_transient_url_errors(monkeypatch):
-    calls = []
-    sleeps = []
-
-    def fake_urlopen(request, timeout):
-        calls.append((request, timeout))
-        raise URLError(socket.gaierror("temporary DNS failure"))
-
-    monkeypatch.setattr("diamond_feed.http.urlopen", fake_urlopen)
-    monkeypatch.setattr("diamond_feed.http.time.sleep", sleeps.append)
-
-    with pytest.raises(FetchError) as raised:
-        fetch_bytes("https://feed.test/rss", timeout=3, attempts=3)
-
-    assert len(calls) == 3
-    assert sleeps == [1, 2]
-    assert raised.value.category == "url_error"
-
-
 def test_fetch_bytes_does_not_retry_permanent_url_error(monkeypatch):
     calls = []
 
@@ -224,6 +205,47 @@ def test_fetch_bytes_does_not_retry_permanent_url_error(monkeypatch):
 
     assert len(calls) == 1
     assert raised.value.category == "url_error"
+
+
+def test_fetch_bytes_does_not_retry_permanent_dns_error(monkeypatch):
+    calls = []
+
+    def fake_urlopen(request, timeout):
+        calls.append((request, timeout))
+        raise URLError(socket.gaierror(socket.EAI_NONAME, "host not found"))
+
+    monkeypatch.setattr("diamond_feed.http.urlopen", fake_urlopen)
+    monkeypatch.setattr("diamond_feed.http.time.sleep", lambda _: pytest.fail("must not sleep"))
+
+    with pytest.raises(FetchError) as raised:
+        fetch_bytes("https://feed.test/rss", timeout=3, attempts=3)
+
+    assert len(calls) == 1
+    assert raised.value.category == "url_error"
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        curl_requests.exceptions.SSLError("TLS failure"),
+        curl_requests.exceptions.CertificateVerifyError("certificate rejected"),
+    ],
+)
+def test_fetch_bytes_does_not_retry_mdpi_ssl_errors(monkeypatch, error):
+    calls = []
+
+    def fake_get(*args, **kwargs):
+        calls.append((args, kwargs))
+        raise error
+
+    monkeypatch.setattr("diamond_feed.http.curl_requests.get", fake_get)
+    monkeypatch.setattr("diamond_feed.http.time.sleep", lambda _: pytest.fail("must not sleep"))
+
+    with pytest.raises(FetchError) as raised:
+        fetch_bytes("https://www.mdpi.com/rss", timeout=3, attempts=3)
+
+    assert len(calls) == 1
+    assert raised.value.category == "network_error"
 
 
 @pytest.mark.parametrize(
