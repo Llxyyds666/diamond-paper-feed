@@ -1,9 +1,11 @@
 from pathlib import Path
+import socket
 from urllib.error import HTTPError, URLError
 
 import pytest
+from curl_cffi import requests as curl_requests
 
-from diamond_feed.http import FetchError, fetch_bytes
+from diamond_feed.http import FetchError, HttpResult, fetch_bytes
 from diamond_feed.sources.rss import classify_failure, collect_rss, parse_feed
 
 
@@ -32,7 +34,7 @@ def test_failure_taxonomy_distinguishes_hard_and_soft_failures():
     ("error", "expected_attempts"),
     [
         (TimeoutError("slow"), 3),
-        (URLError("temporary failure"), 3),
+        (URLError(socket.gaierror("temporary DNS failure")), 3),
     ],
 )
 def test_fetch_bytes_retries_only_transient_transport_errors(monkeypatch, error, expected_attempts):
@@ -160,3 +162,98 @@ def test_parse_feed_marks_missing_dates(monkeypatch):
     assert records[0].journal == "Diamond Journal"
     assert "missing_date" in records[0].categories
     assert records[0].published_at.tzinfo is not None
+
+
+@pytest.mark.parametrize(
+    ("error", "category"),
+    [
+        (curl_requests.exceptions.Timeout("slow"), "timeout"),
+        (curl_requests.exceptions.ConnectionError("disconnected"), "network_error"),
+    ],
+)
+def test_fetch_bytes_retries_mdpi_transient_transport_errors(monkeypatch, error, category):
+    calls = []
+    sleeps = []
+
+    def fake_get(*args, **kwargs):
+        calls.append((args, kwargs))
+        raise error
+
+    monkeypatch.setattr("diamond_feed.http.curl_requests.get", fake_get)
+    monkeypatch.setattr("diamond_feed.http.time.sleep", sleeps.append)
+
+    with pytest.raises(FetchError) as raised:
+        fetch_bytes("https://www.mdpi.com/rss", timeout=3, attempts=3)
+
+    assert len(calls) == 3
+    assert sleeps == [1, 2]
+    assert raised.value.category == category
+
+
+def test_fetch_bytes_retries_only_transient_url_errors(monkeypatch):
+    calls = []
+    sleeps = []
+
+    def fake_urlopen(request, timeout):
+        calls.append((request, timeout))
+        raise URLError(socket.gaierror("temporary DNS failure"))
+
+    monkeypatch.setattr("diamond_feed.http.urlopen", fake_urlopen)
+    monkeypatch.setattr("diamond_feed.http.time.sleep", sleeps.append)
+
+    with pytest.raises(FetchError) as raised:
+        fetch_bytes("https://feed.test/rss", timeout=3, attempts=3)
+
+    assert len(calls) == 3
+    assert sleeps == [1, 2]
+    assert raised.value.category == "url_error"
+
+
+def test_fetch_bytes_does_not_retry_permanent_url_error(monkeypatch):
+    calls = []
+
+    def fake_urlopen(request, timeout):
+        calls.append((request, timeout))
+        raise URLError("unknown url type: bad")
+
+    monkeypatch.setattr("diamond_feed.http.urlopen", fake_urlopen)
+    monkeypatch.setattr("diamond_feed.http.time.sleep", lambda _: pytest.fail("must not sleep"))
+
+    with pytest.raises(FetchError) as raised:
+        fetch_bytes("bad://feed.test/rss", timeout=3, attempts=3)
+
+    assert len(calls) == 1
+    assert raised.value.category == "url_error"
+
+
+@pytest.mark.parametrize(
+    ("attempts", "expected_sleeps"),
+    [(1, []), (4, [1, 2, 4])],
+)
+def test_fetch_bytes_never_sleeps_beyond_attempt_budget(monkeypatch, attempts, expected_sleeps):
+    sleeps = []
+
+    def fake_urlopen(request, timeout):
+        raise TimeoutError("slow")
+
+    monkeypatch.setattr("diamond_feed.http.urlopen", fake_urlopen)
+    monkeypatch.setattr("diamond_feed.http.time.sleep", sleeps.append)
+
+    with pytest.raises(FetchError):
+        fetch_bytes("https://feed.test/rss", timeout=3, attempts=attempts)
+
+    assert sleeps == expected_sleeps
+
+
+@pytest.mark.parametrize("status", [404, 410, 502])
+def test_collect_rss_classifies_fetch_result_status_before_parsing(status):
+    def fetcher(url):
+        return HttpResult(body=b"not xml", status=status, final_url="https://feed.test/final")
+
+    records, failure = collect_rss("https://feed.test/rss", fetcher)
+
+    assert records == []
+    assert failure is not None
+    assert failure.category == f"http_{status}"
+    assert failure.url == "https://feed.test/final"
+    assert failure.detail == f"HTTP {status}"

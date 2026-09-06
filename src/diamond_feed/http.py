@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import socket
 import time
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -29,11 +30,19 @@ def _retryable_status(status: int) -> bool:
 
 
 def _transport_failure(error: Exception) -> tuple[str, bool]:
+    if isinstance(error, curl_requests.exceptions.Timeout):
+        return "timeout", True
+    if isinstance(error, curl_requests.exceptions.ConnectionError):
+        return "network_error", True
     if isinstance(error, TimeoutError):
         return "timeout", True
     if isinstance(error, URLError):
         reason = getattr(error, "reason", None)
-        return ("timeout", True) if isinstance(reason, TimeoutError) else ("url_error", True)
+        if isinstance(reason, TimeoutError):
+            return "timeout", True
+        if isinstance(reason, (socket.gaierror, ConnectionError)):
+            return "url_error", True
+        return "url_error", False
     return "network_error", False
 
 

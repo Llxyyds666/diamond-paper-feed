@@ -113,6 +113,14 @@ def collect_rss(
     except Exception as error:
         return [], SourceFailure(datetime.now(timezone.utc), "network_error", url, _safe_detail(str(error)))
 
+    if not 200 <= result.status < 300:
+        return [], SourceFailure(
+            timestamp=datetime.now(timezone.utc),
+            category=classify_failure(result.status, None, False),
+            url=result.final_url or url,
+            detail=f"HTTP {result.status}",
+        )
+
     try:
         records = parse_feed(result.body, url)
     except Exception as error:
