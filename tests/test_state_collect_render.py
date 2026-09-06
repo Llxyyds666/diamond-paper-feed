@@ -149,6 +149,81 @@ def test_save_state_reports_invalid_runtime_field_as_validation_error(tmp_path):
     assert not list(tmp_path.glob("*.tmp"))
 
 
+@pytest.mark.parametrize(
+    "field",
+    ["title", "abstract", "authors", "journal", "doi", "url", "sources", "source_ids", "categories", "summary_zh"],
+)
+def test_load_state_rejects_unpaired_surrogate_in_every_persisted_paper_string(tmp_path, field):
+    from diamond_feed.state import load_state
+
+    record = _paper("Diamond surrogate", "abstract", "10.1000/surrogate", 1)
+    key = record_key(record)
+    paper = record.to_dict()
+    if field in {"authors", "sources", "source_ids", "categories"}:
+        paper[field] = ["bad\ud800value"]
+    else:
+        paper[field] = "bad\ud800value"
+    payload = {"version": 1, "papers": {key: paper}, "pending_ai": [], "source_watermarks": {}}
+    path = tmp_path / "state.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError) as raised:
+        load_state(path)
+    assert raised.value.__cause__ is not None
+    assert "surrogate" in str(raised.value.__cause__)
+
+
+def test_save_state_rejects_unpaired_surrogate_before_writing(tmp_path):
+    from diamond_feed.state import FeedState, save_state
+
+    record = _paper("Diamond surrogate", "abstract", "10.1000/save-surrogate", 1)
+    key = record_key(record)
+    record.summary_zh = "bad\udfffvalue"
+
+    with pytest.raises(ValueError, match="surrogate"):
+        save_state(tmp_path / "state.json", FeedState(papers={key: record}, pending_ai=[], source_watermarks={}))
+
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+@pytest.mark.parametrize("location", ["paper-key", "pending-key", "watermark-key", "watermark-value"])
+def test_load_state_rejects_unpaired_surrogate_in_state_keys_and_watermarks(tmp_path, location):
+    from diamond_feed.state import load_state
+
+    record = _paper("Diamond state surrogate", "abstract", "10.1000/state-surrogate", 1)
+    key = record_key(record)
+    payload = {"version": 1, "papers": {key: record.to_dict()}, "pending_ai": [], "source_watermarks": {}}
+    if location == "paper-key":
+        payload["papers"] = {key + "\ud800": record.to_dict()}
+    elif location == "pending-key":
+        payload["pending_ai"] = [key + "\ud800"]
+    elif location == "watermark-key":
+        payload["source_watermarks"] = {"open\ud800alex": "2026-09-01T00:00:00+00:00"}
+    else:
+        payload["source_watermarks"] = {"openalex": "2026-09-01\ud800T00:00:00+00:00"}
+    path = tmp_path / "state.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError) as raised:
+        load_state(path)
+    assert raised.value.__cause__ is not None
+    assert "surrogate" in str(raised.value.__cause__)
+
+
+def test_load_state_wraps_oversized_integer_confidence_as_value_error(tmp_path):
+    from diamond_feed.state import load_state
+
+    record = _paper("Diamond confidence", "abstract", "10.1000/confidence", 1)
+    key = record_key(record)
+    paper = record.to_dict()
+    paper["ai_confidence"] = 10**1000
+    path = tmp_path / "state.json"
+    path.write_text(json.dumps({"version": 1, "papers": {key: paper}, "pending_ai": [], "source_watermarks": {}}), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="invalid state.*confidence"):
+        load_state(path)
+
+
 def test_merge_deduplicates_and_keeps_pending_queue_oldest_first(query_rules):
     from diamond_feed.collect import merge_into_state
     from diamond_feed.state import FeedState
@@ -320,6 +395,249 @@ def test_collection_commit_failure_rolls_back_both_outputs_and_cleans_artifacts(
     assert feed_path.read_text(encoding="utf-8") == old_feed
     assert not list(tmp_path.glob("*.tmp"))
     assert not list(tmp_path.glob("*.bak"))
+
+
+def test_successful_commit_reports_cleanup_pending_without_rolling_back(tmp_path, monkeypatch):
+    from diamond_feed.atomic import commit_staged, stage_text
+
+    state_path = tmp_path / "state.json"
+    feed_path = tmp_path / "feed.xml"
+    state_path.write_text("old state", encoding="utf-8")
+    feed_path.write_text("old feed", encoding="utf-8")
+    original_unlink = Path.unlink
+
+    def fail_backup_cleanup(path, *args, **kwargs):
+        if path.name.endswith(".bak"):
+            raise PermissionError("backup locked")
+        return original_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", fail_backup_cleanup)
+    staged = [stage_text(state_path, "new state"), stage_text(feed_path, "new feed")]
+
+    result = commit_staged(staged)
+
+    assert result.committed is True
+    assert result.status == "committed-with-cleanup-pending"
+    assert result.cleanup_pending is True
+    assert result.cleanup_errors
+    assert state_path.read_text(encoding="utf-8") == "new state"
+    assert feed_path.read_text(encoding="utf-8") == "new feed"
+    assert list(tmp_path.glob("*.bak"))
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_warning_filters_cannot_turn_completed_commit_into_exception(tmp_path, monkeypatch):
+    import warnings
+
+    from diamond_feed.atomic import commit_staged, stage_text
+
+    path = tmp_path / "state.json"
+    path.write_text("old state", encoding="utf-8")
+    original_unlink = Path.unlink
+
+    def fail_backup_cleanup(target, *args, **kwargs):
+        if target.name.endswith(".bak"):
+            raise PermissionError("backup locked")
+        return original_unlink(target, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", fail_backup_cleanup)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        result = commit_staged([stage_text(path, "new state")])
+
+    assert result.committed is True
+    assert result.status == "committed-with-cleanup-pending"
+    assert path.read_text(encoding="utf-8") == "new state"
+
+
+def test_next_commit_cleans_stale_committed_backup_and_continues(tmp_path, monkeypatch):
+    from diamond_feed.atomic import commit_staged, stage_text
+
+    path = tmp_path / "state.json"
+    path.write_text("version one", encoding="utf-8")
+    original_unlink = Path.unlink
+    fail_cleanup = True
+
+    def fail_once_enabled(target, *args, **kwargs):
+        if fail_cleanup and target.name.endswith(".bak"):
+            raise PermissionError("backup locked")
+        return original_unlink(target, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", fail_once_enabled)
+    first_result = commit_staged([stage_text(path, "version two")])
+    assert first_result.status == "committed-with-cleanup-pending"
+    assert list(tmp_path.glob("*.bak"))
+
+    fail_cleanup = False
+    result = commit_staged([stage_text(path, "version three")])
+
+    assert result.committed is True
+    assert result.status == "committed"
+    assert result.cleanup_pending is False
+    assert path.read_text(encoding="utf-8") == "version three"
+    assert not list(tmp_path.glob("*.bak"))
+    assert not list(tmp_path.glob("*.committed"))
+
+
+def test_unresolved_recovery_backup_blocks_publish_but_discards_new_stage(tmp_path):
+    from diamond_feed.atomic import commit_staged, stage_text
+
+    path = tmp_path / "state.json"
+    path.write_text("possibly partial state", encoding="utf-8")
+    backup = tmp_path / "state.json.interrupted.bak"
+    backup.write_text("last known good state", encoding="utf-8")
+    staged = stage_text(path, "another state")
+
+    with pytest.raises(RuntimeError, match=str(backup.resolve()).replace("\\", "\\\\")):
+        commit_staged([staged])
+
+    assert path.read_text(encoding="utf-8") == "possibly partial state"
+    assert backup.read_text(encoding="utf-8") == "last known good state"
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_rollback_diagnostics_collect_restore_and_other_backup_cleanup_failures(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    state_path = tmp_path / "state.json"
+    feed_path = tmp_path / "feed.xml"
+    state_path.write_text("old state", encoding="utf-8")
+    feed_path.write_text("old feed", encoding="utf-8")
+    staged = [atomic.stage_text(state_path, "new state"), atomic.stage_text(feed_path, "new feed")]
+    original_replace = os.replace
+    original_unlink = Path.unlink
+
+    def fail_publish_and_restore(source, destination):
+        source_path = Path(source)
+        destination_path = Path(destination)
+        if source_path.name.endswith(".tmp") and destination_path == feed_path:
+            raise OSError("feed publish failed")
+        if source_path.name.endswith(".bak") and destination_path == state_path:
+            raise OSError("state restore failed")
+        return original_replace(source, destination)
+
+    def fail_unused_feed_backup_cleanup(path, *args, **kwargs):
+        if path.name.startswith("feed.xml") and path.name.endswith(".bak"):
+            raise PermissionError("feed backup cleanup failed")
+        return original_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(atomic.os, "replace", fail_publish_and_restore)
+    monkeypatch.setattr(Path, "unlink", fail_unused_feed_backup_cleanup)
+
+    with pytest.raises(atomic.PublicationRollbackError) as raised:
+        atomic.commit_staged(staged)
+
+    message = str(raised.value)
+    backups = sorted(tmp_path.glob("*.bak"))
+    assert "feed publish failed" in message
+    assert "state restore failed" in message
+    assert "feed backup cleanup failed" in message
+    assert len(backups) == 2
+    assert all(str(path.resolve()) in message for path in backups)
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_rollback_diagnostics_include_preflight_completed_backup_cleanup_failure(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    state_path = tmp_path / "state.json"
+    feed_path = tmp_path / "feed.xml"
+    state_path.write_text("old state", encoding="utf-8")
+    feed_path.write_text("old feed", encoding="utf-8")
+    stale_backup = tmp_path / "state.json.previous.bak"
+    stale_backup.write_text("redundant state", encoding="utf-8")
+    (tmp_path / "state.json.previous.bak.committed").write_text("committed\n", encoding="utf-8")
+    staged = [atomic.stage_text(state_path, "new state"), atomic.stage_text(feed_path, "new feed")]
+    original_replace = os.replace
+    original_unlink = Path.unlink
+
+    def fail_publish_and_restore(source, destination):
+        source_path = Path(source)
+        destination_path = Path(destination)
+        if source_path.name.endswith(".tmp") and destination_path == feed_path:
+            raise OSError("feed publish failed")
+        if source_path.name.endswith(".bak") and source_path != stale_backup and destination_path == state_path:
+            raise OSError("state restore failed")
+        return original_replace(source, destination)
+
+    def fail_stale_cleanup(path, *args, **kwargs):
+        if path == stale_backup:
+            raise PermissionError("stale completed backup cleanup failed")
+        return original_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(atomic.os, "replace", fail_publish_and_restore)
+    monkeypatch.setattr(Path, "unlink", fail_stale_cleanup)
+
+    with pytest.raises(atomic.PublicationRollbackError) as raised:
+        atomic.commit_staged(staged)
+
+    assert "stale completed backup cleanup failed" in str(raised.value)
+    assert any("stale completed backup cleanup failed" in failure for failure in raised.value.rollback_failures)
+    assert stale_backup not in raised.value.recovery_backups
+
+
+def test_rollback_diagnostics_say_when_failed_removal_has_no_backup(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    new_path = tmp_path / "new-state.json"
+    feed_path = tmp_path / "feed.xml"
+    feed_path.write_text("old feed", encoding="utf-8")
+    staged = [atomic.stage_text(new_path, "new state"), atomic.stage_text(feed_path, "new feed")]
+    original_replace = os.replace
+    original_unlink = Path.unlink
+
+    def fail_feed_publish(source, destination):
+        if Path(source).name.endswith(".tmp") and Path(destination) == feed_path:
+            raise OSError("feed publish failed")
+        return original_replace(source, destination)
+
+    def fail_new_destination_removal(path, *args, **kwargs):
+        if path == new_path:
+            raise PermissionError("new destination removal failed")
+        return original_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(atomic.os, "replace", fail_feed_publish)
+    monkeypatch.setattr(Path, "unlink", fail_new_destination_removal)
+
+    with pytest.raises(atomic.PublicationRollbackError) as raised:
+        atomic.commit_staged(staged)
+
+    message = str(raised.value)
+    assert "no backup" in message
+    assert str(new_path.resolve()) in message
+    assert "recoverable backups: none" in message
+
+
+def test_rollback_diagnostics_say_when_expected_backup_is_no_longer_present(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    state_path = tmp_path / "state.json"
+    feed_path = tmp_path / "feed.xml"
+    state_path.write_text("old state", encoding="utf-8")
+    feed_path.write_text("old feed", encoding="utf-8")
+    staged = [atomic.stage_text(state_path, "new state"), atomic.stage_text(feed_path, "new feed")]
+    original_replace = os.replace
+
+    def lose_backup_during_restore(source, destination):
+        source_path = Path(source)
+        destination_path = Path(destination)
+        if source_path.name.endswith(".tmp") and destination_path == feed_path:
+            raise OSError("feed publish failed")
+        if source_path.name.endswith(".bak") and destination_path == state_path:
+            source_path.unlink()
+            raise OSError("state backup disappeared")
+        return original_replace(source, destination)
+
+    monkeypatch.setattr(atomic.os, "replace", lose_backup_during_restore)
+
+    with pytest.raises(atomic.PublicationRollbackError) as raised:
+        atomic.commit_staged(staged)
+
+    assert raised.value.recovery_backups == ()
+    assert raised.value.destinations_without_backup == (state_path.resolve(),)
+    assert str(state_path.resolve()) in str(raised.value)
+    assert "destinations with no backup" in str(raised.value)
 
 
 def _paper(title, abstract, doi, day, source="rss"):

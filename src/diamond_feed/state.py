@@ -42,8 +42,7 @@ class FeedState:
 
 
 def _aware_datetime(value: object, field_name: str) -> datetime:
-    if type(value) is not str:
-        raise ValueError(f"{field_name} must be an ISO datetime string")
+    _persisted_string(value, field_name)
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError as error:
@@ -53,9 +52,21 @@ def _aware_datetime(value: object, field_name: str) -> datetime:
     return parsed.astimezone(timezone.utc)
 
 
+def _persisted_string(value: object, field_name: str) -> str:
+    if type(value) is not str:
+        raise ValueError(f"{field_name} must be a string")
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError as error:
+        raise ValueError(f"{field_name} contains an unpaired Unicode surrogate") from error
+    return value
+
+
 def _string_list(value: object, field_name: str) -> list[str]:
     if type(value) is not list or not all(type(item) is str for item in value):
         raise ValueError(f"{field_name} must be a JSON array of strings")
+    for item in value:
+        _persisted_string(item, field_name)
     return list(value)
 
 
@@ -63,18 +74,24 @@ def _paper_from_payload(payload: object) -> PaperRecord:
     if type(payload) is not dict or set(payload) != PAPER_FIELDS:
         raise ValueError("paper must contain the exact schema fields")
     for field_name in ("title", "abstract", "journal", "url"):
-        if type(payload[field_name]) is not str:
-            raise ValueError(f"paper {field_name} must be a string")
+        _persisted_string(payload[field_name], f"paper {field_name}")
     for field_name in ("authors", "sources", "source_ids", "categories"):
         _string_list(payload[field_name], f"paper {field_name}")
     for field_name in ("doi", "summary_zh"):
-        if payload[field_name] is not None and type(payload[field_name]) is not str:
-            raise ValueError(f"paper {field_name} must be a string or null")
+        if payload[field_name] is not None:
+            _persisted_string(payload[field_name], f"paper {field_name}")
     if payload["ai_relevant"] is not None and type(payload["ai_relevant"]) is not bool:
         raise ValueError("paper ai_relevant must be a boolean or null")
     confidence = payload["ai_confidence"]
-    if confidence is not None and (type(confidence) not in (int, float) or not math.isfinite(confidence)):
-        raise ValueError("paper ai_confidence must be a finite number or null")
+    if confidence is not None:
+        if type(confidence) not in (int, float):
+            raise ValueError("paper ai_confidence must be a finite number or null")
+        try:
+            finite_confidence = math.isfinite(confidence)
+        except OverflowError as error:
+            raise ValueError("paper ai_confidence must be a finite number or null") from error
+        if not finite_confidence:
+            raise ValueError("paper ai_confidence must be a finite number or null")
     published_at = _aware_datetime(payload["published_at"], "paper published_at")
     return PaperRecord(
         title=payload["title"],
@@ -97,18 +114,22 @@ def _validate_state(state: FeedState) -> None:
     if type(state.papers) is not dict or not all(type(key) is str and isinstance(value, PaperRecord) for key, value in state.papers.items()):
         raise ValueError("papers must map string keys to PaperRecord values")
     for key, record in state.papers.items():
+        _persisted_string(key, "paper key")
         validated_record = _paper_from_payload(_paper_payload(record))
         if key != record_key(validated_record):
             raise ValueError(f"paper key is not canonical: {key}")
     if type(state.pending_ai) is not list or not all(type(key) is str for key in state.pending_ai):
         raise ValueError("pending_ai must be a list of strings")
+    for key in state.pending_ai:
+        _persisted_string(key, "pending_ai key")
     if len(state.pending_ai) != len(set(state.pending_ai)):
         raise ValueError("pending_ai keys must be unique")
     if not set(state.pending_ai) <= set(state.papers):
         raise ValueError("pending_ai keys must exist in papers")
     if type(state.source_watermarks) is not dict or not all(type(key) is str for key in state.source_watermarks):
         raise ValueError("source_watermarks must map string keys to ISO datetimes")
-    for value in state.source_watermarks.values():
+    for key, value in state.source_watermarks.items():
+        _persisted_string(key, "source watermark key")
         _aware_datetime(value, "source watermark")
 
 
@@ -124,11 +145,12 @@ def _as_state(payload: object) -> FeedState:
     source_watermarks = payload.get("source_watermarks")
     if type(papers) is not dict or type(pending_ai) is not list or type(source_watermarks) is not dict:
         raise ValueError("malformed state schema")
-    normalized_watermarks = {
-        key: _aware_datetime(value, "source watermark").isoformat()
-        for key, value in source_watermarks.items()
-        if type(key) is str
-    }
+    normalized_watermarks = {}
+    for key, value in source_watermarks.items():
+        if type(key) is not str:
+            continue
+        _persisted_string(key, "source watermark key")
+        normalized_watermarks[key] = _aware_datetime(value, "source watermark").isoformat()
     if len(normalized_watermarks) != len(source_watermarks):
         raise ValueError("source watermark keys must be strings")
     state = FeedState(
