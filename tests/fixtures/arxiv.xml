@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>arXiv Query</title>
+  <entry>
+    <id>http://arxiv.org/abs/2608.01234v2</id>
+    <updated>2026-08-20T12:30:00Z</updated>
+    <published>2026-08-19T10:20:30Z</published>
+    <title>Diamond quantum sensors</title>
+    <summary> A diamond sensing preprint. </summary>
+    <author><name>Ada Lovelace</name></author>
+    <author><name>Grace Hopper</name></author>
+    <arxiv:journal_ref xmlns:arxiv="http://arxiv.org/schemas/atom">Preprint Archive</arxiv:journal_ref>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.09999</id>
+    <published>2026-08-18T00:00:00Z</published>
+    <title>Diamond defects</title>
+    <summary>Defects in diamond.</summary>
+  </entry>
+  <entry><title>Broken record</title></entry>
+</feed>

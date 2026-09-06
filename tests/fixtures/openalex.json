@@ -1,0 +1,24 @@
+{
+  "results": [
+    {
+      "id": "https://openalex.org/W123",
+      "doi": "https://doi.org/10.1000/DIAMOND.1",
+      "title": "Boron-doped diamond electrodes",
+      "display_name": "Boron-doped diamond electrodes",
+      "publication_date": "2026-08-15",
+      "authorships": [{"author": {"display_name": "Ada Lovelace"}}],
+      "primary_location": {"source": {"display_name": "Diamond Journal"}, "landing_page_url": "https://publisher.test/diamond-1"},
+      "abstract_inverted_index": {"electrodes": [3], "Boron-doped": [0], "diamond": [1], "work": [2]}
+    },
+    {
+      "id": "https://openalex.org/W124",
+      "doi": null,
+      "title": "Diamond growth study",
+      "publication_date": "2026-08-14",
+      "authorships": [],
+      "primary_location": null,
+      "abstract_inverted_index": null
+    },
+    {"id": "https://openalex.org/bad"}
+  ]
+}
