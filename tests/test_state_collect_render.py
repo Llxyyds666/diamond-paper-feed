@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 import json
 import os
 from pathlib import Path
+import stat
 from xml.etree import ElementTree
 
 import pytest
@@ -1109,6 +1110,230 @@ def test_collection_reports_cleanup_debt_from_failure_log_and_publication(tmp_pa
     assert str(publication_artifact.resolve()) in stderr
 
 
+@pytest.mark.parametrize(
+    ("state_name", "feed_name", "failure_name"),
+    [
+        ("x.tmp", "x", "failures.tsv"),
+        ("x", "x.tmp", "failures.tsv"),
+        ("out/state.json", "out/sub/../state.json", "failures.tsv"),
+        ("state.json", "feed.xml", "state.json"),
+        ("state.json", "feed.xml", "nested/../feed.xml"),
+        ("state.json", "feed.xml", "state.json.tmp"),
+        ("state.json", "feed.xml", "feed.xml.tmp"),
+    ],
+    ids=[
+        "state-is-feed-temp",
+        "feed-is-state-temp",
+        "relative-destination-alias",
+        "failure-is-state",
+        "failure-is-feed-alias",
+        "failure-is-state-temp",
+        "failure-is-feed-temp",
+    ],
+)
+def test_collection_rejects_unsafe_output_layout_before_writes_or_source_calls(
+    tmp_path, monkeypatch, state_name, feed_name, failure_name
+):
+    from diamond_feed import collect
+
+    config, sources, queries, _, _, _ = _collection_paths(tmp_path)
+    state_path = tmp_path / state_name
+    feed_path = tmp_path / feed_name
+    failure_path = tmp_path / failure_name
+    snapshots = {}
+    for label, path in (("state", state_path), ("feed", feed_path), ("failure", failure_path)):
+        normalized = Path(os.path.abspath(os.path.normpath(path)))
+        normalized.parent.mkdir(parents=True, exist_ok=True)
+        key = os.path.normcase(str(normalized))
+        if key not in snapshots:
+            normalized.write_text(f"old {label}", encoding="utf-8")
+            snapshots[key] = (normalized, normalized.read_bytes())
+
+    def unexpected_call(*_args, **_kwargs):
+        raise AssertionError("output layout must be rejected before source collection")
+
+    monkeypatch.setattr(collect, "_read_sources", unexpected_call)
+    monkeypatch.setattr(collect, "collect_rss", unexpected_call)
+    monkeypatch.setattr(collect, "_collect_scholarly", unexpected_call)
+
+    with pytest.raises(ValueError, match="output.*(layout|path)|destination|temporary"):
+        collect.main(
+            [
+                "--config", str(config),
+                "--state", str(state_path),
+                "--sources", str(sources),
+                "--queries", str(queries),
+                "--feed", str(feed_path),
+                "--failures", str(failure_path),
+            ],
+            now=lambda: datetime(2026, 9, 5, tzinfo=timezone.utc),
+        )
+
+    for path, contents in snapshots.values():
+        assert path.read_bytes() == contents
+
+
+def test_commit_staged_rejects_resolved_destination_alias_and_cleans_all_temporaries(tmp_path):
+    from diamond_feed import atomic
+
+    (tmp_path / "sub").mkdir()
+    destination = tmp_path / "state.json"
+    first_temporary = tmp_path / "first.tmp"
+    second_temporary = tmp_path / "second.tmp"
+    destination.write_text("old state", encoding="utf-8")
+    first_temporary.write_text("first", encoding="utf-8")
+    second_temporary.write_text("second", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="destinations must be unique"):
+        atomic.commit_staged(
+            [
+                atomic.StagedFile(destination, first_temporary),
+                atomic.StagedFile(tmp_path / "sub" / ".." / "state.json", second_temporary),
+            ]
+        )
+
+    assert destination.read_text(encoding="utf-8") == "old state"
+    assert not first_temporary.exists()
+    assert not second_temporary.exists()
+
+
+@pytest.mark.parametrize("collision", ["duplicate-temporary", "temporary-destination"])
+def test_commit_staged_rejects_temporary_topology_and_preserves_destinations(tmp_path, collision):
+    from diamond_feed import atomic
+
+    first_destination = tmp_path / "state.json"
+    second_destination = tmp_path / "feed.xml"
+    first_destination.write_text("old state", encoding="utf-8")
+    second_destination.write_text("old feed", encoding="utf-8")
+    first_temporary = tmp_path / "first.tmp"
+    first_temporary.write_text("first", encoding="utf-8")
+    second_temporary = first_temporary if collision == "duplicate-temporary" else first_destination
+    if collision == "temporary-destination":
+        items = [
+            atomic.StagedFile(first_destination, tmp_path / "safe.tmp"),
+            atomic.StagedFile(second_destination, second_temporary),
+        ]
+        items[0].temporary.write_text("safe", encoding="utf-8")
+    else:
+        items = [
+            atomic.StagedFile(first_destination, first_temporary),
+            atomic.StagedFile(second_destination, second_temporary),
+        ]
+
+    with pytest.raises(Exception, match="temporar"):
+        atomic.commit_staged(items)
+
+    assert first_destination.read_text(encoding="utf-8") == "old state"
+    assert second_destination.read_text(encoding="utf-8") == "old feed"
+    if collision == "duplicate-temporary":
+        assert not first_temporary.exists()
+
+
+def test_symlink_manifest_is_not_followed_or_used_to_delete_external_target(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    controlled = tmp_path / "controlled"
+    external = tmp_path / "external"
+    controlled.mkdir()
+    external.mkdir()
+    destination = controlled / "state.json"
+    destination.write_text("old state", encoding="utf-8")
+    transaction_id = "a" * 32
+    link = controlled / f"{atomic.MANIFEST_PREFIX}{transaction_id}{atomic.MANIFEST_SUFFIX}"
+    sentinel = external / "sentinel.json"
+    sentinel.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "transaction_id": transaction_id,
+                "destinations": [str(destination.resolve())],
+                "backups": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    _symlink_or_mock(link, sentinel, monkeypatch)
+
+    atomic.commit_staged([atomic.stage_text(destination, "new state")])
+
+    assert sentinel.exists()
+    assert _lexists(link)
+    assert destination.read_text(encoding="utf-8") == "new state"
+
+
+def test_symlink_backup_is_retained_and_never_deletes_external_target(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    controlled = tmp_path / "controlled"
+    external = tmp_path / "external"
+    controlled.mkdir()
+    external.mkdir()
+    destination = controlled / "state.json"
+    destination.write_text("current state", encoding="utf-8")
+    transaction_id = "b" * 32
+    backup = controlled / f"state.json.{transaction_id}.bak"
+    sentinel = external / "sentinel.txt"
+    sentinel.write_text("external data", encoding="utf-8")
+    _symlink_or_mock(backup, sentinel, monkeypatch)
+    manifest = controlled / f"{atomic.MANIFEST_PREFIX}{transaction_id}{atomic.MANIFEST_SUFFIX}"
+    manifest.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "transaction_id": transaction_id,
+                "destinations": [str(destination.resolve())],
+                "backups": [str(backup.absolute())],
+            }
+        ),
+        encoding="utf-8",
+    )
+    staged = atomic.stage_text(destination, "next state")
+
+    with pytest.raises(RuntimeError, match="unresolved publication backup"):
+        atomic.commit_staged([staged])
+
+    assert sentinel.read_text(encoding="utf-8") == "external data"
+    assert _lexists(backup)
+    assert manifest.exists()
+    assert destination.read_text(encoding="utf-8") == "current state"
+    assert not staged.temporary.exists()
+
+
+def test_manifest_paths_with_parent_traversal_never_authorize_backup_cleanup(tmp_path):
+    from diamond_feed import atomic
+
+    controlled = tmp_path / "controlled"
+    (controlled / "sub").mkdir(parents=True)
+    destination = controlled / "state.json"
+    destination.write_text("current state", encoding="utf-8")
+    transaction_id = "c" * 32
+    backup = controlled / f"state.json.{transaction_id}.bak"
+    backup.write_text("recoverable state", encoding="utf-8")
+    manifest = controlled / f"{atomic.MANIFEST_PREFIX}{transaction_id}{atomic.MANIFEST_SUFFIX}"
+    escaped_destination = controlled / "sub" / ".." / "state.json"
+    escaped_backup = controlled / "sub" / ".." / backup.name
+    manifest.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "transaction_id": transaction_id,
+                "destinations": [str(escaped_destination)],
+                "backups": [str(escaped_backup)],
+            }
+        ),
+        encoding="utf-8",
+    )
+    staged = atomic.stage_text(destination, "next state")
+
+    with pytest.raises(RuntimeError, match="unresolved publication backup"):
+        atomic.commit_staged([staged])
+
+    assert backup.read_text(encoding="utf-8") == "recoverable state"
+    assert manifest.exists()
+    assert destination.read_text(encoding="utf-8") == "current state"
+    assert not staged.temporary.exists()
+
+
 def _paper(title, abstract, doi, day, source="rss"):
     return PaperRecord(title=title, abstract=abstract, authors=["A. Author"], journal="Diamond Journal", published_at=datetime(2026, 9, day, tzinfo=timezone.utc), doi=doi, url=f"https://doi.org/{doi}", sources=[source], source_ids=[f"{source}:{doi}"])
 
@@ -1135,3 +1360,36 @@ def _successful_collection(tmp_path, monkeypatch):
 def _collection_args(paths):
     config, sources, queries, state_path, feed_path, failures = paths
     return ["--config", str(config), "--state", str(state_path), "--sources", str(sources), "--queries", str(queries), "--feed", str(feed_path), "--failures", str(failures)]
+
+
+def _lexists(path):
+    try:
+        path.lstat()
+    except FileNotFoundError:
+        return False
+    return True
+
+
+def _symlink_or_mock(link, target, monkeypatch):
+    try:
+        link.symlink_to(target)
+        return
+    except OSError:
+        link.write_text("simulated symlink", encoding="utf-8")
+
+    original_lstat = Path.lstat
+    original_read_text = Path.read_text
+
+    def simulated_lstat(path, *args, **kwargs):
+        result = original_lstat(path, *args, **kwargs)
+        if path == link:
+            return os.stat_result((stat.S_IFLNK | 0o777, *result[1:]))
+        return result
+
+    def simulated_read_text(path, *args, **kwargs):
+        if path == link:
+            return original_read_text(target, *args, **kwargs)
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "lstat", simulated_lstat)
+    monkeypatch.setattr(Path, "read_text", simulated_read_text)

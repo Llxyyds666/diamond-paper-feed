@@ -9,7 +9,7 @@ from pathlib import Path
 import sys
 from typing import Callable, Iterable
 
-from diamond_feed.atomic import CommitResult, atomic_write_text, commit_staged, discard_staged, raise_with_cleanup, stage_text
+from diamond_feed.atomic import CommitResult, atomic_write_text, commit_staged, discard_staged, raise_with_cleanup, stage_text, validate_output_layout
 from diamond_feed.config import load_config
 from diamond_feed.filtering import QueryRules, load_rules, matches_rules
 from diamond_feed.http import FetchError, fetch_bytes
@@ -124,6 +124,7 @@ def main(argv: list[str] | None = None, *, now: Callable[[], datetime] | None = 
     parser.add_argument("--feed", type=Path, default=Path("filtered_feed.xml"))
     parser.add_argument("--failures", type=Path, default=Path("fetch_failures.tsv"))
     args = parser.parse_args(argv)
+    validate_output_layout((args.state, args.feed, args.failures))
     config = load_config(args.config)
     rules = load_rules(args.queries)
     state = load_state(args.state)
