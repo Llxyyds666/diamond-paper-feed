@@ -1,0 +1,1 @@
+"""Diamond literature aggregation package."""
