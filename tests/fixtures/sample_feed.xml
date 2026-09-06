@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:prism="http://prismstandard.org/namespaces/basic/2.0/"
+      xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <title>Diamond Materials</title>
+  <entry>
+    <id>tag:feed.test,2026:diamond-1</id>
+    <title>Diamond growth study</title>
+    <summary>Preserved study summary.</summary>
+    <author><name>Ada Researcher</name></author>
+    <updated>2026-09-01T12:30:00+02:00</updated>
+    <prism:doi>10.1000/DIAMOND.1</prism:doi>
+    <link rel="alternate" href="https://journal.test/diamond-1" />
+  </entry>
+  <entry>
+    <id>tag:feed.test,2026:diamond-2</id>
+    <title>Diamond surface analysis</title>
+    <summary>Second preserved summary.</summary>
+    <author><name>Bea Scientist</name></author>
+    <published>2026-09-02T08:00:00Z</published>
+    <dc:identifier>https://doi.org/10.1000/diamond.2</dc:identifier>
+    <link rel="alternate" href="https://journal.test/diamond-2" />
+  </entry>
+</feed>
