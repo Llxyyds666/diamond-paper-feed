@@ -46,6 +46,15 @@ def test_save_state_flushes_fsyncs_and_replaces_sibling_temp(tmp_path, monkeypat
     assert not path.with_suffix(".json.tmp").exists()
 
 
+def test_save_state_returns_publication_result(tmp_path):
+    from diamond_feed.state import FeedState, save_state
+
+    result = save_state(tmp_path / "state.json", FeedState.empty())
+
+    assert result.committed is True
+    assert result.status == "committed"
+
+
 @pytest.mark.parametrize("payload", [{"version": 2, "papers": {}, "pending_ai": [], "source_watermarks": {}}, {"version": "1"}])
 def test_load_state_rejects_unsupported_or_malformed_version(tmp_path, payload):
     from diamond_feed.state import load_state
@@ -480,6 +489,221 @@ def test_next_commit_cleans_stale_committed_backup_and_continues(tmp_path, monke
     assert not list(tmp_path.glob("*.committed"))
 
 
+def test_completion_manifest_is_single_and_published_after_all_destinations(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    state_path = tmp_path / "state.json"
+    feed_path = tmp_path / "feed.xml"
+    state_path.write_text("old state", encoding="utf-8")
+    feed_path.write_text("old feed", encoding="utf-8")
+    original_replace = os.replace
+    replacements = []
+
+    def record_replacements(source, destination):
+        replacements.append((Path(source), Path(destination)))
+        return original_replace(source, destination)
+
+    monkeypatch.setattr(atomic.os, "replace", record_replacements)
+    result = atomic.commit_staged(
+        [atomic.stage_text(state_path, "new state"), atomic.stage_text(feed_path, "new feed")]
+    )
+
+    manifest_replacements = [
+        pair for pair in replacements if pair[1].name.startswith(".diamond-feed-publication.")
+    ]
+    assert result.status == "committed"
+    assert len(manifest_replacements) == 1
+    manifest_index = replacements.index(manifest_replacements[0])
+    assert replacements.index((state_path.with_name("state.json.tmp"), state_path)) < manifest_index
+    assert replacements.index((feed_path.with_name("feed.xml.tmp"), feed_path)) < manifest_index
+    assert not any(path.name.endswith(".bak.committed") for pair in replacements for path in pair)
+
+
+def test_legacy_partial_markers_never_authorize_recovery_backup_cleanup(tmp_path):
+    from diamond_feed.atomic import commit_staged, stage_text
+
+    state_path = tmp_path / "state.json"
+    feed_path = tmp_path / "feed.xml"
+    state_path.write_text("partially published state", encoding="utf-8")
+    feed_path.write_text("old feed", encoding="utf-8")
+    state_backup = tmp_path / "state.json.interrupted.bak"
+    feed_backup = tmp_path / "feed.xml.interrupted.bak"
+    state_backup.write_text("recoverable state", encoding="utf-8")
+    feed_backup.write_text("recoverable feed", encoding="utf-8")
+    (tmp_path / "state.json.interrupted.bak.committed").write_text("committed\n", encoding="utf-8")
+    staged = [stage_text(state_path, "next state"), stage_text(feed_path, "next feed")]
+
+    with pytest.raises(RuntimeError, match="recovery"):
+        commit_staged(staged)
+
+    assert state_backup.read_text(encoding="utf-8") == "recoverable state"
+    assert feed_backup.read_text(encoding="utf-8") == "recoverable feed"
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_manifest_must_exactly_describe_transaction_backups_before_cleanup(tmp_path, monkeypatch):
+    from diamond_feed.atomic import commit_staged, stage_text
+
+    state_path = tmp_path / "state.json"
+    feed_path = tmp_path / "feed.xml"
+    state_path.write_text("old state", encoding="utf-8")
+    feed_path.write_text("old feed", encoding="utf-8")
+    original_unlink = Path.unlink
+    cleanup_locked = True
+
+    def retain_backups(path, *args, **kwargs):
+        if cleanup_locked and path.name.endswith(".bak"):
+            raise PermissionError("backup locked")
+        return original_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", retain_backups)
+    first_result = commit_staged(
+        [stage_text(state_path, "new state"), stage_text(feed_path, "new feed")]
+    )
+    manifests = list(tmp_path.glob(".diamond-feed-publication.*.json"))
+    backups = sorted(tmp_path.glob("*.bak"))
+    assert first_result.cleanup_pending is True
+    assert len(manifests) == 1
+    assert len(backups) == 2
+
+    payload = json.loads(manifests[0].read_text(encoding="utf-8"))
+    payload["backups"] = payload["backups"][:1]
+    manifests[0].write_text(json.dumps(payload), encoding="utf-8")
+    cleanup_locked = False
+
+    with pytest.raises(RuntimeError, match="recovery"):
+        commit_staged([stage_text(state_path, "later state"), stage_text(feed_path, "later feed")])
+
+    assert all(path.exists() for path in backups)
+
+
+def test_manifest_creation_primary_and_temp_cleanup_failures_become_commit_debt(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    path = tmp_path / "state.json"
+    path.write_text("old state", encoding="utf-8")
+    original_replace = os.replace
+    original_unlink = Path.unlink
+
+    def fail_manifest_publish(source, destination):
+        if Path(destination).name.startswith(".diamond-feed-publication."):
+            raise OSError("manifest publish failed")
+        return original_replace(source, destination)
+
+    def fail_manifest_temp_cleanup(target, *args, **kwargs):
+        if target.name.startswith(".diamond-feed-publication.") and target.name.endswith(".tmp"):
+            raise PermissionError("manifest temp cleanup failed")
+        return original_unlink(target, *args, **kwargs)
+
+    monkeypatch.setattr(atomic.os, "replace", fail_manifest_publish)
+    monkeypatch.setattr(Path, "unlink", fail_manifest_temp_cleanup)
+    result = atomic.commit_staged([atomic.stage_text(path, "new state")])
+
+    assert result.status == "committed-with-cleanup-pending"
+    assert any("manifest publish failed" in error for error in result.cleanup_errors)
+    assert any("manifest temp cleanup failed" in error for error in result.cleanup_errors)
+    assert path.read_text(encoding="utf-8") == "new state"
+    backups = list(tmp_path.glob("*.bak"))
+    assert len(backups) == 1
+
+    monkeypatch.setattr(atomic.os, "replace", original_replace)
+    monkeypatch.setattr(Path, "unlink", original_unlink)
+    with pytest.raises(RuntimeError, match="recovery"):
+        atomic.commit_staged([atomic.stage_text(path, "later state")])
+    assert backups[0].exists()
+
+
+def test_stage_text_preserves_primary_and_cleanup_failures(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    path = tmp_path / "state.json"
+    temporary = tmp_path / "state.json.tmp"
+    original_unlink = Path.unlink
+
+    monkeypatch.setattr(atomic.os, "fsync", lambda _fd: (_ for _ in ()).throw(OSError("stage fsync failed")))
+
+    def fail_stage_cleanup(target, *args, **kwargs):
+        if target == temporary:
+            raise PermissionError("stage temp cleanup failed")
+        return original_unlink(target, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", fail_stage_cleanup)
+
+    with pytest.raises(RuntimeError) as raised:
+        atomic.stage_text(path, "new state")
+
+    assert type(raised.value).__name__ == "PublicationOperationError"
+    assert "stage fsync failed" in raised.value.primary_failure
+    assert any("stage temp cleanup failed" in error for error in raised.value.cleanup_failures)
+    assert temporary.exists()
+
+
+def test_backup_preserves_copy_and_temp_cleanup_failures(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    path = tmp_path / "state.json"
+    path.write_text("old state", encoding="utf-8")
+    staged = atomic.stage_text(path, "new state")
+    original_unlink = Path.unlink
+
+    monkeypatch.setattr(
+        atomic.shutil,
+        "copyfileobj",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(OSError("backup copy failed")),
+    )
+
+    def fail_backup_temp_cleanup(target, *args, **kwargs):
+        if target.name.endswith(".bak.tmp"):
+            raise PermissionError("backup temp cleanup failed")
+        return original_unlink(target, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", fail_backup_temp_cleanup)
+
+    with pytest.raises(RuntimeError) as raised:
+        atomic.commit_staged([staged])
+
+    assert type(raised.value).__name__ == "PublicationOperationError"
+    assert "backup copy failed" in raised.value.primary_failure
+    assert any("backup temp cleanup failed" in error for error in raised.value.cleanup_failures)
+    assert path.read_text(encoding="utf-8") == "old state"
+
+
+def test_preflight_cleanup_debt_is_preserved_when_publish_fails_and_rollback_succeeds(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    path = tmp_path / "state.json"
+    path.write_text("version one", encoding="utf-8")
+    original_unlink = Path.unlink
+    original_replace = os.replace
+    retained_backups = set()
+
+    def retain_selected_backups(target, *args, **kwargs):
+        if target in retained_backups or (not retained_backups and target.name.endswith(".bak")):
+            retained_backups.add(target)
+            raise PermissionError("stale backup cleanup failed")
+        return original_unlink(target, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", retain_selected_backups)
+    first_result = atomic.commit_staged([atomic.stage_text(path, "version two")])
+    assert first_result.cleanup_pending is True
+    assert len(retained_backups) == 1
+
+    def fail_next_publish(source, destination):
+        if Path(source) == path.with_name("state.json.tmp") and Path(destination) == path:
+            raise OSError("next publish failed")
+        return original_replace(source, destination)
+
+    monkeypatch.setattr(atomic.os, "replace", fail_next_publish)
+
+    with pytest.raises(RuntimeError) as raised:
+        atomic.commit_staged([atomic.stage_text(path, "version three")])
+
+    assert type(raised.value).__name__ == "PublicationOperationError"
+    assert "next publish failed" in raised.value.primary_failure
+    assert any("stale backup cleanup failed" in error for error in raised.value.cleanup_failures)
+    assert path.read_text(encoding="utf-8") == "version two"
+
+
 def test_unresolved_recovery_backup_blocks_publish_but_discards_new_stage(tmp_path):
     from diamond_feed.atomic import commit_staged, stage_text
 
@@ -545,12 +769,22 @@ def test_rollback_diagnostics_include_preflight_completed_backup_cleanup_failure
     feed_path = tmp_path / "feed.xml"
     state_path.write_text("old state", encoding="utf-8")
     feed_path.write_text("old feed", encoding="utf-8")
-    stale_backup = tmp_path / "state.json.previous.bak"
-    stale_backup.write_text("redundant state", encoding="utf-8")
-    (tmp_path / "state.json.previous.bak.committed").write_text("committed\n", encoding="utf-8")
-    staged = [atomic.stage_text(state_path, "new state"), atomic.stage_text(feed_path, "new feed")]
     original_replace = os.replace
     original_unlink = Path.unlink
+    retained_backups = []
+
+    def fail_stale_cleanup(path, *args, **kwargs):
+        if path.name.endswith(".bak") and (not retained_backups or path == retained_backups[0]):
+            if not retained_backups:
+                retained_backups.append(path)
+            raise PermissionError("stale completed backup cleanup failed")
+        return original_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", fail_stale_cleanup)
+    first_result = atomic.commit_staged([atomic.stage_text(state_path, "committed state")])
+    assert first_result.cleanup_pending is True
+    stale_backup = retained_backups[0]
+    staged = [atomic.stage_text(state_path, "new state"), atomic.stage_text(feed_path, "new feed")]
 
     def fail_publish_and_restore(source, destination):
         source_path = Path(source)
@@ -561,13 +795,7 @@ def test_rollback_diagnostics_include_preflight_completed_backup_cleanup_failure
             raise OSError("state restore failed")
         return original_replace(source, destination)
 
-    def fail_stale_cleanup(path, *args, **kwargs):
-        if path == stale_backup:
-            raise PermissionError("stale completed backup cleanup failed")
-        return original_unlink(path, *args, **kwargs)
-
     monkeypatch.setattr(atomic.os, "replace", fail_publish_and_restore)
-    monkeypatch.setattr(Path, "unlink", fail_stale_cleanup)
 
     with pytest.raises(atomic.PublicationRollbackError) as raised:
         atomic.commit_staged(staged)
@@ -638,6 +866,45 @@ def test_rollback_diagnostics_say_when_expected_backup_is_no_longer_present(tmp_
     assert raised.value.destinations_without_backup == (state_path.resolve(),)
     assert str(state_path.resolve()) in str(raised.value)
     assert "destinations with no backup" in str(raised.value)
+
+
+def test_collection_reports_cleanup_debt_from_failure_log_and_publication(tmp_path, monkeypatch, capsys):
+    from diamond_feed import collect
+    from diamond_feed.atomic import CommitResult
+
+    paths = _successful_collection(tmp_path, monkeypatch)
+    real_atomic_write = collect.atomic_write_text
+    real_commit = collect.commit_staged
+    failure_artifact = tmp_path / "failures.previous.bak"
+    publication_artifact = tmp_path / "state.previous.bak"
+
+    def write_with_debt(path, contents):
+        real_atomic_write(path, contents)
+        return CommitResult(
+            status="committed-with-cleanup-pending",
+            cleanup_errors=(f"cleanup pending: {failure_artifact.resolve()}",),
+        )
+
+    def commit_with_debt(staged):
+        real_commit(staged)
+        return CommitResult(
+            status="committed-with-cleanup-pending",
+            cleanup_errors=(f"cleanup pending: {publication_artifact.resolve()}",),
+        )
+
+    monkeypatch.setattr(collect, "atomic_write_text", write_with_debt)
+    monkeypatch.setattr(collect, "commit_staged", commit_with_debt)
+
+    result = collect.main(
+        _collection_args(paths),
+        now=lambda: datetime(2026, 9, 5, tzinfo=timezone.utc),
+    )
+    stderr = capsys.readouterr().err
+
+    assert result == 0
+    assert stderr.count("committed-with-cleanup-pending") == 2
+    assert str(failure_artifact.resolve()) in stderr
+    assert str(publication_artifact.resolve()) in stderr
 
 
 def _paper(title, abstract, doi, day, source="rss"):

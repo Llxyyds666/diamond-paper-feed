@@ -1,11 +1,17 @@
 """Durable staging and recoverable multi-file publication helpers."""
 
 from dataclasses import dataclass
+import json
 import os
 from pathlib import Path
 import shutil
 from typing import Iterable, Literal
 import uuid
+
+
+MANIFEST_PREFIX = ".diamond-feed-publication."
+MANIFEST_SUFFIX = ".json"
+MANIFEST_FIELDS = {"version", "transaction_id", "destinations", "backups"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,6 +34,19 @@ class CommitResult:
     @property
     def cleanup_pending(self) -> bool:
         return self.status == "committed-with-cleanup-pending"
+
+
+class PublicationOperationError(RuntimeError):
+    """An operation failed and cleanup of its temporary artifacts also failed."""
+
+    def __init__(self, primary_failure: str, cleanup_failures: Iterable[str]):
+        self.primary_failure = primary_failure
+        self.cleanup_failures = tuple(cleanup_failures)
+        cleanup = "; ".join(self.cleanup_failures) or "none"
+        super().__init__(
+            f"publication operation failed; primary failure: {primary_failure}; "
+            f"cleanup failures: {cleanup}"
+        )
 
 
 class PublicationRollbackError(RuntimeError):
@@ -54,8 +73,37 @@ class PublicationRollbackError(RuntimeError):
         )
 
 
+@dataclass(frozen=True, slots=True)
+class _CompletionManifest:
+    path: Path
+    transaction_id: str
+    destinations: tuple[Path, ...]
+    backups: tuple[Path, ...]
+
+
 def _sibling(path: Path, suffix: str) -> Path:
     return path.with_name(f"{path.name}{suffix}")
+
+
+def _remove(path: Path, action: str) -> str | None:
+    try:
+        path.unlink(missing_ok=True)
+    except Exception as error:
+        return f"{action} {path.resolve()}: {error}"
+    return None
+
+
+def _raise_with_cleanup(
+    primary_error: Exception,
+    primary_action: str,
+    cleanup_failures: Iterable[str],
+) -> None:
+    failures = tuple(cleanup_failures)
+    if failures:
+        raise PublicationOperationError(
+            f"{primary_action}: {primary_error}", failures
+        ) from primary_error
+    raise primary_error
 
 
 def stage_text(path: Path, contents: str) -> StagedFile:
@@ -67,24 +115,27 @@ def stage_text(path: Path, contents: str) -> StagedFile:
             handle.write(contents)
             handle.flush()
             os.fsync(handle.fileno())
-    except Exception:
-        temporary.unlink(missing_ok=True)
-        raise
+    except Exception as primary_error:
+        cleanup = _remove(temporary, "remove staged temporary")
+        _raise_with_cleanup(
+            primary_error,
+            f"stage text for {path.resolve()}",
+            () if cleanup is None else (cleanup,),
+        )
     return StagedFile(destination=path, temporary=temporary)
 
 
 def discard_staged(staged: Iterable[StagedFile]) -> tuple[str, ...]:
     failures: list[str] = []
     for item in staged:
-        try:
-            item.temporary.unlink(missing_ok=True)
-        except Exception as error:
-            failures.append(f"remove staged temporary {item.temporary.resolve()}: {error}")
+        failure = _remove(item.temporary, "remove staged temporary")
+        if failure is not None:
+            failures.append(failure)
     return tuple(failures)
 
 
-def _backup_marker(backup: Path) -> Path:
-    return _sibling(backup, ".committed")
+def _backup_path(destination: Path, transaction_id: str) -> Path:
+    return _sibling(destination, f".{transaction_id}.bak")
 
 
 def _backup_candidates(destination: Path) -> list[Path]:
@@ -96,53 +147,134 @@ def _backup_candidates(destination: Path) -> list[Path]:
     )
 
 
-def _marker_candidates(destination: Path) -> list[Path]:
+def _backup_transaction_id(destination: Path, backup: Path) -> str | None:
     prefix = f"{destination.name}."
-    return sorted(
-        path
-        for path in destination.parent.iterdir()
-        if path.name.startswith(prefix) and path.name.endswith(".bak.committed")
-    )
+    if not backup.name.startswith(prefix) or not backup.name.endswith(".bak"):
+        return None
+    transaction_id = backup.name[len(prefix) : -len(".bak")]
+    if len(transaction_id) != 32 or any(character not in "0123456789abcdef" for character in transaction_id):
+        return None
+    return transaction_id
 
 
-def _cleanup_stale_committed(destination: Path) -> list[str]:
-    """Best-effort cleanup of backups known to belong to completed commits."""
+def _manifest_parent(destinations: Iterable[Path]) -> Path:
+    resolved_parents = [str(path.resolve().parent) for path in destinations]
+    if not resolved_parents:
+        raise ValueError("at least one staged destination is required")
+    try:
+        return Path(os.path.commonpath(resolved_parents))
+    except ValueError as error:
+        raise ValueError("staged destinations must share a filesystem root") from error
+
+
+def _manifest_path(destinations: Iterable[Path], transaction_id: str) -> Path:
+    return _manifest_parent(destinations) / f"{MANIFEST_PREFIX}{transaction_id}{MANIFEST_SUFFIX}"
+
+
+def _find_manifest(backup: Path, transaction_id: str) -> Path | None:
+    name = f"{MANIFEST_PREFIX}{transaction_id}{MANIFEST_SUFFIX}"
+    directory = backup.resolve().parent
+    while True:
+        candidate = directory / name
+        if candidate.exists():
+            return candidate
+        parent = directory.parent
+        if parent == directory:
+            return None
+        directory = parent
+
+
+def _load_manifest(path: Path, transaction_id: str) -> _CompletionManifest | None:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if type(payload) is not dict or set(payload) != MANIFEST_FIELDS:
+            return None
+        if payload["version"] != 1 or type(payload["version"]) is not int:
+            return None
+        if payload["transaction_id"] != transaction_id or type(payload["transaction_id"]) is not str:
+            return None
+        if type(payload["destinations"]) is not list or not all(type(item) is str for item in payload["destinations"]):
+            return None
+        if type(payload["backups"]) is not list or not all(type(item) is str for item in payload["backups"]):
+            return None
+        destinations = tuple(Path(item).resolve() for item in payload["destinations"])
+        backups = tuple(Path(item).resolve() for item in payload["backups"])
+    except (OSError, UnicodeError, json.JSONDecodeError, TypeError, ValueError):
+        return None
+    if not destinations or len(destinations) != len(set(destinations)) or len(backups) != len(set(backups)):
+        return None
+    if _manifest_path(destinations, transaction_id).resolve() != path.resolve():
+        return None
+    possible_backups = {_backup_path(destination, transaction_id).resolve() for destination in destinations}
+    if not set(backups) <= possible_backups:
+        return None
+    actual_backups = {
+        candidate.resolve()
+        for destination in destinations
+        for candidate in _backup_candidates(destination)
+        if _backup_transaction_id(destination, candidate) == transaction_id
+    }
+    if not actual_backups <= set(backups):
+        return None
+    return _CompletionManifest(path.resolve(), transaction_id, destinations, backups)
+
+
+def _completed_manifest(destination: Path, backup: Path) -> _CompletionManifest | None:
+    transaction_id = _backup_transaction_id(destination, backup)
+    if transaction_id is None:
+        return None
+    manifest_path = _find_manifest(backup, transaction_id)
+    if manifest_path is None:
+        return None
+    manifest = _load_manifest(manifest_path, transaction_id)
+    if manifest is None or backup.resolve() not in manifest.backups:
+        return None
+    return manifest
+
+
+def _preflight(destinations: Iterable[Path]) -> list[str]:
+    """Clean only backups authorized by one complete transaction manifest."""
+    destination_list = list(destinations)
+    manifests: dict[Path, _CompletionManifest] = {}
+    authorized: set[Path] = set()
+    for destination in destination_list:
+        for backup in _backup_candidates(destination):
+            manifest = _completed_manifest(destination, backup)
+            if manifest is None:
+                continue
+            manifests[manifest.path] = manifest
+            authorized.update(manifest.backups)
+
     cleanup_errors: list[str] = []
-    for backup in _backup_candidates(destination):
-        marker = _backup_marker(backup)
-        if not marker.exists():
+    for manifest in manifests.values():
+        for backup in manifest.backups:
+            if not backup.exists():
+                continue
+            failure = _remove(backup, "remove stale committed backup")
+            if failure is not None:
+                cleanup_errors.append(failure)
+        if any(backup.exists() for backup in manifest.backups):
             continue
-        try:
-            backup.unlink(missing_ok=True)
-        except Exception as error:
-            cleanup_errors.append(f"remove stale committed backup {backup.resolve()}: {error}")
-            continue
-        try:
-            marker.unlink(missing_ok=True)
-        except Exception as error:
-            cleanup_errors.append(f"remove stale commit marker {marker.resolve()}: {error}")
-    for marker in _marker_candidates(destination):
-        backup = marker.with_name(marker.name.removesuffix(".committed"))
-        if backup.exists():
-            continue
-        try:
-            marker.unlink(missing_ok=True)
-        except Exception as error:
-            cleanup_errors.append(f"remove orphaned commit marker {marker.resolve()}: {error}")
-    return cleanup_errors
+        failure = _remove(manifest.path, "remove completed publication manifest")
+        if failure is not None:
+            cleanup_errors.append(failure)
 
-
-def _reject_unresolved_backups(destination: Path) -> None:
-    unresolved = [path.resolve() for path in _backup_candidates(destination) if not _backup_marker(path).exists()]
+    unresolved = [
+        backup.resolve()
+        for destination in destination_list
+        for backup in _backup_candidates(destination)
+        if backup.resolve() not in authorized
+    ]
     if unresolved:
         paths = ", ".join(str(path) for path in unresolved)
         raise RuntimeError(f"unresolved publication backup requires recovery: {paths}")
+    return cleanup_errors
 
 
 def _backup(path: Path, transaction_id: str) -> Path | None:
     if not path.exists():
         return None
-    backup = _sibling(path, f".{transaction_id}.bak")
+    backup = _backup_path(path, transaction_id)
     temporary = _sibling(backup, ".tmp")
     try:
         with path.open("rb") as source, temporary.open("wb") as target:
@@ -150,55 +282,78 @@ def _backup(path: Path, transaction_id: str) -> Path | None:
             target.flush()
             os.fsync(target.fileno())
         os.replace(temporary, backup)
-    except Exception:
-        temporary.unlink(missing_ok=True)
-        raise
+    except Exception as primary_error:
+        cleanup = _remove(temporary, "remove backup temporary")
+        _raise_with_cleanup(
+            primary_error,
+            f"create backup for {path.resolve()}",
+            () if cleanup is None else (cleanup,),
+        )
     return backup
 
 
-def _mark_backup_committed(backup: Path) -> None:
-    marker = _backup_marker(backup)
-    staged = stage_text(marker, "committed\n")
+def _write_completion_manifest(
+    destinations: Iterable[Path],
+    backups: Iterable[Path],
+    transaction_id: str,
+) -> tuple[Path, tuple[str, ...]]:
+    destination_list = tuple(path.resolve() for path in destinations)
+    backup_list = tuple(path.resolve() for path in backups)
+    manifest = _manifest_path(destination_list, transaction_id)
+    contents = json.dumps(
+        {
+            "version": 1,
+            "transaction_id": transaction_id,
+            "destinations": [str(path) for path in destination_list],
+            "backups": [str(path) for path in backup_list],
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ) + "\n"
     try:
-        os.replace(staged.temporary, marker)
-    except Exception:
-        discard_staged([staged])
-        raise
+        staged = stage_text(manifest, contents)
+    except PublicationOperationError as error:
+        return manifest, (error.primary_failure, *error.cleanup_failures)
+    except Exception as error:
+        return manifest, (f"write completion manifest {manifest.resolve()}: {error}",)
+    try:
+        os.replace(staged.temporary, manifest)
+    except Exception as primary_error:
+        cleanup_failures = discard_staged([staged])
+        return manifest, (
+            f"publish completion manifest {manifest.resolve()}: {primary_error}",
+            *cleanup_failures,
+        )
+    return manifest, ()
+
+
+def _publish_failure_details(error: Exception, primary_action: str) -> tuple[str, tuple[str, ...]]:
+    if isinstance(error, PublicationOperationError):
+        return error.primary_failure, error.cleanup_failures
+    return f"{primary_action}: {error}", ()
 
 
 def commit_staged(staged: Iterable[StagedFile]) -> CommitResult:
     """Publish a staged group and preserve actionable recovery diagnostics.
 
-    Backups use transaction-specific names.  A `.committed` companion marks a
-    leftover backup as redundant after a successful commit, so a later run can
-    remove it safely and continue.  Unmarked backups are never auto-deleted:
-    they represent an incomplete rollback and retain the last recoverable data.
+    Transaction backups are auto-cleanable only when one atomic manifest names
+    the exact transaction.  The manifest is published after every destination,
+    so no rollback path can leave completion evidence beside recovery data.
     """
     items = list(staged)
     destinations = [item.destination for item in items]
     if len(set(destinations)) != len(destinations):
         discard_staged(items)
         raise ValueError("staged destinations must be unique")
+    _manifest_parent(destinations)
 
-    cleanup_errors: list[str] = []
     try:
-        for destination in destinations:
-            cleanup_errors.extend(_cleanup_stale_committed(destination))
-            _reject_unresolved_backups(destination)
+        cleanup_errors = _preflight(destinations)
     except Exception as preflight_error:
         cleanup_failures = discard_staged(items)
         if cleanup_failures:
-            recovery_backups = [
-                backup
-                for destination in destinations
-                for backup in _backup_candidates(destination)
-                if not _backup_marker(backup).exists()
-            ]
-            raise PublicationRollbackError(
-                f"preflight recovery check: {preflight_error}",
-                cleanup_failures,
-                recovery_backups,
-                (),
+            raise PublicationOperationError(
+                f"preflight recovery check: {preflight_error}", cleanup_failures
             ) from preflight_error
         raise
 
@@ -216,11 +371,8 @@ def commit_staged(staged: Iterable[StagedFile]) -> CommitResult:
             primary_action = f"publish {item.temporary.resolve()} to {item.destination.resolve()}"
             os.replace(item.temporary, item.destination)
             committed.append(item)
-        for backup in backups.values():
-            primary_action = f"mark committed backup {backup.resolve()}"
-            _mark_backup_committed(backup)
     except Exception as publish_error:
-        primary_failure = f"{primary_action}: {publish_error}"
+        primary_failure, primary_cleanup = _publish_failure_details(publish_error, primary_action)
         rollback_failures: list[str] = []
         destinations_without_backup: list[Path] = []
         committed_destinations = {item.destination for item in committed}
@@ -242,39 +394,46 @@ def commit_staged(staged: Iterable[StagedFile]) -> CommitResult:
         for destination, backup in backups.items():
             if destination in committed_destinations:
                 continue
-            try:
-                backup.unlink(missing_ok=True)
-            except Exception as cleanup_error:
-                rollback_failures.append(f"remove unused backup {backup.resolve()}: {cleanup_error}")
-        for backup in backups.values():
-            marker = _backup_marker(backup)
-            try:
-                marker.unlink(missing_ok=True)
-            except Exception as cleanup_error:
-                rollback_failures.append(f"remove rollback commit marker {marker.resolve()}: {cleanup_error}")
+            failure = _remove(backup, "remove unused backup")
+            if failure is not None:
+                rollback_failures.append(failure)
         rollback_failures.extend(discard_staged(items))
+        all_cleanup_failures = [*cleanup_errors, *primary_cleanup, *rollback_failures]
         if rollback_failures:
             recovery_backups = [backup for backup in backups.values() if backup.exists()]
             raise PublicationRollbackError(
                 primary_failure,
-                [*cleanup_errors, *rollback_failures],
+                all_cleanup_failures,
                 recovery_backups,
                 destinations_without_backup,
+            ) from publish_error
+        if cleanup_errors or primary_cleanup:
+            raise PublicationOperationError(
+                primary_failure, [*cleanup_errors, *primary_cleanup]
             ) from publish_error
         raise
 
     cleanup_errors.extend(discard_staged(items))
-    for backup in backups.values():
-        marker = _backup_marker(backup)
-        try:
-            backup.unlink(missing_ok=True)
-        except Exception as cleanup_error:
-            cleanup_errors.append(f"remove committed backup {backup.resolve()}: {cleanup_error}")
-            continue
-        try:
-            marker.unlink(missing_ok=True)
-        except Exception as cleanup_error:
-            cleanup_errors.append(f"remove committed marker {marker.resolve()}: {cleanup_error}")
+    if backups:
+        manifest, manifest_errors = _write_completion_manifest(
+            destinations, backups.values(), transaction_id
+        )
+        cleanup_errors.extend(manifest_errors)
+        if manifest_errors:
+            cleanup_errors.extend(
+                f"completion evidence unavailable; recovery backup retained: {backup.resolve()}"
+                for backup in backups.values()
+                if backup.exists()
+            )
+        else:
+            for backup in backups.values():
+                failure = _remove(backup, "remove committed backup")
+                if failure is not None:
+                    cleanup_errors.append(failure)
+            if not any(backup.exists() for backup in backups.values()):
+                failure = _remove(manifest, "remove completed publication manifest")
+                if failure is not None:
+                    cleanup_errors.append(failure)
     status = "committed-with-cleanup-pending" if cleanup_errors else "committed"
     return CommitResult(status=status, cleanup_errors=tuple(cleanup_errors))
 

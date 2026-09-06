@@ -6,9 +6,10 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 import io
 from pathlib import Path
+import sys
 from typing import Callable, Iterable
 
-from diamond_feed.atomic import atomic_write_text, commit_staged, discard_staged, stage_text
+from diamond_feed.atomic import CommitResult, atomic_write_text, commit_staged, discard_staged, stage_text
 from diamond_feed.config import load_config
 from diamond_feed.filtering import QueryRules, load_rules, matches_rules
 from diamond_feed.http import FetchError, fetch_bytes
@@ -97,13 +98,21 @@ def _collect_scholarly(
         return [(name, [], _failure(url, error))]
 
 
-def _write_failures(path: Path, failures: list[SourceFailure]) -> None:
+def _write_failures(path: Path, failures: list[SourceFailure]) -> CommitResult:
     output = io.StringIO(newline="")
     writer = csv.writer(output, delimiter="\t", lineterminator="\n")
     writer.writerow(["timestamp", "category", "url", "detail"])
     for failure in failures:
         writer.writerow([failure.timestamp.astimezone(timezone.utc).isoformat(), failure.category, failure.url, failure.detail])
-    atomic_write_text(path, output.getvalue())
+    return atomic_write_text(path, output.getvalue())
+
+
+def _report_cleanup_debt(result: CommitResult) -> None:
+    if not result.cleanup_pending:
+        return
+    print(f"publication status: {result.status}", file=sys.stderr)
+    for error in result.cleanup_errors:
+        print(f"publication cleanup debt: {error}", file=sys.stderr)
 
 
 def main(argv: list[str] | None = None, *, now: Callable[[], datetime] | None = None) -> int:
@@ -144,7 +153,8 @@ def main(argv: list[str] | None = None, *, now: Callable[[], datetime] | None = 
             else:
                 failures.append(failure)
 
-    _write_failures(args.failures, failures)
+    failure_result = _write_failures(args.failures, failures)
+    _report_cleanup_debt(failure_result)
     if not successful_sources:
         return 2
 
@@ -159,7 +169,8 @@ def main(argv: list[str] | None = None, *, now: Callable[[], datetime] | None = 
     except Exception:
         discard_staged(staged)
         raise
-    commit_staged(staged)
+    publication_result = commit_staged(staged)
+    _report_cleanup_debt(publication_result)
     return 0
 
 

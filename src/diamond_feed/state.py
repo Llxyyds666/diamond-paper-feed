@@ -6,7 +6,7 @@ import json
 import math
 from pathlib import Path
 
-from diamond_feed.atomic import StagedFile, commit_staged, stage_text
+from diamond_feed.atomic import CommitResult, StagedFile, commit_staged, stage_text
 from diamond_feed.models import PaperRecord
 from diamond_feed.normalize import record_key
 
@@ -213,6 +213,6 @@ def stage_state(path: Path, state: FeedState) -> StagedFile:
     return stage_text(path, contents)
 
 
-def save_state(path: Path, state: FeedState) -> None:
+def save_state(path: Path, state: FeedState) -> CommitResult:
     """Atomically publish a validated state file."""
-    commit_staged([stage_state(path, state)])
+    return commit_staged([stage_state(path, state)])
