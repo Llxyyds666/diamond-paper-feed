@@ -1,0 +1,24 @@
+{
+  "include_any": [
+    "diamond", "diamonds", "nanodiamond", "nanodiamonds",
+    "nano-diamond", "nanocrystalline diamond", "ultrananocrystalline diamond",
+    "polycrystalline diamond", "single-crystal diamond", "single crystal diamond",
+    "cvd diamond", "chemical vapor deposition diamond", "chemical vapour deposition diamond",
+    "boron-doped diamond", "boron doped diamond", "diamond membrane", "diamond film",
+    "diamond semiconductor", "diamond transistor", "diamond photonics", "diamond electrode",
+    "nitrogen-vacancy center", "nitrogen vacancy centre", "nv center in diamond",
+    "silicon-vacancy center", "germanium-vacancy center", "tin-vacancy center",
+    "diamond color center", "diamond colour centre", "diamond-like carbon", "diamond like carbon"
+  ],
+  "material_context": [
+    "carbon", "crystal", "film", "membrane", "substrate", "surface", "grain",
+    "defect", "vacancy", "quantum", "semiconductor", "electrode", "coating",
+    "growth", "cvd", "hpht", "thermal", "phonon", "optical", "sensor",
+    "geology", "mineral", "inclusion", "mantle", "anvil"
+  ],
+  "obvious_noise": [
+    "diamond graph", "diamond norm", "diamond operator", "diamond lemma",
+    "baseball diamond", "softball diamond", "diamond league", "diamond jewelry",
+    "diamond jewellery", "diamond ring market", "diamond film festival"
+  ]
+}
