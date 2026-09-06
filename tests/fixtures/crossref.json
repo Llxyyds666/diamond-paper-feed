@@ -4,7 +4,7 @@
       {
         "DOI": "10.1000/diamond.1",
         "title": ["Boron-doped diamond electrodes"],
-        "abstract": "<jats:p>Diamond <b>electrode</b> performance.</jats:p>",
+        "abstract": "&lt;jats:p&gt;Diamond &lt;b&gt;electrode&lt;/b&gt; performance.&lt;/jats:p&gt;",
         "author": [{"given": "Ada", "family": "Lovelace"}],
         "container-title": ["Diamond Journal"],
         "published-online": {"date-parts": [[2026, 8, 16]]},

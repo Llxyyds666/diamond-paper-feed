@@ -21,18 +21,28 @@ def build_url(query: str, from_date: date, rows: int) -> str:
 
 
 def _strip_tags(value: object) -> str:
-    return " ".join(unescape(_TAGS.sub(" ", str(value or ""))).split())
+    return " ".join(_TAGS.sub(" ", unescape(str(value or ""))).split())
 
 
 def _publication_date(item: dict[str, object]) -> datetime:
+    """Return UTC publication time, defaulting a missing month or day to one."""
     for field in ("published-online", "published-print"):
         value = item.get(field)
         if not isinstance(value, dict):
             continue
         parts = value.get("date-parts")
-        if isinstance(parts, list) and parts and isinstance(parts[0], list) and len(parts[0]) >= 3:
-            year, month, day = (int(component) for component in parts[0][:3])
+        if not (isinstance(parts, list) and parts and isinstance(parts[0], list)):
+            continue
+        date_parts = parts[0]
+        if not 1 <= len(date_parts) <= 3:
+            continue
+        try:
+            year = int(date_parts[0])
+            month = int(date_parts[1]) if len(date_parts) >= 2 else 1
+            day = int(date_parts[2]) if len(date_parts) >= 3 else 1
             return datetime(year, month, day, tzinfo=timezone.utc)
+        except (TypeError, ValueError, OverflowError):
+            continue
     raise ValueError("missing publication date")
 
 
@@ -54,10 +64,14 @@ def _authors(value: object) -> list[str]:
 def parse_response(body: bytes) -> list[PaperRecord]:
     """Parse Crossref JSON, ignoring individual incomplete records."""
     payload = json.loads(body)
-    message = payload.get("message", {}) if isinstance(payload, dict) else {}
-    items = message.get("items", []) if isinstance(message, dict) else []
+    if not isinstance(payload, dict) or not isinstance(payload.get("message"), dict):
+        raise ValueError("invalid Crossref response envelope")
+    message = payload["message"]
+    if not isinstance(message.get("items"), list):
+        raise ValueError("invalid Crossref response envelope")
+    items = message["items"]
     records: list[PaperRecord] = []
-    for item in items if isinstance(items, list) else []:
+    for item in items:
         if not isinstance(item, dict):
             continue
         try:

@@ -1,11 +1,14 @@
 from datetime import date, timezone
+import json
 from pathlib import Path
 from urllib.parse import parse_qs, unquote_plus, urlparse
+
+import pytest
 
 from diamond_feed.sources import arxiv, crossref, openalex
 
 
-FIXTURES = Path("tests/fixtures")
+FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def test_source_urls_have_date_window_encoded_query_and_rows():
@@ -31,6 +34,33 @@ def test_openalex_reconstructs_inverted_abstract_stably_and_handles_none():
     assert openalex.reconstruct_abstract(None) == ""
 
 
+@pytest.mark.parametrize(
+    "invalid_index",
+    [
+        {1: [0]},
+        {"diamond": "not-a-list"},
+        {"diamond": [True]},
+        {"diamond": [1.0]},
+        {"diamond": [-1]},
+    ],
+)
+def test_openalex_rejects_malformed_inverted_abstract(invalid_index):
+    with pytest.raises(ValueError):
+        openalex.reconstruct_abstract(invalid_index)
+
+
+def test_openalex_skips_bad_index_without_losing_neighboring_record():
+    payload = json.loads((FIXTURES / "openalex.json").read_bytes())
+    malformed = dict(payload["results"][0])
+    malformed["id"] = "https://openalex.org/W-malformed"
+    malformed["abstract_inverted_index"] = {"diamond": "not-a-list"}
+    payload["results"] = [payload["results"][0], malformed]
+
+    records = openalex.parse_response(json.dumps(payload).encode())
+
+    assert [record.source_ids for record in records] == [["https://openalex.org/W123"]]
+
+
 def test_openalex_fixture_becomes_records_and_skips_malformed_item():
     records = openalex.parse_response((FIXTURES / "openalex.json").read_bytes())
 
@@ -53,6 +83,37 @@ def test_crossref_fixture_strips_tags_uses_online_date_and_print_fallback():
     assert records[0].doi == "10.1000/diamond.1"
 
 
+@pytest.mark.parametrize(
+    ("date_parts", "expected"),
+    [
+        ([2026], date(2026, 1, 1)),
+        ([2026, 8], date(2026, 8, 1)),
+    ],
+)
+def test_crossref_partial_dates_default_missing_parts_to_one(date_parts, expected):
+    payload = json.loads((FIXTURES / "crossref.json").read_bytes())
+    item = payload["message"]["items"][0]
+    item["published-online"] = {"date-parts": [date_parts]}
+
+    records = crossref.parse_response(json.dumps(payload).encode())
+
+    assert records[0].published_at.date() == expected
+    assert records[0].published_at.tzinfo == timezone.utc
+
+
+def test_crossref_skips_record_without_a_valid_date_and_keeps_neighbor():
+    payload = json.loads((FIXTURES / "crossref.json").read_bytes())
+    malformed = dict(payload["message"]["items"][0])
+    malformed["DOI"] = "10.1000/invalid-date"
+    malformed["published-online"] = {"date-parts": [[2026, 13]]}
+    malformed.pop("published-print", None)
+    payload["message"]["items"] = [payload["message"]["items"][0], malformed]
+
+    records = crossref.parse_response(json.dumps(payload).encode())
+
+    assert [record.doi for record in records] == ["10.1000/diamond.1"]
+
+
 def test_arxiv_fixture_uses_utc_canonical_url_and_id_and_survives_bad_entry():
     records = arxiv.parse_response((FIXTURES / "arxiv.xml").read_bytes())
 
@@ -62,3 +123,29 @@ def test_arxiv_fixture_uses_utc_canonical_url_and_id_and_survives_bad_entry():
     assert records[0].doi is None
     assert records[0].published_at.tzinfo == timezone.utc
     assert records[0].authors == ["Ada Lovelace", "Grace Hopper"]
+
+
+@pytest.mark.parametrize(
+    ("parser", "body"),
+    [
+        (openalex.parse_response, b"{}"),
+        (openalex.parse_response, b'{"results": {}}'),
+        (crossref.parse_response, b"{}"),
+        (crossref.parse_response, b'{"message": []}'),
+        (crossref.parse_response, b'{"message": {"items": {}}}'),
+    ],
+)
+def test_json_sources_reject_malformed_batch_envelopes(parser, body):
+    with pytest.raises(ValueError):
+        parser(body)
+
+
+@pytest.mark.parametrize(
+    ("parser", "body"),
+    [
+        (openalex.parse_response, b'{"results": []}'),
+        (crossref.parse_response, b'{"message": {"items": []}}'),
+    ],
+)
+def test_json_sources_accept_valid_empty_batches(parser, body):
+    assert parser(body) == []

@@ -19,9 +19,18 @@ def build_url(query: str, from_date: date, rows: int) -> str:
 
 def reconstruct_abstract(index: dict[str, list[int]] | None) -> str:
     """Recreate an OpenAlex inverted-index abstract in position order."""
-    if not index:
+    if index is None:
         return ""
-    positions = [(position, word) for word, offsets in index.items() for position in offsets]
+    if not isinstance(index, dict):
+        raise ValueError("abstract inverted index must be an object")
+    positions: list[tuple[int, str]] = []
+    for word, offsets in index.items():
+        if not isinstance(word, str) or not isinstance(offsets, list):
+            raise ValueError("abstract inverted index has invalid entries")
+        for position in offsets:
+            if type(position) is not int or position < 0:
+                raise ValueError("abstract inverted index has invalid offsets")
+            positions.append((position, word))
     return " ".join(word for _, word in sorted(positions))
 
 
@@ -45,9 +54,11 @@ def _authors(value: object) -> list[str]:
 def parse_response(body: bytes) -> list[PaperRecord]:
     """Parse OpenAlex JSON, ignoring individual incomplete records."""
     payload = json.loads(body)
-    items = payload.get("results", []) if isinstance(payload, dict) else []
+    if not isinstance(payload, dict) or not isinstance(payload.get("results"), list):
+        raise ValueError("invalid OpenAlex response envelope")
+    items = payload["results"]
     records: list[PaperRecord] = []
-    for item in items if isinstance(items, list) else []:
+    for item in items:
         if not isinstance(item, dict):
             continue
         try:
