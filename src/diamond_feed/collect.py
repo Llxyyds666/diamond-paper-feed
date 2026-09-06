@@ -9,7 +9,7 @@ from pathlib import Path
 import sys
 from typing import Callable, Iterable
 
-from diamond_feed.atomic import CommitResult, atomic_write_text, commit_staged, discard_staged, stage_text
+from diamond_feed.atomic import CommitResult, atomic_write_text, commit_staged, discard_staged, raise_with_cleanup, stage_text
 from diamond_feed.config import load_config
 from diamond_feed.filtering import QueryRules, load_rules, matches_rules
 from diamond_feed.http import FetchError, fetch_bytes
@@ -166,9 +166,12 @@ def main(argv: list[str] | None = None, *, now: Callable[[], datetime] | None = 
     try:
         staged.append(stage_state(args.state, state))
         staged.append(stage_text(args.feed, xml))
-    except Exception:
-        discard_staged(staged)
-        raise
+    except Exception as staging_error:
+        raise_with_cleanup(
+            staging_error,
+            "stage collection outputs",
+            discard_staged(staged),
+        )
     publication_result = commit_staged(staged)
     _report_cleanup_debt(publication_result)
     return 0

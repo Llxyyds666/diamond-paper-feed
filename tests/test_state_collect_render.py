@@ -375,6 +375,44 @@ def test_collection_state_staging_failure_preserves_old_outputs_and_cleans_temps
     assert not list(tmp_path.glob("*.bak"))
 
 
+def test_collection_staging_aggregates_stage_and_previous_temp_cleanup_failures(tmp_path, monkeypatch):
+    from diamond_feed import collect
+    from diamond_feed.atomic import PublicationOperationError
+    from diamond_feed.state import FeedState, save_state
+
+    paths = _successful_collection(tmp_path, monkeypatch)
+    config, sources, queries, state_path, feed_path, failures = paths
+    save_state(state_path, FeedState.empty())
+    state_temporary = state_path.with_name("state.json.tmp")
+    original_unlink = Path.unlink
+
+    def fail_feed_stage(path, _contents):
+        assert path == feed_path
+        raise PublicationOperationError(
+            "feed stage write failed",
+            (f"remove feed temporary {feed_path.with_name('feed.xml.tmp').resolve()}: locked",),
+        )
+
+    def fail_previous_stage_cleanup(path, *args, **kwargs):
+        if path == state_temporary:
+            raise PermissionError("state temporary cleanup failed")
+        return original_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(collect, "stage_text", fail_feed_stage)
+    monkeypatch.setattr(Path, "unlink", fail_previous_stage_cleanup)
+
+    with pytest.raises(PublicationOperationError) as raised:
+        collect.main(
+            _collection_args(paths),
+            now=lambda: datetime(2026, 9, 5, tzinfo=timezone.utc),
+        )
+
+    assert "feed stage write failed" in raised.value.primary_failure
+    assert any("remove feed temporary" in failure for failure in raised.value.cleanup_failures)
+    assert any("state temporary cleanup failed" in failure for failure in raised.value.cleanup_failures)
+    assert state_temporary.exists()
+
+
 @pytest.mark.parametrize("failed_destination", ["feed.xml", "state.json"])
 def test_collection_commit_failure_rolls_back_both_outputs_and_cleans_artifacts(tmp_path, monkeypatch, failed_destination):
     from diamond_feed import atomic, collect
@@ -519,6 +557,65 @@ def test_completion_manifest_is_single_and_published_after_all_destinations(tmp_
     assert not any(path.name.endswith(".bak.committed") for pair in replacements for path in pair)
 
 
+def test_duplicate_destination_validation_aggregates_all_staged_cleanup_failures(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    destination = tmp_path / "state.json"
+    first_temporary = tmp_path / "first.tmp"
+    second_temporary = tmp_path / "second.tmp"
+    first_temporary.write_text("first", encoding="utf-8")
+    second_temporary.write_text("second", encoding="utf-8")
+    original_unlink = Path.unlink
+
+    def fail_second_cleanup(path, *args, **kwargs):
+        if path == second_temporary:
+            raise PermissionError("second staged cleanup failed")
+        return original_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", fail_second_cleanup)
+    staged = [
+        atomic.StagedFile(destination, first_temporary),
+        atomic.StagedFile(destination, second_temporary),
+    ]
+
+    with pytest.raises(atomic.PublicationOperationError) as raised:
+        atomic.commit_staged(staged)
+
+    assert "destinations must be unique" in raised.value.primary_failure
+    assert any("second staged cleanup failed" in failure for failure in raised.value.cleanup_failures)
+    assert not first_temporary.exists()
+    assert second_temporary.exists()
+
+
+def test_manifest_layout_validation_aggregates_all_staged_cleanup_failures(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    first = atomic.stage_text(tmp_path / "state.json", "state")
+    second = atomic.stage_text(tmp_path / "feed.xml", "feed")
+    original_unlink = Path.unlink
+
+    monkeypatch.setattr(
+        atomic,
+        "_manifest_parent",
+        lambda _destinations: (_ for _ in ()).throw(ValueError("manifest roots differ")),
+    )
+
+    def fail_second_cleanup(path, *args, **kwargs):
+        if path == second.temporary:
+            raise PermissionError("layout staged cleanup failed")
+        return original_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", fail_second_cleanup)
+
+    with pytest.raises(atomic.PublicationOperationError) as raised:
+        atomic.commit_staged([first, second])
+
+    assert "manifest roots differ" in raised.value.primary_failure
+    assert any("layout staged cleanup failed" in failure for failure in raised.value.cleanup_failures)
+    assert not first.temporary.exists()
+    assert second.temporary.exists()
+
+
 def test_legacy_partial_markers_never_authorize_recovery_backup_cleanup(tmp_path):
     from diamond_feed.atomic import commit_staged, stage_text
 
@@ -575,6 +672,66 @@ def test_manifest_must_exactly_describe_transaction_backups_before_cleanup(tmp_p
         commit_staged([stage_text(state_path, "later state"), stage_text(feed_path, "later feed")])
 
     assert all(path.exists() for path in backups)
+
+
+def test_preflight_retries_orphan_manifest_cleanup_without_touching_invalid_manifest(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    path = tmp_path / "state.json"
+    path.write_text("version one", encoding="utf-8")
+    invalid_manifest = tmp_path / (".diamond-feed-publication." + "f" * 32 + ".json")
+    invalid_manifest.write_text("not a manifest", encoding="utf-8")
+    unrelated_destination = tmp_path / "unrelated.json"
+    unrelated_manifest = tmp_path / (".diamond-feed-publication." + "e" * 32 + ".json")
+    unrelated_manifest.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "transaction_id": "e" * 32,
+                "destinations": [str(unrelated_destination.resolve())],
+                "backups": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    original_unlink = Path.unlink
+    manifest_cleanup_locked = True
+
+    def fail_manifest_cleanup(target, *args, **kwargs):
+        if (
+            manifest_cleanup_locked
+            and target.name.startswith(".diamond-feed-publication.")
+            and target != invalid_manifest
+        ):
+            raise PermissionError("orphan manifest cleanup failed")
+        return original_unlink(target, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", fail_manifest_cleanup)
+    first_result = atomic.commit_staged([atomic.stage_text(path, "version two")])
+    valid_manifests = [
+        manifest
+        for manifest in tmp_path.glob(".diamond-feed-publication.*.json")
+        if manifest not in {invalid_manifest, unrelated_manifest}
+    ]
+    assert first_result.cleanup_pending is True
+    assert len(valid_manifests) == 1
+    assert not list(tmp_path.glob("*.bak"))
+
+    manifest_cleanup_locked = False
+    original_backup_candidates = atomic._backup_candidates
+
+    def reject_unrelated_directory_scan(destination):
+        if destination.resolve() == unrelated_destination.resolve():
+            raise AssertionError("unrelated manifest destination was scanned")
+        return original_backup_candidates(destination)
+
+    monkeypatch.setattr(atomic, "_backup_candidates", reject_unrelated_directory_scan)
+    second_result = atomic.commit_staged([atomic.stage_text(path, "version three")])
+
+    assert second_result.status == "committed"
+    assert not valid_manifests[0].exists()
+    assert invalid_manifest.read_text(encoding="utf-8") == "not a manifest"
+    assert unrelated_manifest.exists()
 
 
 def test_manifest_creation_primary_and_temp_cleanup_failures_become_commit_debt(tmp_path, monkeypatch):
@@ -702,6 +859,51 @@ def test_preflight_cleanup_debt_is_preserved_when_publish_fails_and_rollback_suc
     assert "next publish failed" in raised.value.primary_failure
     assert any("stale backup cleanup failed" in error for error in raised.value.cleanup_failures)
     assert path.read_text(encoding="utf-8") == "version two"
+
+
+def test_preflight_aggregates_authorized_cleanup_unresolved_backup_and_staged_cleanup(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    completed_path = tmp_path / "completed.json"
+    unresolved_path = tmp_path / "unresolved.json"
+    completed_path.write_text("version one", encoding="utf-8")
+    unresolved_path.write_text("current partial", encoding="utf-8")
+    original_unlink = Path.unlink
+    retained = []
+
+    def retain_first_backup(target, *args, **kwargs):
+        if target.name.endswith(".bak") and (not retained or target == retained[0]):
+            if not retained:
+                retained.append(target)
+            raise PermissionError("authorized backup cleanup failed")
+        return original_unlink(target, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", retain_first_backup)
+    first_result = atomic.commit_staged([atomic.stage_text(completed_path, "version two")])
+    assert first_result.cleanup_pending is True
+    unresolved_backup = tmp_path / "unresolved.json.interrupted.bak"
+    unresolved_backup.write_text("recoverable unresolved", encoding="utf-8")
+    completed_stage = atomic.stage_text(completed_path, "version three")
+    unresolved_stage = atomic.stage_text(unresolved_path, "next partial")
+
+    def fail_authorized_and_staged_cleanup(target, *args, **kwargs):
+        if target == retained[0]:
+            raise PermissionError("authorized backup cleanup failed")
+        if target == unresolved_stage.temporary:
+            raise PermissionError("unresolved staged cleanup failed")
+        return original_unlink(target, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", fail_authorized_and_staged_cleanup)
+
+    with pytest.raises(atomic.PublicationOperationError) as raised:
+        atomic.commit_staged([completed_stage, unresolved_stage])
+
+    assert "unresolved publication backup" in raised.value.primary_failure
+    assert any("authorized backup cleanup failed" in failure for failure in raised.value.cleanup_failures)
+    assert any("unresolved staged cleanup failed" in failure for failure in raised.value.cleanup_failures)
+    assert unresolved_backup.exists()
+    assert not completed_stage.temporary.exists()
+    assert unresolved_stage.temporary.exists()
 
 
 def test_unresolved_recovery_backup_blocks_publish_but_discards_new_stage(tmp_path):
