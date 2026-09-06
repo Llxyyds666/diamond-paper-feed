@@ -4,9 +4,11 @@ import argparse
 import csv
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
+import io
 from pathlib import Path
 from typing import Callable, Iterable
 
+from diamond_feed.atomic import atomic_write_text, commit_staged, discard_staged, stage_text
 from diamond_feed.config import load_config
 from diamond_feed.filtering import QueryRules, load_rules, matches_rules
 from diamond_feed.http import FetchError, fetch_bytes
@@ -15,7 +17,7 @@ from diamond_feed.normalize import merge_records, record_key
 from diamond_feed.render import render_rss
 from diamond_feed.sources import arxiv, crossref, openalex
 from diamond_feed.sources.rss import collect_rss
-from diamond_feed.state import FeedState, load_state, save_state
+from diamond_feed.state import FeedState, load_state, stage_state
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,26 +98,12 @@ def _collect_scholarly(
 
 
 def _write_failures(path: Path, failures: list[SourceFailure]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.writer(handle, delimiter="\t", lineterminator="\n")
-        writer.writerow(["timestamp", "category", "url", "detail"])
-        for failure in failures:
-            writer.writerow([failure.timestamp.astimezone(timezone.utc).isoformat(), failure.category, failure.url, failure.detail])
-
-
-def _atomic_write_text(path: Path, contents: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f"{path.name}.tmp")
-    try:
-        with temporary.open("w", encoding="utf-8", newline="\n") as handle:
-            handle.write(contents)
-            handle.flush()
-            __import__("os").fsync(handle.fileno())
-        __import__("os").replace(temporary, path)
-    except Exception:
-        temporary.unlink(missing_ok=True)
-        raise
+    output = io.StringIO(newline="")
+    writer = csv.writer(output, delimiter="\t", lineterminator="\n")
+    writer.writerow(["timestamp", "category", "url", "detail"])
+    for failure in failures:
+        writer.writerow([failure.timestamp.astimezone(timezone.utc).isoformat(), failure.category, failure.url, failure.detail])
+    atomic_write_text(path, output.getvalue())
 
 
 def main(argv: list[str] | None = None, *, now: Callable[[], datetime] | None = None) -> int:
@@ -164,8 +152,14 @@ def main(argv: list[str] | None = None, *, now: Callable[[], datetime] | None = 
     for source_name in successful_sources:
         state.source_watermarks[source_name] = current_time.isoformat()
     xml = render_rss(list(state.papers.values()), config.publication.title, config.publication.base_url, config.collection.raw_feed_max_items)
-    _atomic_write_text(args.feed, xml)
-    save_state(args.state, state)
+    staged = []
+    try:
+        staged.append(stage_state(args.state, state))
+        staged.append(stage_text(args.feed, xml))
+    except Exception:
+        discard_staged(staged)
+        raise
+    commit_staged(staged)
     return 0
 
 

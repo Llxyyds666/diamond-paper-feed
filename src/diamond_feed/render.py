@@ -12,7 +12,19 @@ ElementTree.register_namespace("dc", DC_NS)
 
 
 def _element(parent: ElementTree.Element, name: str, value: str) -> None:
-    ElementTree.SubElement(parent, name).text = value
+    ElementTree.SubElement(parent, name).text = _xml_text(value)
+
+
+def _xml_text(value: str) -> str:
+    """Remove code points forbidden by XML 1.0 while retaining legal whitespace."""
+    return "".join(
+        character
+        for character in value
+        if (code := ord(character)) in (0x9, 0xA, 0xD)
+        or 0x20 <= code <= 0xD7FF
+        or 0xE000 <= code <= 0xFFFD
+        or 0x10000 <= code <= 0x10FFFF
+    )
 
 
 def render_rss(records: list[PaperRecord], title: str, link: str, limit: int) -> str:

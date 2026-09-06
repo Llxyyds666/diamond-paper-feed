@@ -1,14 +1,33 @@
 """Durable, versioned storage for collected papers."""
 
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 import json
-import os
+import math
 from pathlib import Path
 
+from diamond_feed.atomic import StagedFile, commit_staged, stage_text
 from diamond_feed.models import PaperRecord
+from diamond_feed.normalize import record_key
 
 
 STATE_VERSION = 1
+ROOT_FIELDS = {"version", "papers", "pending_ai", "source_watermarks"}
+PAPER_FIELDS = {
+    "title",
+    "abstract",
+    "authors",
+    "journal",
+    "published_at",
+    "doi",
+    "url",
+    "sources",
+    "source_ids",
+    "categories",
+    "summary_zh",
+    "ai_relevant",
+    "ai_confidence",
+}
 
 
 @dataclass(slots=True)
@@ -22,27 +41,105 @@ class FeedState:
         return cls()
 
 
+def _aware_datetime(value: object, field_name: str) -> datetime:
+    if type(value) is not str:
+        raise ValueError(f"{field_name} must be an ISO datetime string")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise ValueError(f"{field_name} must be a parseable ISO datetime") from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError(f"{field_name} must include a timezone")
+    return parsed.astimezone(timezone.utc)
+
+
+def _string_list(value: object, field_name: str) -> list[str]:
+    if type(value) is not list or not all(type(item) is str for item in value):
+        raise ValueError(f"{field_name} must be a JSON array of strings")
+    return list(value)
+
+
+def _paper_from_payload(payload: object) -> PaperRecord:
+    if type(payload) is not dict or set(payload) != PAPER_FIELDS:
+        raise ValueError("paper must contain the exact schema fields")
+    for field_name in ("title", "abstract", "journal", "url"):
+        if type(payload[field_name]) is not str:
+            raise ValueError(f"paper {field_name} must be a string")
+    for field_name in ("authors", "sources", "source_ids", "categories"):
+        _string_list(payload[field_name], f"paper {field_name}")
+    for field_name in ("doi", "summary_zh"):
+        if payload[field_name] is not None and type(payload[field_name]) is not str:
+            raise ValueError(f"paper {field_name} must be a string or null")
+    if payload["ai_relevant"] is not None and type(payload["ai_relevant"]) is not bool:
+        raise ValueError("paper ai_relevant must be a boolean or null")
+    confidence = payload["ai_confidence"]
+    if confidence is not None and (type(confidence) not in (int, float) or not math.isfinite(confidence)):
+        raise ValueError("paper ai_confidence must be a finite number or null")
+    published_at = _aware_datetime(payload["published_at"], "paper published_at")
+    return PaperRecord(
+        title=payload["title"],
+        abstract=payload["abstract"],
+        authors=list(payload["authors"]),
+        journal=payload["journal"],
+        published_at=published_at,
+        doi=payload["doi"],
+        url=payload["url"],
+        sources=list(payload["sources"]),
+        source_ids=list(payload["source_ids"]),
+        categories=list(payload["categories"]),
+        summary_zh=payload["summary_zh"],
+        ai_relevant=payload["ai_relevant"],
+        ai_confidence=None if confidence is None else float(confidence),
+    )
+
+
+def _validate_state(state: FeedState) -> None:
+    if type(state.papers) is not dict or not all(type(key) is str and isinstance(value, PaperRecord) for key, value in state.papers.items()):
+        raise ValueError("papers must map string keys to PaperRecord values")
+    for key, record in state.papers.items():
+        validated_record = _paper_from_payload(_paper_payload(record))
+        if key != record_key(validated_record):
+            raise ValueError(f"paper key is not canonical: {key}")
+    if type(state.pending_ai) is not list or not all(type(key) is str for key in state.pending_ai):
+        raise ValueError("pending_ai must be a list of strings")
+    if len(state.pending_ai) != len(set(state.pending_ai)):
+        raise ValueError("pending_ai keys must be unique")
+    if not set(state.pending_ai) <= set(state.papers):
+        raise ValueError("pending_ai keys must exist in papers")
+    if type(state.source_watermarks) is not dict or not all(type(key) is str for key in state.source_watermarks):
+        raise ValueError("source_watermarks must map string keys to ISO datetimes")
+    for value in state.source_watermarks.values():
+        _aware_datetime(value, "source watermark")
+
+
 def _as_state(payload: object) -> FeedState:
-    if not isinstance(payload, dict):
+    if type(payload) is not dict:
         raise ValueError("state must be a JSON object")
     if payload.get("version") != STATE_VERSION or type(payload.get("version")) is not int:
         raise ValueError(f"unsupported state version: {payload.get('version')!r}")
+    if set(payload) != ROOT_FIELDS:
+        raise ValueError("state must contain the exact schema fields")
     papers = payload.get("papers")
     pending_ai = payload.get("pending_ai")
     source_watermarks = payload.get("source_watermarks")
-    if not isinstance(papers, dict) or not isinstance(pending_ai, list) or not isinstance(source_watermarks, dict):
+    if type(papers) is not dict or type(pending_ai) is not list or type(source_watermarks) is not dict:
         raise ValueError("malformed state schema")
-    if not all(isinstance(key, str) and isinstance(value, dict) for key, value in papers.items()):
-        raise ValueError("malformed papers in state")
-    if not all(isinstance(key, str) for key in pending_ai):
-        raise ValueError("malformed pending_ai in state")
-    if not all(isinstance(key, str) and isinstance(value, str) for key, value in source_watermarks.items()):
-        raise ValueError("malformed source_watermarks in state")
-    return FeedState(
-        papers={key: PaperRecord.from_dict(value) for key, value in papers.items()},
+    normalized_watermarks = {
+        key: _aware_datetime(value, "source watermark").isoformat()
+        for key, value in source_watermarks.items()
+        if type(key) is str
+    }
+    if len(normalized_watermarks) != len(source_watermarks):
+        raise ValueError("source watermark keys must be strings")
+    state = FeedState(
+        papers={key: _paper_from_payload(value) for key, value in papers.items() if type(key) is str},
         pending_ai=list(pending_ai),
-        source_watermarks=dict(source_watermarks),
+        source_watermarks=normalized_watermarks,
     )
+    if len(state.papers) != len(papers):
+        raise ValueError("paper keys must be strings")
+    _validate_state(state)
+    return state
 
 
 def load_state(path: Path) -> FeedState:
@@ -56,25 +153,44 @@ def load_state(path: Path) -> FeedState:
 
 
 def _payload(state: FeedState) -> dict[str, object]:
+    _validate_state(state)
     return {
         "version": STATE_VERSION,
-        "papers": {key: record.to_dict() for key, record in state.papers.items()},
+        "papers": {key: _paper_payload(record) for key, record in state.papers.items()},
         "pending_ai": list(state.pending_ai),
-        "source_watermarks": dict(state.source_watermarks),
+        "source_watermarks": {
+            key: _aware_datetime(value, "source watermark").isoformat()
+            for key, value in state.source_watermarks.items()
+        },
     }
 
 
+def _paper_payload(record: PaperRecord) -> dict[str, object]:
+    return {
+        "title": record.title,
+        "abstract": record.abstract,
+        "authors": list(record.authors) if type(record.authors) is list else record.authors,
+        "journal": record.journal,
+        "published_at": record.published_at.astimezone(timezone.utc).isoformat()
+        if isinstance(record.published_at, datetime) and record.published_at.tzinfo is not None and record.published_at.utcoffset() is not None
+        else record.published_at,
+        "doi": record.doi,
+        "url": record.url,
+        "sources": list(record.sources) if type(record.sources) is list else record.sources,
+        "source_ids": list(record.source_ids) if type(record.source_ids) is list else record.source_ids,
+        "categories": list(record.categories) if type(record.categories) is list else record.categories,
+        "summary_zh": record.summary_zh,
+        "ai_relevant": record.ai_relevant,
+        "ai_confidence": record.ai_confidence,
+    }
+
+
+def stage_state(path: Path, state: FeedState) -> StagedFile:
+    """Validate and durably stage state without replacing the last good file."""
+    contents = json.dumps(_payload(state), ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n"
+    return stage_text(path, contents)
+
+
 def save_state(path: Path, state: FeedState) -> None:
-    """Atomically publish a complete state file after syncing its sibling temporary file."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f"{path.name}.tmp")
-    try:
-        with temporary.open("w", encoding="utf-8", newline="\n") as handle:
-            json.dump(_payload(state), handle, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
-            handle.write("\n")
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, path)
-    except Exception:
-        temporary.unlink(missing_ok=True)
-        raise
+    """Atomically publish a validated state file."""
+    commit_staged([stage_state(path, state)])

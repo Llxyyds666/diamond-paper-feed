@@ -33,9 +33,9 @@ def test_save_state_flushes_fsyncs_and_replaces_sibling_temp(tmp_path, monkeypat
     real_fsync = os.fsync
     real_replace = os.replace
 
-    monkeypatch.setattr("diamond_feed.state.os.fsync", lambda fd: calls.append(("fsync", fd)) or real_fsync(fd))
+    monkeypatch.setattr("diamond_feed.atomic.os.fsync", lambda fd: calls.append(("fsync", fd)) or real_fsync(fd))
     monkeypatch.setattr(
-        "diamond_feed.state.os.replace",
+        "diamond_feed.atomic.os.replace",
         lambda source, target: calls.append(("replace", Path(source), Path(target))) or real_replace(source, target),
     )
 
@@ -54,6 +54,99 @@ def test_load_state_rejects_unsupported_or_malformed_version(tmp_path, payload):
     path.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(ValueError, match="version"):
         load_state(path)
+
+
+def test_default_empty_rss_registry_is_readable():
+    from diamond_feed.collect import _read_sources
+
+    assert _read_sources(Path("config/rss_sources.tsv")) == []
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda payload: payload.update(extra=True),
+        lambda payload: payload["papers"][next(iter(payload["papers"]))].update(extra=True),
+        lambda payload: payload["papers"][next(iter(payload["papers"]))].update(authors="AB"),
+        lambda payload: payload["papers"][next(iter(payload["papers"]))].update(ai_relevant="false"),
+        lambda payload: payload["papers"][next(iter(payload["papers"]))].update(ai_confidence=True),
+        lambda payload: payload["papers"][next(iter(payload["papers"]))].update(published_at="2026-09-01T00:00:00"),
+        lambda payload: payload.update(pending_ai=[next(iter(payload["papers"])), next(iter(payload["papers"]))]),
+        lambda payload: payload.update(pending_ai=["doi:10.1000/missing"]),
+        lambda payload: payload.update(source_watermarks={"openalex": "2026-09-01T00:00:00"}),
+    ],
+    ids=[
+        "unknown-root-field",
+        "unknown-paper-field",
+        "string-authors",
+        "string-bool",
+        "bool-as-number",
+        "naive-paper-time",
+        "duplicate-pending",
+        "missing-pending-paper",
+        "naive-watermark",
+    ],
+)
+def test_load_state_rejects_non_strict_schema_and_broken_invariants(tmp_path, mutate):
+    from diamond_feed.state import load_state
+
+    record = _paper("Diamond strict schema", "abstract", "10.1000/strict", 1)
+    key = record_key(record)
+    payload = {"version": 1, "papers": {key: record.to_dict()}, "pending_ai": [key], "source_watermarks": {}}
+    mutate(payload)
+    path = tmp_path / "state.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="invalid state"):
+        load_state(path)
+
+
+def test_load_state_rejects_noncanonical_paper_key_and_normalizes_watermark_to_utc(tmp_path):
+    from diamond_feed.state import load_state
+
+    record = _paper("Diamond canonical key", "abstract", "10.1000/canonical", 1)
+    payload = {
+        "version": 1,
+        "papers": {"wrong": record.to_dict()},
+        "pending_ai": [],
+        "source_watermarks": {"openalex": "2026-09-01T08:00:00+08:00"},
+    }
+    path = tmp_path / "state.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ValueError, match="key"):
+        load_state(path)
+
+    payload["papers"] = {record_key(record): record.to_dict()}
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    assert load_state(path).source_watermarks["openalex"] == "2026-09-01T00:00:00+00:00"
+
+
+def test_save_state_rejects_invalid_in_memory_state_before_replacing(tmp_path):
+    from diamond_feed.state import FeedState, save_state
+
+    path = tmp_path / "state.json"
+    path.write_text("old state", encoding="utf-8")
+    record = _paper("Diamond invalid state", "abstract", "10.1000/invalid-state", 1)
+    state = FeedState(papers={"wrong": record}, pending_ai=["wrong"], source_watermarks={})
+
+    with pytest.raises(ValueError, match="key"):
+        save_state(path, state)
+
+    assert path.read_text(encoding="utf-8") == "old state"
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_save_state_reports_invalid_runtime_field_as_validation_error(tmp_path):
+    from diamond_feed.state import FeedState, save_state
+
+    record = _paper("Diamond invalid DOI", "abstract", "10.1000/invalid-doi", 1)
+    key = record_key(record)
+    record.doi = 123  # type: ignore[assignment]
+
+    with pytest.raises(ValueError, match="doi"):
+        save_state(tmp_path / "state.json", FeedState(papers={key: record}, pending_ai=[key], source_watermarks={}))
+
+    assert not list(tmp_path.glob("*.tmp"))
 
 
 def test_merge_deduplicates_and_keeps_pending_queue_oldest_first(query_rules):
@@ -104,6 +197,24 @@ def test_raw_rss_is_valid_sorted_escaped_and_bounded(diamond_records):
     assert items[0].findtext(dc + "source") == "Diamond Journal"
     assert items[0].findtext(dc + "identifier") == "10.1000/special"
     assert any(item.findtext("guid") == "doi:10.1000/diamond.1" for item in items)
+
+
+def test_raw_rss_removes_xml_1_0_forbidden_characters_from_all_text():
+    from diamond_feed.render import render_rss
+
+    record = _paper("Diamond\x00 title\ud800", "abstract\x08\x0b\x0c\x1f￾\nkept", "10.1000/control", 1)
+    record.authors = ["A\x00 Author"]
+    record.journal = "Journal\x00"
+    record.url = "https://example.test/\x00paper"
+    xml = render_rss([record], "Feed\x00\ud800", "https://example.test/\x08", 1)
+
+    root = ElementTree.fromstring(xml)
+
+    assert root.findtext("./channel/title") == "Feed"
+    assert root.findtext("./channel/item/title") == "Diamond title"
+    assert root.findtext("./channel/item/description") == "abstract\nkept"
+    for forbidden in ("\x00", "\x08", "\x0b", "\x0c", "\x1f", "￾", "\ud800"):
+        assert forbidden not in xml
 
 
 def test_collection_isolates_adapters_persists_success_and_reports_failures(tmp_path, monkeypatch, query_rules):
@@ -160,6 +271,57 @@ def test_collection_uses_watermark_or_30_day_bootstrap_and_all_failure_preserves
     assert ("crossref", (now - timedelta(days=30)).date()) in requested_dates
 
 
+def test_collection_state_staging_failure_preserves_old_outputs_and_cleans_temps(tmp_path, monkeypatch):
+    from diamond_feed import collect
+    from diamond_feed.state import FeedState, save_state
+
+    paths = _successful_collection(tmp_path, monkeypatch)
+    config, sources, queries, state_path, feed_path, failures = paths
+    save_state(state_path, FeedState.empty())
+    old_state = state_path.read_text(encoding="utf-8")
+    feed_path.write_text("old feed", encoding="utf-8")
+    monkeypatch.setattr(collect, "stage_state", lambda *args: (_ for _ in ()).throw(OSError("state stage failed")), raising=False)
+
+    with pytest.raises(OSError, match="state stage failed"):
+        collect.main(_collection_args(paths), now=lambda: datetime(2026, 9, 5, tzinfo=timezone.utc))
+
+    assert state_path.read_text(encoding="utf-8") == old_state
+    assert feed_path.read_text(encoding="utf-8") == "old feed"
+    assert not list(tmp_path.glob("*.tmp"))
+    assert not list(tmp_path.glob("*.bak"))
+
+
+@pytest.mark.parametrize("failed_destination", ["feed.xml", "state.json"])
+def test_collection_commit_failure_rolls_back_both_outputs_and_cleans_artifacts(tmp_path, monkeypatch, failed_destination):
+    from diamond_feed import atomic, collect
+    from diamond_feed.state import FeedState, save_state
+
+    paths = _successful_collection(tmp_path, monkeypatch)
+    config, sources, queries, state_path, feed_path, failures = paths
+    save_state(state_path, FeedState.empty())
+    old_state = state_path.read_text(encoding="utf-8")
+    old_feed = "old feed"
+    feed_path.write_text(old_feed, encoding="utf-8")
+    real_replace = os.replace
+
+    def fail_selected_commit(source, destination):
+        source_path = Path(source)
+        destination_path = Path(destination)
+        if source_path.name.endswith(".tmp") and destination_path.name == failed_destination:
+            raise OSError(f"{failed_destination} commit failed")
+        return real_replace(source, destination)
+
+    monkeypatch.setattr(atomic.os, "replace", fail_selected_commit)
+
+    with pytest.raises(OSError, match="commit failed"):
+        collect.main(_collection_args(paths), now=lambda: datetime(2026, 9, 5, tzinfo=timezone.utc))
+
+    assert state_path.read_text(encoding="utf-8") == old_state
+    assert feed_path.read_text(encoding="utf-8") == old_feed
+    assert not list(tmp_path.glob("*.tmp"))
+    assert not list(tmp_path.glob("*.bak"))
+
+
 def _paper(title, abstract, doi, day, source="rss"):
     return PaperRecord(title=title, abstract=abstract, authors=["A. Author"], journal="Diamond Journal", published_at=datetime(2026, 9, day, tzinfo=timezone.utc), doi=doi, url=f"https://doi.org/{doi}", sources=[source], source_ids=[f"{source}:{doi}"])
 
@@ -171,3 +333,18 @@ def _collection_paths(tmp_path):
     queries = tmp_path / "queries.json"
     queries.write_text(Path("config/queries.json").read_text(encoding="utf-8"), encoding="utf-8")
     return config, sources, queries, tmp_path / "state.json", tmp_path / "feed.xml", tmp_path / "failures.tsv"
+
+
+def _successful_collection(tmp_path, monkeypatch):
+    from diamond_feed import collect
+
+    paths = _collection_paths(tmp_path)
+    paths[1].write_text("name\tcategory\turl\n", encoding="utf-8")
+    record = _paper("Diamond transaction", "abstract", "10.1000/transaction", 1)
+    monkeypatch.setattr(collect, "_collect_scholarly", lambda *args, **kwargs: [(args[0], [record], None)])
+    return paths
+
+
+def _collection_args(paths):
+    config, sources, queries, state_path, feed_path, failures = paths
+    return ["--config", str(config), "--state", str(state_path), "--sources", str(sources), "--queries", str(queries), "--feed", str(feed_path), "--failures", str(failures)]
