@@ -1,6 +1,40 @@
 timestamp	category	url	detail
-2026-09-07T06:28:23.323262+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
-2026-09-07T06:28:28.665986+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
-2026-09-07T06:28:29.256985+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aaemcq&type=etoc&feed=rss	HTTP 403
-2026-09-07T06:28:29.889313+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aelccp&type=etoc&feed=rss	HTTP 403
-2026-09-07T06:29:05.750605+00:00	network_error	https://api.openalex.org/works?search=diamond&filter=from_publication_date%3A2026-08-08&per-page=200&cursor=Ils1LjAyOTY4MTcsIDE3ODg1NjY0MDAwMDAsICdodHRwczovL29wZW5hbGV4Lm9yZy9XNzIwODgyODE0MSddIg%3D%3D&select=id%2Cdoi%2Ctitle%2Cdisplay_name%2Cpublication_date%2Cauthorships%2Cprimary_location%2Cabstract_inverted_index	network_error
+2026-09-07T14:51:50.355322+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC62.XML	HTTP 418
+2026-09-07T14:51:50.423763+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC53.XML	HTTP 418
+2026-09-07T14:51:50.476695+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC67.XML	HTTP 418
+2026-09-07T14:51:50.527955+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC54.XML	HTTP 418
+2026-09-07T14:51:50.639039+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC57.XML	HTTP 418
+2026-09-07T14:51:50.769587+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC55.XML	HTTP 418
+2026-09-07T14:51:50.879798+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC51.XML	HTTP 418
+2026-09-07T14:51:51.000765+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC64.XML	HTTP 418
+2026-09-07T14:51:51.107697+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC48.XML	HTTP 418
+2026-09-07T14:51:51.165914+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC56.XML	HTTP 418
+2026-09-07T14:51:51.286472+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC49.XML	HTTP 418
+2026-09-07T14:51:51.393650+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC65.XML	HTTP 418
+2026-09-07T14:51:51.500568+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC68.XML	HTTP 418
+2026-09-07T14:51:51.554911+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC52.XML	HTTP 418
+2026-09-07T14:51:51.678235+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC60.XML	HTTP 418
+2026-09-07T14:51:51.797654+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC91.XML	HTTP 418
+2026-09-07T14:51:51.929519+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC61.XML	HTTP 418
+2026-09-07T14:51:52.048524+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC63.XML	HTTP 418
+2026-09-07T14:51:52.178344+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC59.XML	HTTP 418
+2026-09-07T14:51:52.237940+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC66.XML	HTTP 418
+2026-09-07T14:51:52.347300+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC58.XML	HTTP 418
+2026-09-07T14:51:52.459101+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC92.XML	HTTP 418
+2026-09-07T14:51:52.549409+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC90.XML	HTTP 418
+2026-09-07T14:51:56.762517+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC50.XML	HTTP 418
+2026-09-07T14:51:58.196412+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10836&sortOrder=newest	malformed feed
+2026-09-07T14:51:58.292980+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10853&sortOrder=newest	malformed feed
+2026-09-07T14:51:58.369960+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10854&sortOrder=newest	malformed feed
+2026-09-07T14:51:58.445225+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=11051&sortOrder=newest	malformed feed
+2026-09-07T14:51:58.539614+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=11664&sortOrder=newest	malformed feed
+2026-09-07T14:51:58.600170+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=12274&sortOrder=newest	malformed feed
+2026-09-07T14:51:58.672885+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=12598&sortOrder=newest	malformed feed
+2026-09-07T14:51:58.760789+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=340&sortOrder=newest	malformed feed
+2026-09-07T14:51:58.838478+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=40823&sortOrder=newest	malformed feed
+2026-09-07T14:52:19.860038+00:00	http_403	https://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=ghpr20	HTTP 403
+2026-09-07T14:52:19.894512+00:00	http_403	https://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=tetn	HTTP 403
+2026-09-07T14:52:21.233191+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	malformed feed
+2026-09-07T14:52:21.311523+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	malformed feed
+2026-09-07T14:52:21.682524+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aaemcq&type=etoc&feed=rss	HTTP 403
+2026-09-07T14:52:21.804701+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aelccp&type=etoc&feed=rss	HTTP 403
