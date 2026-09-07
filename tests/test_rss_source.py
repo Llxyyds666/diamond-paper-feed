@@ -22,6 +22,32 @@ def test_parse_atom_feed_to_canonical_records():
     assert records[1].source_ids == ["tag:feed.test,2026:diamond-2"]
 
 
+def test_parse_rss_normalizes_semicolon_delimited_scalar_authors():
+    body = b"""<?xml version='1.0'?>
+<rss version='2.0'><channel><title>IEEE Diamond Journal</title>
+<item><title>Diamond device</title><link>https://example.test/paper</link>
+<pubDate>Sun, 06 Sep 2026 00:00:00 GMT</pubDate>
+<authors>Alice Author; Bob Researcher;</authors></item>
+</channel></rss>"""
+
+    records = parse_feed(body, "https://ieeexplore.ieee.org/rss/TOC55.XML")
+
+    assert records[0].authors == ["Alice Author", "Bob Researcher"]
+
+
+def test_parse_rss_collapses_whitespace_inside_mapped_author_names():
+    body = b"""<?xml version='1.0'?>
+<rss xmlns:dc='http://purl.org/dc/elements/1.1/' version='2.0'>
+<channel><title>Diamond Journal</title><item><title>Diamond device</title>
+<link>https://example.test/paper</link>
+<pubDate>Sun, 06 Sep 2026 00:00:00 GMT</pubDate>
+<dc:creator>Alice Author,\n  Bob Researcher</dc:creator></item></channel></rss>"""
+
+    records = parse_feed(body, "https://feed.test/rss")
+
+    assert records[0].authors == ["Alice Author, Bob Researcher"]
+
+
 def test_failure_taxonomy_distinguishes_hard_and_soft_failures():
     assert classify_failure(404, None, False) == "http_404"
     assert classify_failure(410, None, False) == "http_410"

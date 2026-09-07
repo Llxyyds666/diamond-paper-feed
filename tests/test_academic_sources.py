@@ -29,6 +29,18 @@ def test_source_urls_have_date_window_encoded_query_and_rows():
     assert "%26" in arxiv_url
 
 
+def test_json_source_page_sizes_are_capped_at_public_api_limits():
+    openalex_query = parse_qs(
+        urlparse(openalex.build_url("diamond", date(2026, 8, 1), 2000)).query
+    )
+    crossref_query = parse_qs(
+        urlparse(crossref.build_url("diamond", date(2026, 8, 1), 2000)).query
+    )
+
+    assert openalex_query["per-page"] == ["200"]
+    assert crossref_query["rows"] == ["1000"]
+
+
 def test_openalex_reconstructs_inverted_abstract_stably_and_handles_none():
     assert openalex.reconstruct_abstract({"third": [2], "first": [0], "second": [1]}) == "first second third"
     assert openalex.reconstruct_abstract(None) == ""

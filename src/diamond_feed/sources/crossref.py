@@ -12,12 +12,14 @@ from diamond_feed.normalize import normalize_doi
 
 _BASE_URL = "https://api.crossref.org/works"
 _SELECT = "DOI,title,abstract,author,container-title,published-online,published-print,URL"
+_MAX_PAGE_SIZE = 1000
 _TAGS = re.compile(r"<[^>]+>")
 
 
 def build_url(query: str, from_date: date, rows: int) -> str:
     """Build the Crossref works request for a caller-supplied date window."""
-    return f"{_BASE_URL}?{urlencode({'query.bibliographic': query, 'filter': f'from-pub-date:{from_date.isoformat()}', 'rows': rows, 'select': _SELECT})}"
+    page_size = min(rows, _MAX_PAGE_SIZE)
+    return f"{_BASE_URL}?{urlencode({'query.bibliographic': query, 'filter': f'from-pub-date:{from_date.isoformat()}', 'rows': page_size, 'select': _SELECT})}"
 
 
 def _strip_tags(value: object) -> str:

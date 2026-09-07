@@ -63,6 +63,18 @@ def _entry_url(entry: object, source_url: str) -> str:
     return identifier if identifier.startswith(("http://", "https://")) else source_url
 
 
+def _authors(entry: object) -> list[str]:
+    raw_authors = entry.get("authors", [])  # type: ignore[union-attr]
+    if isinstance(raw_authors, str):
+        return [name for value in raw_authors.split(";") if (name := " ".join(value.split()))]
+    authors = []
+    for author in raw_authors:
+        name = " ".join(str(author.get("name", "")).split())
+        if name:
+            authors.append(name)
+    return authors
+
+
 def parse_feed(body: bytes, source_url: str) -> list[PaperRecord]:
     parsed = feedparser.parse(body)
     entries = list(parsed.entries)
@@ -72,7 +84,7 @@ def parse_feed(body: bytes, source_url: str) -> list[PaperRecord]:
     records: list[PaperRecord] = []
     for entry in entries:
         published_at, categories = _publication_date(entry)
-        authors = [str(author.get("name", "")) for author in entry.get("authors", []) if author.get("name")]
+        authors = _authors(entry)
         record_journal = str(entry.get("journal") or entry.get("prism_publicationname") or journal)
         source_id = str(entry.get("id") or entry.get("link") or entry.get("title", ""))
         records.append(

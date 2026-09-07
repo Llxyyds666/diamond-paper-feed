@@ -10,11 +10,13 @@ from diamond_feed.normalize import normalize_doi
 
 _BASE_URL = "https://api.openalex.org/works"
 _SELECT = "id,doi,title,display_name,publication_date,authorships,primary_location,abstract_inverted_index"
+_MAX_PAGE_SIZE = 200
 
 
 def build_url(query: str, from_date: date, rows: int) -> str:
     """Build the OpenAlex works request for a caller-supplied date window."""
-    return f"{_BASE_URL}?{urlencode({'search': query, 'filter': f'from_publication_date:{from_date.isoformat()}', 'per-page': rows, 'select': _SELECT})}"
+    page_size = min(rows, _MAX_PAGE_SIZE)
+    return f"{_BASE_URL}?{urlencode({'search': query, 'filter': f'from_publication_date:{from_date.isoformat()}', 'per-page': page_size, 'select': _SELECT})}"
 
 
 def reconstruct_abstract(index: dict[str, list[int]] | None) -> str:
