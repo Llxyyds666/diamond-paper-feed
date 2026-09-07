@@ -1,0 +1,35 @@
+timestamp	category	url	detail
+2026-09-07T02:17:48.688663+00:00	timeout	https://export.arxiv.org/api/query?search_query=all:%22dion-jacobson%22+AND+all:perovskite&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://export.arxiv.org/api/query?search_query=all:%22quasi-2d%22+AND+all:perovskite&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://export.arxiv.org/api/query?search_query=all:%22ruddlesden-popper%22+AND+all:perovskite&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://export.arxiv.org/api/query?search_query=all:perovskite+AND+all:%22solar+cell%22&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://export.arxiv.org/api/query?search_query=all:perovskite+AND+all:tandem&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending	timeout
+2026-09-07T02:17:48.688663+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
+2026-09-07T02:17:48.688663+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
+2026-09-07T02:17:48.688663+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aaemcq&type=etoc&feed=rss	HTTP 403
+2026-09-07T02:17:48.688663+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aelccp&type=etoc&feed=rss	HTTP 403
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/00220248	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/00381101	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/00406090	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/01679260	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/01679317	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/01694332	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/01968904	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/02540584	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/02728842	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/03796779	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/07496036	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/09253467	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/09270248	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/13596454	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/13698001	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/13869477	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/18716763	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/18792391	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/20959273	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/22112855	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/22113797	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/2352152X	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/24058440	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/25425293	timeout
+2026-09-07T02:17:48.688663+00:00	timeout	https://rss.sciencedirect.com/publication/science/26671131	timeout

@@ -66,10 +66,14 @@ def test_load_state_rejects_unsupported_or_malformed_version(tmp_path, payload):
         load_state(path)
 
 
-def test_default_empty_rss_registry_is_readable():
+def test_default_rss_registry_is_readable():
     from diamond_feed.collect import _read_sources
 
-    assert _read_sources(Path("config/rss_sources.tsv")) == []
+    rows = _read_sources(Path("config/rss_sources.tsv"))
+
+    assert rows
+    assert all(set(row) == {"name", "category", "url"} for row in rows)
+    assert all(row["url"].startswith("https://") for row in rows)
 
 
 @pytest.mark.parametrize(
