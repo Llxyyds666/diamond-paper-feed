@@ -319,3 +319,58 @@ def test_screening_rejects_whole_batch_when_any_decision_is_invalid(ai_config, d
 
     with pytest.raises(ValueError, match="invalid model response"):
         screen_batch(diamond_records, client, ai_config, RequestBudget(1))
+
+
+def test_complete_json_accepts_a_strict_digest_object_without_weakening_screening(ai_config, diamond_records):
+    client = DeepSeekClient(
+        "test-api-key",
+        ai_config,
+        transport=lambda *args: _response('{"html":"<section><h2>概览</h2></section>"}'),
+    )
+
+    assert client.complete_json([], 10, RequestBudget(1)) == {
+        "html": "<section><h2>概览</h2></section>"
+    }
+
+    client = DeepSeekClient(
+        "test-api-key",
+        ai_config,
+        transport=lambda *args: _response('{"html":"<section></section>"}'),
+    )
+    with pytest.raises(ValueError, match="invalid model response"):
+        screen_batch(diamond_records[:1], client, ai_config, RequestBudget(1))
+
+
+def test_complete_json_accumulates_available_model_token_usage(ai_config):
+    responses = iter(
+        [
+            {
+                "choices": [{"message": {"content": "[]"}}],
+                "usage": {"prompt_tokens": 11, "completion_tokens": 4, "total_tokens": 15},
+            },
+            {
+                "choices": [{"message": {"content": "{}"}}],
+                "usage": {"prompt_tokens": 7, "completion_tokens": 2, "total_tokens": 9},
+            },
+        ]
+    )
+    client = DeepSeekClient("test-api-key", ai_config, transport=lambda *args: next(responses))
+    budget = RequestBudget(2)
+
+    client.complete_json([], 10, budget)
+    client.complete_json([], 10, budget)
+
+    assert (client.prompt_tokens, client.completion_tokens, client.total_tokens) == (18, 6, 24)
+
+
+def test_complete_json_counts_usage_from_an_invalid_json_completion(ai_config):
+    response = {
+        "choices": [{"message": {"content": "not JSON"}}],
+        "usage": {"prompt_tokens": 5, "completion_tokens": 1, "total_tokens": 6},
+    }
+    client = DeepSeekClient("test-api-key", ai_config, transport=lambda *args: response)
+
+    with pytest.raises(ValueError, match="invalid model response"):
+        client.complete_json([], 10, RequestBudget(1))
+
+    assert (client.prompt_tokens, client.completion_tokens, client.total_tokens) == (5, 1, 6)

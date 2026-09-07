@@ -82,17 +82,17 @@ def _duplicate_safe_object(pairs: list[tuple[str, object]]) -> dict[str, object]
     return result
 
 
-def _decode_model_array(content: str) -> list[object]:
+def _decode_model_json(content: str) -> list[object] | dict[str, object]:
     try:
         decoded = json.loads(content, object_pairs_hook=_duplicate_safe_object)
     except (TypeError, ValueError, json.JSONDecodeError) as error:
         raise _ModelResponseError from error
-    if type(decoded) is not list:
+    if type(decoded) not in (list, dict):
         raise _ModelResponseError
     return decoded
 
 
-def _extract_model_array(response: object) -> list[object]:
+def _extract_model_json(response: object) -> list[object] | dict[str, object]:
     if type(response) is not dict:
         raise _ModelResponseError
     choices = response.get("choices")
@@ -107,7 +107,23 @@ def _extract_model_array(response: object) -> list[object]:
     content = message.get("content")
     if type(content) is not str:
         raise _ModelResponseError
-    return _decode_model_array(content)
+    return _decode_model_json(content)
+
+
+def _response_usage(response: object) -> tuple[int, int] | None:
+    if type(response) is not dict or type(response.get("usage")) is not dict:
+        return None
+    usage = response["usage"]
+    prompt = usage.get("prompt_tokens")
+    completion = usage.get("completion_tokens")
+    if (
+        type(prompt) is not int
+        or prompt < 0
+        or type(completion) is not int
+        or completion < 0
+    ):
+        return None
+    return prompt, completion
 
 
 def _http_status(error: Exception) -> int | None:
@@ -140,6 +156,24 @@ class DeepSeekClient:
         self._key = key
         self._config = config
         self._transport = transport or self._default_transport
+        self._prompt_tokens = 0
+        self._completion_tokens = 0
+        self._usage_lock = Lock()
+
+    @property
+    def prompt_tokens(self) -> int:
+        with self._usage_lock:
+            return self._prompt_tokens
+
+    @property
+    def completion_tokens(self) -> int:
+        with self._usage_lock:
+            return self._completion_tokens
+
+    @property
+    def total_tokens(self) -> int:
+        with self._usage_lock:
+            return self._prompt_tokens + self._completion_tokens
 
     def _default_transport(
         self, url: str, headers: dict[str, str], payload: dict[str, object], timeout: float
@@ -183,10 +217,16 @@ class DeepSeekClient:
                 if _retryable(error):
                     continue
                 raise _safe_request_error(error, attempt) from None
+            usage = _response_usage(response)
+            if usage is not None:
+                with self._usage_lock:
+                    self._prompt_tokens += usage[0]
+                    self._completion_tokens += usage[1]
             try:
-                return _extract_model_array(response)
+                result = _extract_model_json(response)
             except _ModelResponseError:
                 raise ValueError("invalid model response") from None
+            return result
 
 
 def _screening_messages(records: Sequence[PaperRecord], config: AiConfig) -> list[dict[str, object]]:
