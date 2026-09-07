@@ -19,6 +19,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
         with:
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
       - name: Set up Python
@@ -40,7 +41,21 @@ jobs:
       - name: Commit and push summary outputs
         shell: bash
         run: |
-          git add -- ai_summary_feed.xml ai_summary.html ai_usage.json state.json
+          allowed_outputs=(
+            "ai_summary_feed.xml"
+            "ai_summary.html"
+            "ai_usage.json"
+            "state.json"
+          )
+          existing_outputs=()
+          for output in "${allowed_outputs[@]}"; do
+            if [[ -e "${output}" ]] || git ls-files --error-unmatch -- "${output}" > /dev/null 2>&1; then
+              existing_outputs+=("${output}")
+            fi
+          done
+          if (( ${#existing_outputs[@]} > 0 )); then
+            git add -- "${existing_outputs[@]}"
+          fi
           if git diff --cached --quiet; then
             echo "No summary output changes to publish."
             exit 0

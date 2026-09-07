@@ -20,7 +20,7 @@ def test_github_workflows_obey_the_automation_contract():
                 "python -m diamond_feed.collect --config paper_feed_config.json "
                 "--state state.json"
             ),
-            "staged": "git add -- filtered_feed.xml state.json fetch_failures.tsv",
+            "outputs": ("filtered_feed.xml", "state.json", "fetch_failures.tsv"),
         },
         "summarize": {
             "text": summarize,
@@ -29,8 +29,11 @@ def test_github_workflows_obey_the_automation_contract():
                 "python -m diamond_feed.summarize --config paper_feed_config.json "
                 "--state state.json"
             ),
-            "staged": (
-                "git add -- ai_summary_feed.xml ai_summary.html ai_usage.json state.json"
+            "outputs": (
+                "ai_summary_feed.xml",
+                "ai_summary.html",
+                "ai_usage.json",
+                "state.json",
             ),
         },
     }
@@ -42,17 +45,31 @@ def test_github_workflows_obey_the_automation_contract():
         assert "group: diamond-paper-feed-${{ github.ref }}" in text
         assert "cancel-in-progress: false" in text
         assert "uses: actions/checkout@v6" in text
+        assert "ref: ${{ github.ref_name }}" in text
         assert "fetch-depth: 0" in text
         assert "uses: actions/setup-python@v6" in text
         assert "python-version: '3.11'" in text
         assert 'python -m pip install ".[dev]"' in text
         assert "python -m pytest -q" in text
         assert contract["command"] in text
-        assert contract["staged"] in text
+        assert "allowed_outputs=(" in text
+        assert "existing_outputs=()" in text
+        assert 'for output in "${allowed_outputs[@]}"; do' in text
+        assert '[[ -e "${output}" ]]' in text
+        assert 'git ls-files --error-unmatch -- "${output}"' in text
+        assert 'existing_outputs+=("${output}")' in text
+        assert 'if (( ${#existing_outputs[@]} > 0 )); then' in text
+        assert 'git add -- "${existing_outputs[@]}"' in text
+        for output in contract["outputs"]:
+            assert f'"{output}"' in text
+        fixed_pathspec = "git add -- " + " ".join(contract["outputs"])
+        assert fixed_pathspec not in text
         assert "if git diff --cached --quiet; then" in text
         assert 'git pull --rebase origin "${GITHUB_REF_NAME}"' in text
         assert text.index("python -m pytest -q") < text.index(contract["command"])
-        assert text.index(contract["staged"]) < text.index("git commit -m")
+        assert text.index('git add -- "${existing_outputs[@]}"') < text.index(
+            "git commit -m"
+        )
         assert text.index("git commit -m") < text.index("git pull --rebase")
         assert text.index("git pull --rebase") < text.index("git push")
 
@@ -62,3 +79,18 @@ def test_github_workflows_obey_the_automation_contract():
         run: python -m diamond_feed.summarize --config paper_feed_config.json --state state.json
 """
     assert expected_digest_step in summarize
+
+
+def test_empty_summary_queue_can_publish_without_preexisting_output_files():
+    summarize = (WORKFLOW_DIRECTORY / "summarize.yml").read_text(encoding="utf-8")
+
+    guarded_add = """          if (( ${#existing_outputs[@]} > 0 )); then
+            git add -- "${existing_outputs[@]}"
+          fi
+          if git diff --cached --quiet; then
+"""
+    assert guarded_add in summarize
+    assert (
+        "git add -- ai_summary_feed.xml ai_summary.html ai_usage.json state.json"
+        not in summarize
+    )

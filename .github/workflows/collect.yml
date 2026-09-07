@@ -19,6 +19,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
         with:
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
       - name: Set up Python
@@ -38,7 +39,20 @@ jobs:
       - name: Commit and push collection outputs
         shell: bash
         run: |
-          git add -- filtered_feed.xml state.json fetch_failures.tsv
+          allowed_outputs=(
+            "filtered_feed.xml"
+            "state.json"
+            "fetch_failures.tsv"
+          )
+          existing_outputs=()
+          for output in "${allowed_outputs[@]}"; do
+            if [[ -e "${output}" ]] || git ls-files --error-unmatch -- "${output}" > /dev/null 2>&1; then
+              existing_outputs+=("${output}")
+            fi
+          done
+          if (( ${#existing_outputs[@]} > 0 )); then
+            git add -- "${existing_outputs[@]}"
+          fi
           if git diff --cached --quiet; then
             echo "No collection output changes to publish."
             exit 0
