@@ -1334,6 +1334,223 @@ def test_manifest_paths_with_parent_traversal_never_authorize_backup_cleanup(tmp
     assert not staged.temporary.exists()
 
 
+def test_collection_rejects_real_linked_output_parent_before_adapter_or_write(
+    tmp_path, monkeypatch
+):
+    from diamond_feed import collect
+
+    config, sources, queries, _, _, _ = _collection_paths(tmp_path)
+    controlled = tmp_path / "controlled"
+    external = tmp_path / "external"
+    controlled.mkdir()
+    external.mkdir()
+    linked_parent = controlled / "linked-output"
+    _require_directory_symlink(linked_parent, external)
+    state_path = linked_parent / "state.json"
+    feed_path = controlled / "feed.xml"
+    failure_path = controlled / "failures.tsv"
+    external_state = external / "state.json"
+    external_state.write_text(
+        json.dumps(
+            {"version": 1, "papers": {}, "pending_ai": [], "source_watermarks": {}}
+        ),
+        encoding="utf-8",
+    )
+    feed_path.write_text("old feed", encoding="utf-8")
+    failure_path.write_text("old failures", encoding="utf-8")
+    snapshots = {
+        external_state: external_state.read_bytes(),
+        feed_path: feed_path.read_bytes(),
+        failure_path: failure_path.read_bytes(),
+    }
+
+    def unexpected_source_call(*_args, **_kwargs):
+        raise AssertionError("linked output parent must be rejected before adapters")
+
+    monkeypatch.setattr(collect, "_read_sources", unexpected_source_call)
+    monkeypatch.setattr(collect, "_collect_scholarly", unexpected_source_call)
+
+    with pytest.raises(ValueError, match="ancestor|reparse|link"):
+        collect.main(
+            [
+                "--config", str(config),
+                "--state", str(state_path),
+                "--sources", str(sources),
+                "--queries", str(queries),
+                "--feed", str(feed_path),
+                "--failures", str(failure_path),
+            ]
+        )
+
+    for path, contents in snapshots.items():
+        assert path.read_bytes() == contents
+
+
+def test_commit_rejects_real_linked_manifest_parent_without_external_cleanup(tmp_path):
+    from diamond_feed import atomic
+
+    controlled = tmp_path / "controlled"
+    external = tmp_path / "external-manifest-root"
+    controlled.mkdir()
+    external.mkdir()
+    linked_parent = controlled / "publication"
+    _require_directory_symlink(linked_parent, external)
+    state_path = linked_parent / "state.json"
+    feed_path = linked_parent / "feed.xml"
+    external_state = external / "state.json"
+    external_feed = external / "feed.xml"
+    external_state.write_text("old state", encoding="utf-8")
+    external_feed.write_text("old feed", encoding="utf-8")
+    transaction_id = "d" * 32
+    external_manifest = external / (
+        f"{atomic.MANIFEST_PREFIX}{transaction_id}{atomic.MANIFEST_SUFFIX}"
+    )
+    external_manifest.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "transaction_id": transaction_id,
+                "destinations": [
+                    str(Path(os.path.abspath(os.path.normpath(state_path)))),
+                    str(Path(os.path.abspath(os.path.normpath(feed_path)))),
+                ],
+                "backups": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    state_temporary = controlled / "state.stage"
+    feed_temporary = controlled / "feed.stage"
+    state_temporary.write_text("new state", encoding="utf-8")
+    feed_temporary.write_text("new feed", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="ancestor|reparse|link"):
+        atomic.commit_staged(
+            [
+                atomic.StagedFile(state_path, state_temporary),
+                atomic.StagedFile(feed_path, feed_temporary),
+            ]
+        )
+
+    assert external_manifest.exists()
+    assert external_state.read_text(encoding="utf-8") == "old state"
+    assert external_feed.read_text(encoding="utf-8") == "old feed"
+    assert not state_temporary.exists()
+    assert not feed_temporary.exists()
+
+
+def test_commit_rejects_real_linked_backup_ancestor_without_external_cleanup(tmp_path):
+    from diamond_feed import atomic
+
+    controlled = tmp_path / "controlled"
+    external = tmp_path / "external-backup-root"
+    controlled.mkdir()
+    external.mkdir()
+    linked_parent = controlled / "linked-feed"
+    _require_directory_symlink(linked_parent, external)
+    state_path = controlled / "state.json"
+    feed_path = linked_parent / "feed.xml"
+    state_path.write_text("old state", encoding="utf-8")
+    external_feed = external / "feed.xml"
+    external_feed.write_text("old feed", encoding="utf-8")
+    transaction_id = "e" * 32
+    external_backup = external / f"feed.xml.{transaction_id}.bak"
+    external_backup.write_text("external recovery sentinel", encoding="utf-8")
+    manifest = controlled / (
+        f"{atomic.MANIFEST_PREFIX}{transaction_id}{atomic.MANIFEST_SUFFIX}"
+    )
+    lexical_state = Path(os.path.abspath(os.path.normpath(state_path)))
+    lexical_feed = Path(os.path.abspath(os.path.normpath(feed_path)))
+    lexical_backup = Path(os.path.abspath(os.path.normpath(linked_parent / external_backup.name)))
+    manifest.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "transaction_id": transaction_id,
+                "destinations": [str(lexical_state), str(lexical_feed)],
+                "backups": [str(lexical_backup)],
+            }
+        ),
+        encoding="utf-8",
+    )
+    state_temporary = controlled / "state.stage"
+    feed_temporary = controlled / "feed.stage"
+    state_temporary.write_text("new state", encoding="utf-8")
+    feed_temporary.write_text("new feed", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="ancestor|reparse|link"):
+        atomic.commit_staged(
+            [
+                atomic.StagedFile(state_path, state_temporary),
+                atomic.StagedFile(feed_path, feed_temporary),
+            ]
+        )
+
+    assert external_backup.read_text(encoding="utf-8") == "external recovery sentinel"
+    assert external_feed.read_text(encoding="utf-8") == "old feed"
+    assert manifest.exists()
+    assert not state_temporary.exists()
+    assert not feed_temporary.exists()
+
+
+def test_output_layout_rejects_mocked_windows_reparse_ancestor(tmp_path, monkeypatch):
+    from diamond_feed import atomic
+
+    controlled = tmp_path / "controlled"
+    reparse_parent = controlled / "junction"
+    reparse_parent.mkdir(parents=True)
+    original_lstat = Path.lstat
+    reparse_attribute = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+
+    class ReparseMetadata:
+        def __init__(self, wrapped):
+            self._wrapped = wrapped
+            self.st_mode = wrapped.st_mode
+            self.st_file_attributes = (
+                getattr(wrapped, "st_file_attributes", 0) | reparse_attribute
+            )
+
+        def __getattr__(self, name):
+            return getattr(self._wrapped, name)
+
+    def report_reparse_directory(path, *args, **kwargs):
+        metadata = original_lstat(path, *args, **kwargs)
+        if path == reparse_parent:
+            return ReparseMetadata(metadata)
+        return metadata
+
+    monkeypatch.setattr(Path, "lstat", report_reparse_directory)
+
+    with pytest.raises(ValueError, match="reparse|link"):
+        atomic.validate_output_layout(
+            [
+                reparse_parent / "state.json",
+                controlled / "feed.xml",
+                controlled / "failures.tsv",
+            ]
+        )
+
+
+def test_stage_text_rejects_real_linked_parent_without_external_write(tmp_path):
+    from diamond_feed import atomic
+
+    controlled = tmp_path / "controlled"
+    external = tmp_path / "external-stage-root"
+    controlled.mkdir()
+    external.mkdir()
+    linked_parent = controlled / "linked-stage"
+    _require_directory_symlink(linked_parent, external)
+    destination = linked_parent / "feed.xml"
+    external_temporary = external / "feed.xml.tmp"
+    external_temporary.write_text("external staged sentinel", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="ancestor|reparse|link"):
+        atomic.stage_text(destination, "new feed")
+
+    assert external_temporary.read_text(encoding="utf-8") == "external staged sentinel"
+    assert not (external / "feed.xml").exists()
+
+
 def _paper(title, abstract, doi, day, source="rss"):
     return PaperRecord(title=title, abstract=abstract, authors=["A. Author"], journal="Diamond Journal", published_at=datetime(2026, 9, day, tzinfo=timezone.utc), doi=doi, url=f"https://doi.org/{doi}", sources=[source], source_ids=[f"{source}:{doi}"])
 
@@ -1393,3 +1610,10 @@ def _symlink_or_mock(link, target, monkeypatch):
 
     monkeypatch.setattr(Path, "lstat", simulated_lstat)
     monkeypatch.setattr(Path, "read_text", simulated_read_text)
+
+
+def _require_directory_symlink(link, target):
+    try:
+        link.symlink_to(target, target_is_directory=True)
+    except OSError as error:
+        pytest.skip(f"directory symlink unavailable: {error}")

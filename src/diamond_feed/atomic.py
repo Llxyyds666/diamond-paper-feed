@@ -13,6 +13,7 @@ import uuid
 MANIFEST_PREFIX = ".diamond-feed-publication."
 MANIFEST_SUFFIX = ".json"
 MANIFEST_FIELDS = {"version", "transaction_id", "destinations", "backups"}
+_REPARSE_POINT = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,23 +100,97 @@ def _lexical_key(path: Path) -> str:
     return os.path.normcase(str(_lexical_absolute(path)))
 
 
-def _resolved_key(path: Path) -> str:
-    return os.path.normcase(str(path.resolve(strict=False)))
+def _is_link_or_reparse(metadata: os.stat_result) -> bool:
+    return stat.S_ISLNK(metadata.st_mode) or bool(
+        getattr(metadata, "st_file_attributes", 0) & _REPARSE_POINT
+    )
+
+
+def _guard_lexical_path(
+    anchor: Path,
+    target: Path,
+    *,
+    include_target: bool = False,
+    target_kind: Literal["directory", "regular"] | None = None,
+    allow_missing: bool = True,
+) -> Path:
+    """Validate a lexical path component-by-component without following links."""
+    lexical_anchor = _lexical_absolute(anchor)
+    lexical_target = _lexical_absolute(target)
+    try:
+        common = Path(os.path.commonpath((lexical_anchor, lexical_target)))
+    except ValueError as error:
+        raise ValueError("path is outside its controlled filesystem anchor") from error
+    if _lexical_key(common) != _lexical_key(lexical_anchor):
+        raise ValueError("path is outside its controlled filesystem anchor")
+    try:
+        relative_parts = lexical_target.relative_to(lexical_anchor).parts
+    except ValueError as error:
+        raise ValueError("path is outside its controlled filesystem anchor") from error
+
+    last_index = len(relative_parts) if include_target else max(len(relative_parts) - 1, 0)
+    current = lexical_anchor
+    missing = False
+    for index, part in enumerate(relative_parts[:last_index], start=1):
+        current /= part
+        is_target = include_target and index == len(relative_parts)
+        if missing:
+            continue
+        try:
+            metadata = current.lstat()
+        except FileNotFoundError:
+            if not allow_missing:
+                raise ValueError(f"required path component does not exist: {current}")
+            missing = True
+            continue
+        except OSError as error:
+            raise ValueError(f"cannot safely inspect path component {current}: {error}") from error
+        if _is_link_or_reparse(metadata):
+            role = "target" if is_target else "ancestor"
+            raise ValueError(f"refuse linked or reparse-point {role}: {current}")
+        if not is_target and not stat.S_ISDIR(metadata.st_mode):
+            raise ValueError(f"refuse non-directory ancestor: {current}")
+        if is_target and target_kind == "directory" and not stat.S_ISDIR(metadata.st_mode):
+            raise ValueError(f"required directory is not a directory: {current}")
+        if is_target and target_kind == "regular" and not stat.S_ISREG(metadata.st_mode):
+            raise ValueError(f"required regular file is not a regular file: {current}")
+    return lexical_target
+
+
+def _guard_path(
+    path: Path,
+    *,
+    include_target: bool = False,
+    target_kind: Literal["directory", "regular"] | None = None,
+    allow_missing: bool = True,
+) -> Path:
+    lexical_path = _lexical_absolute(path)
+    anchor = Path(lexical_path.anchor)
+    return _guard_lexical_path(
+        anchor,
+        lexical_path,
+        include_target=include_target,
+        target_kind=target_kind,
+        allow_missing=allow_missing,
+    )
 
 
 def _exists_no_follow(path: Path) -> bool:
     try:
-        path.lstat()
-    except FileNotFoundError:
+        lexical_path = _guard_path(path)
+        lexical_path.lstat()
+    except (FileNotFoundError, ValueError):
         return False
     return True
 
 
 def _remove(path: Path, action: str) -> str | None:
+    lexical_path = _lexical_absolute(path)
     try:
-        path.unlink(missing_ok=True)
+        _guard_path(lexical_path)
+        lexical_path.unlink(missing_ok=True)
     except Exception as error:
-        return f"{action} {_lexical_absolute(path)}: {error}"
+        return f"{action} {lexical_path}: {error}"
     return None
 
 
@@ -123,13 +198,14 @@ def _remove_regular_artifact(path: Path, action: str) -> str | None:
     """Remove a manifest or backup only when its directory entry is a regular file."""
     lexical_path = _lexical_absolute(path)
     try:
+        _guard_path(lexical_path)
         metadata = lexical_path.lstat()
     except FileNotFoundError:
         return None
     except Exception as error:
         return f"inspect {action} {lexical_path}: {error}"
-    if not stat.S_ISREG(metadata.st_mode):
-        kind = "symbolic link" if stat.S_ISLNK(metadata.st_mode) else "non-regular file"
+    if _is_link_or_reparse(metadata) or not stat.S_ISREG(metadata.st_mode):
+        kind = "link or reparse point" if _is_link_or_reparse(metadata) else "non-regular file"
         return f"refuse {action} {lexical_path}: {kind} is not safe to remove automatically"
     try:
         lexical_path.unlink()
@@ -141,8 +217,9 @@ def _remove_regular_artifact(path: Path, action: str) -> str | None:
 def _read_regular_text_no_follow(path: Path) -> str:
     """Read a regular file while rejecting links and entry swaps."""
     lexical_path = _lexical_absolute(path)
+    _guard_path(lexical_path)
     before = lexical_path.lstat()
-    if not stat.S_ISREG(before.st_mode):
+    if _is_link_or_reparse(before) or not stat.S_ISREG(before.st_mode):
         raise OSError("completion manifest is not a regular file")
     flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
     descriptor = os.open(lexical_path, flags)
@@ -168,12 +245,17 @@ def validate_output_layout(destinations: Iterable[Path]) -> None:
     destination_list = list(destinations)
     if not destination_list:
         raise ValueError("output layout requires at least one destination")
-    destination_keys = [_resolved_key(path) for path in destination_list]
+    for path in destination_list:
+        _guard_path(path, include_target=True, target_kind="regular")
+        _guard_path(_sibling(path, ".tmp"), include_target=True, target_kind="regular")
+    destination_keys = [_lexical_key(path) for path in destination_list]
     if len(destination_keys) != len(set(destination_keys)):
-        raise ValueError("output destinations must be unique after path resolution")
-    temporary_keys = [_resolved_key(_sibling(path, ".tmp")) for path in destination_list]
+        raise ValueError("output destinations must be unique after lexical normalization")
+    temporary_keys = [_lexical_key(_sibling(path, ".tmp")) for path in destination_list]
     if len(temporary_keys) != len(set(temporary_keys)):
-        raise ValueError("output fixed sibling temporaries must be unique after path resolution")
+        raise ValueError(
+            "output fixed sibling temporaries must be unique after lexical normalization"
+        )
     collisions = set(destination_keys).intersection(temporary_keys)
     if collisions:
         raise ValueError("output destination collides with a fixed sibling temporary path")
@@ -197,9 +279,15 @@ def raise_with_cleanup(
 
 def stage_text(path: Path, contents: str) -> StagedFile:
     """Write and fsync text to the destination's sibling `.tmp` without publishing it."""
-    path.parent.mkdir(parents=True, exist_ok=True)
+    path = _lexical_absolute(path)
     temporary = _sibling(path, ".tmp")
+    _guard_path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    _guard_path(path.parent, include_target=True, target_kind="directory", allow_missing=False)
+    _guard_path(path, include_target=True, target_kind="regular")
+    _guard_path(temporary, include_target=True, target_kind="regular")
     try:
+        _guard_path(temporary, include_target=True, target_kind="regular")
         with temporary.open("w", encoding="utf-8", newline="\n") as handle:
             handle.write(contents)
             handle.flush()
@@ -208,7 +296,7 @@ def stage_text(path: Path, contents: str) -> StagedFile:
         cleanup = _remove(temporary, "remove staged temporary")
         raise_with_cleanup(
             primary_error,
-            f"stage text for {path.resolve()}",
+            f"stage text for {path}",
             () if cleanup is None else (cleanup,),
         )
     return StagedFile(destination=path, temporary=temporary)
@@ -229,6 +317,12 @@ def _backup_path(destination: Path, transaction_id: str) -> Path:
 
 def _backup_candidates(destination: Path) -> list[Path]:
     lexical_destination = _lexical_absolute(destination)
+    _guard_path(
+        lexical_destination.parent,
+        include_target=True,
+        target_kind="directory",
+        allow_missing=False,
+    )
     prefix = f"{lexical_destination.name}."
     return sorted(
         path
@@ -271,6 +365,12 @@ def _manifest_transaction_id(path: Path) -> str | None:
 
 
 def _manifest_candidates(directory: Path) -> list[tuple[Path, str]]:
+    directory = _guard_path(
+        directory,
+        include_target=True,
+        target_kind="directory",
+        allow_missing=False,
+    )
     candidates: list[tuple[Path, str]] = []
     for path in directory.iterdir():
         transaction_id = _manifest_transaction_id(path)
@@ -335,8 +435,10 @@ def _load_manifest(
             for candidate in _backup_candidates(destination)
             if _backup_transaction_id(destination, candidate) == transaction_id
         ]
-        if any(not stat.S_ISREG(candidate.lstat().st_mode) for candidate in actual_backups):
-            return None
+        for candidate in actual_backups:
+            metadata = candidate.lstat()
+            if _is_link_or_reparse(metadata) or not stat.S_ISREG(metadata.st_mode):
+                return None
     except OSError:
         return None
     if not {_lexical_key(candidate) for candidate in actual_backups} <= backup_keys:
@@ -349,6 +451,12 @@ def _preflight(destinations: Iterable[Path]) -> list[str]:
     destination_list = list(destinations)
     relevant_destinations = {_lexical_key(path) for path in destination_list}
     manifest_directory = _manifest_parent(destination_list)
+    _guard_path(
+        manifest_directory,
+        include_target=True,
+        target_kind="directory",
+        allow_missing=False,
+    )
     manifests: dict[Path, _CompletionManifest] = {}
     authorized: set[str] = set()
     for manifest_path, transaction_id in _manifest_candidates(manifest_directory):
@@ -390,21 +498,30 @@ def _preflight(destinations: Iterable[Path]) -> list[str]:
 
 
 def _backup(path: Path, transaction_id: str) -> Path | None:
-    if not path.exists():
+    path = _lexical_absolute(path)
+    _guard_path(path, include_target=True, target_kind="regular")
+    try:
+        path.lstat()
+    except FileNotFoundError:
         return None
     backup = _backup_path(path, transaction_id)
     temporary = _sibling(backup, ".tmp")
     try:
+        _guard_path(path, include_target=True, target_kind="regular", allow_missing=False)
+        _guard_path(backup, include_target=True, target_kind="regular")
+        _guard_path(temporary, include_target=True, target_kind="regular")
         with path.open("rb") as source, temporary.open("wb") as target:
             shutil.copyfileobj(source, target)
             target.flush()
             os.fsync(target.fileno())
+        _guard_path(temporary, include_target=True, target_kind="regular", allow_missing=False)
+        _guard_path(backup, include_target=True, target_kind="regular")
         os.replace(temporary, backup)
     except Exception as primary_error:
         cleanup = _remove(temporary, "remove backup temporary")
         raise_with_cleanup(
             primary_error,
-            f"create backup for {path.resolve()}",
+            f"create backup for {path}",
             () if cleanup is None else (cleanup,),
         )
     return backup
@@ -433,13 +550,20 @@ def _write_completion_manifest(
     except PublicationOperationError as error:
         return manifest, (error.primary_failure, *error.cleanup_failures)
     except Exception as error:
-        return manifest, (f"write completion manifest {manifest.resolve()}: {error}",)
+        return manifest, (f"write completion manifest {_lexical_absolute(manifest)}: {error}",)
     try:
+        _guard_path(
+            staged.temporary,
+            include_target=True,
+            target_kind="regular",
+            allow_missing=False,
+        )
+        _guard_path(manifest, include_target=True, target_kind="regular")
         os.replace(staged.temporary, manifest)
     except Exception as primary_error:
         cleanup_failures = discard_staged([staged])
         return manifest, (
-            f"publish completion manifest {manifest.resolve()}: {primary_error}",
+            f"publish completion manifest {_lexical_absolute(manifest)}: {primary_error}",
             *cleanup_failures,
         )
     return manifest, ()
@@ -454,23 +578,26 @@ def _publish_failure_details(error: Exception, primary_action: str) -> tuple[str
 def _validate_staged_layout(items: list[StagedFile]) -> None:
     if not items:
         raise ValueError("at least one staged destination is required")
-    destination_keys = [_resolved_key(item.destination) for item in items]
+    for item in items:
+        _guard_path(item.destination, include_target=True, target_kind="regular")
+        _guard_path(item.temporary, include_target=True, target_kind="regular")
+    destination_keys = [_lexical_key(item.destination) for item in items]
     if len(destination_keys) != len(set(destination_keys)):
-        raise ValueError("staged destinations must be unique after path resolution")
-    temporary_keys = [_resolved_key(item.temporary) for item in items]
+        raise ValueError("staged destinations must be unique after lexical normalization")
+    temporary_keys = [_lexical_key(item.temporary) for item in items]
     if len(temporary_keys) != len(set(temporary_keys)):
-        raise ValueError("staged temporaries must be unique after path resolution")
+        raise ValueError("staged temporaries must be unique after lexical normalization")
     if set(destination_keys).intersection(temporary_keys):
         raise ValueError("staged temporary must not alias any destination")
 
 
 def _discard_invalid_staged(items: list[StagedFile]) -> tuple[str, ...]:
     """Discard safe temporaries while retaining any path that aliases an output."""
-    protected = {_resolved_key(item.destination) for item in items}
+    protected = {_lexical_key(item.destination) for item in items}
     failures: list[str] = []
     cleaned: set[str] = set()
     for item in items:
-        temporary_key = _resolved_key(item.temporary)
+        temporary_key = _lexical_key(item.temporary)
         if temporary_key in protected:
             failures.append(
                 "retain unsafe staged temporary "
@@ -509,13 +636,24 @@ def commit_staged(staged: Iterable[StagedFile]) -> CommitResult:
     primary_action = "prepare publication"
     try:
         for item in items:
-            primary_action = f"create backup for {item.destination.resolve()}"
+            primary_action = f"create backup for {_lexical_absolute(item.destination)}"
             backup = _backup(item.destination, transaction_id)
             if backup is not None:
                 backups[item.destination] = backup
         for item in items:
-            primary_action = f"publish {item.temporary.resolve()} to {item.destination.resolve()}"
-            os.replace(item.temporary, item.destination)
+            temporary = _guard_path(
+                item.temporary,
+                include_target=True,
+                target_kind="regular",
+                allow_missing=False,
+            )
+            destination = _guard_path(
+                item.destination,
+                include_target=True,
+                target_kind="regular",
+            )
+            primary_action = f"publish {temporary} to {destination}"
+            os.replace(temporary, destination)
             committed.append(item)
     except Exception as publish_error:
         primary_failure, primary_cleanup = _publish_failure_details(publish_error, primary_action)
@@ -526,16 +664,38 @@ def commit_staged(staged: Iterable[StagedFile]) -> CommitResult:
             backup = backups.get(item.destination)
             try:
                 if backup is None:
-                    item.destination.unlink(missing_ok=True)
+                    destination = _guard_path(
+                        item.destination,
+                        include_target=True,
+                        target_kind="regular",
+                    )
+                    destination.unlink(missing_ok=True)
                 else:
-                    os.replace(backup, item.destination)
+                    guarded_backup = _guard_path(
+                        backup,
+                        include_target=True,
+                        target_kind="regular",
+                        allow_missing=False,
+                    )
+                    destination = _guard_path(
+                        item.destination,
+                        include_target=True,
+                        target_kind="regular",
+                    )
+                    os.replace(guarded_backup, destination)
             except Exception as rollback_error:
                 if backup is None or not _exists_no_follow(backup):
                     destinations_without_backup.append(item.destination)
                 if backup is None:
-                    action = f"remove new destination {item.destination.resolve()} (no backup exists)"
+                    action = (
+                        f"remove new destination {_lexical_absolute(item.destination)} "
+                        "(no backup exists)"
+                    )
                 else:
-                    action = f"restore {item.destination.resolve()} from {backup.resolve()}"
+                    action = (
+                        f"restore {_lexical_absolute(item.destination)} "
+                        f"from {_lexical_absolute(backup)}"
+                    )
                 rollback_failures.append(f"{action}: {rollback_error}")
         for destination, backup in backups.items():
             if destination in committed_destinations:
