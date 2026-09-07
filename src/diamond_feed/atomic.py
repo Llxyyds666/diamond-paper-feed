@@ -1,4 +1,11 @@
-"""Durable staging and recoverable multi-file publication helpers."""
+"""Durable staging and recoverable multi-file publication helpers.
+
+The path guards are best-effort static no-follow checks for a single GitHub
+Actions job or a single-user scheduled task.  Callers must provide output
+parents that remain exclusive to the process and trusted for the duration of
+publication.  This module is not a security sandbox against a hostile process
+that can replace filesystem ancestors between validation and use.
+"""
 
 from dataclasses import dataclass
 import json
@@ -114,7 +121,12 @@ def _guard_lexical_path(
     target_kind: Literal["directory", "regular"] | None = None,
     allow_missing: bool = True,
 ) -> Path:
-    """Validate a lexical path component-by-component without following links."""
+    """Best-effort reject links present during a lexical component walk.
+
+    The caller owns the trust boundary after this check: concurrent hostile
+    filesystem mutation requires handle-relative platform APIs outside this
+    module's deployment model.
+    """
     lexical_anchor = _lexical_absolute(anchor)
     lexical_target = _lexical_absolute(target)
     try:
@@ -241,7 +253,7 @@ def _read_regular_text_no_follow(path: Path) -> str:
 
 
 def validate_output_layout(destinations: Iterable[Path]) -> None:
-    """Reject aliases and fixed sibling-temporary collisions before staging."""
+    """Reject static links, aliases, and fixed-temporary collisions before staging."""
     destination_list = list(destinations)
     if not destination_list:
         raise ValueError("output layout requires at least one destination")
@@ -278,14 +290,13 @@ def raise_with_cleanup(
 
 
 def stage_text(path: Path, contents: str) -> StagedFile:
-    """Write and fsync text to the destination's sibling `.tmp` without publishing it."""
+    """Stage text under an exclusive, trusted output parent and fsync it."""
     path = _lexical_absolute(path)
     temporary = _sibling(path, ".tmp")
     _guard_path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     _guard_path(path.parent, include_target=True, target_kind="directory", allow_missing=False)
     _guard_path(path, include_target=True, target_kind="regular")
-    _guard_path(temporary, include_target=True, target_kind="regular")
     try:
         _guard_path(temporary, include_target=True, target_kind="regular")
         with temporary.open("w", encoding="utf-8", newline="\n") as handle:
@@ -619,6 +630,9 @@ def commit_staged(staged: Iterable[StagedFile]) -> CommitResult:
     Transaction backups are auto-cleanable only when one atomic manifest names
     the exact transaction.  The manifest is published after every destination,
     so no rollback path can leave completion evidence beside recovery data.
+    Output parents must remain exclusive to this process and trusted throughout
+    the operation; path checks reject pre-existing links but are not a sandbox
+    against hostile concurrent filesystem mutation.
     """
     items = list(staged)
     destinations = [item.destination for item in items]
