@@ -9,7 +9,7 @@ def test_github_workflows_obey_the_automation_contract():
     summarize = (WORKFLOW_DIRECTORY / "summarize.yml").read_text(encoding="utf-8")
 
     assert "DEEPSEEK_API_KEY" not in collect
-    assert summarize.count("DEEPSEEK_API_KEY") == 2
+    assert summarize.count("DEEPSEEK_API_KEY") == 5
     assert "DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}" in summarize
 
     expected = {
@@ -75,6 +75,7 @@ def test_github_workflows_obey_the_automation_contract():
 
     expected_digest_step = """      - name: Generate bounded DeepSeek digest
         id: summarize
+        if: ${{ inputs.smoke_test != true }}
         continue-on-error: true
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}

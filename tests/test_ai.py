@@ -46,7 +46,7 @@ def test_screening_truncates_abstracts_and_validates_json(ai_config, diamond_rec
     assert request_content["papers"][0]["abstract"] == record.abstract[:1200]
 
 
-def test_failed_attempts_count_against_hard_budget(ai_config, diamond_records):
+def test_ambiguous_timeout_is_not_retried_or_reported_as_zero_usage(ai_config, diamond_records):
     calls = 0
 
     def failing_transport(url, headers, payload, timeout):
@@ -57,11 +57,12 @@ def test_failed_attempts_count_against_hard_budget(ai_config, diamond_records):
     budget = RequestBudget(5)
     client = DeepSeekClient("test-api-key", ai_config, transport=failing_transport)
 
-    with pytest.raises(RuntimeError, match="request budget exhausted"):
+    with pytest.raises(RuntimeError, match="TimeoutError status=none attempt=1"):
         screen_batch(diamond_records[:1], client, ai_config, budget)
 
-    assert calls == 5
-    assert budget.used == 5
+    assert calls == 1
+    assert budget.used == 1
+    assert client.token_usage_complete is False
 
 
 @pytest.mark.parametrize("maximum", [0, -1, True, 1.5, "2"])
@@ -103,7 +104,7 @@ def test_exhausted_budget_does_not_call_transport(ai_config):
 
 
 @pytest.mark.parametrize("status", [429, 500, 503])
-def test_retries_only_timeout_and_retryable_http_statuses(ai_config, status):
+def test_retries_only_explicit_retryable_http_statuses(ai_config, status):
     calls = 0
 
     def transport(url, headers, payload, timeout):
@@ -119,7 +120,7 @@ def test_retries_only_timeout_and_retryable_http_statuses(ai_config, status):
     assert (calls, budget.used, budget.remaining) == (2, 2, 1)
 
 
-def test_timeout_retries_and_each_attempt_consumes_budget(ai_config):
+def test_timeout_cannot_turn_one_call_into_multiple_billable_requests(ai_config):
     calls = 0
 
     def transport(url, headers, payload, timeout):
@@ -131,8 +132,11 @@ def test_timeout_retries_and_each_attempt_consumes_budget(ai_config):
 
     budget = RequestBudget(2)
     client = DeepSeekClient("test-api-key", ai_config, transport=transport)
-    assert client.complete_json([], 1, budget) == []
-    assert (calls, budget.used) == (2, 2)
+    with pytest.raises(RuntimeError, match="TimeoutError status=none attempt=1"):
+        client.complete_json([], 1, budget)
+
+    assert (calls, budget.used, budget.remaining) == (1, 1, 1)
+    assert client.token_usage_complete is False
 
 
 @pytest.mark.parametrize("status", [401, 403, 402])
@@ -204,12 +208,13 @@ def test_default_transport_uses_required_endpoint_payload_and_headers(ai_config,
         "model": ai_config.model,
         "messages": [{"role": "user", "content": "hello"}],
         "stream": False,
+        "thinking": {"type": "disabled"},
         "temperature": 0.1,
         "max_tokens": 77,
     }
     assert seen["headers"]["Content-type"] == "application/json"
     assert seen["headers"]["Authorization"] == "Bearer test-api-key"
-    assert seen["timeout"] > 0
+    assert seen["timeout"] >= 600
 
 
 def test_default_transport_errors_do_not_expose_key(ai_config, monkeypatch):
@@ -217,7 +222,7 @@ def test_default_transport_errors_do_not_expose_key(ai_config, monkeypatch):
         raise TimeoutError("test-api-key must not appear")
 
     monkeypatch.setattr("diamond_feed.ai.urlopen", fake_urlopen)
-    with pytest.raises(RuntimeError, match="request budget exhausted") as raised:
+    with pytest.raises(RuntimeError, match="TimeoutError status=none attempt=1") as raised:
         DeepSeekClient("test-api-key", ai_config).complete_json([], 1, RequestBudget(1))
     assert "test-api-key" not in str(raised.value)
 

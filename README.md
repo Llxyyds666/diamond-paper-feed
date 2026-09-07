@@ -12,7 +12,7 @@ Diamond Paper Feed 是一个面向金刚石研究的高召回文献监测项目�
 - `ai_summary_feed.xml`：DeepSeek 判定相关的中文精选 RSS。
 - `ai_summary.html`：按主题展示的中文摘要页面。
 - `state.json`：去重论文、来源水位和待处理 AI 队列。
-- `ai_usage.json`：每日候选数、成功数、请求数和 token 用量，不含提示词或凭据。
+- `ai_usage.json`：每日候选数、成功数、请求数和 token 用量，不含提示词或凭据；`token_usage_complete=false` 表示超时请求可能已在服务端计费，应以 DeepSeek 控制台为准。
 - `fetch_failures.tsv`：当前一轮来源故障分类。
 
 ## Covered diamond categories
@@ -148,7 +148,7 @@ python -m diamond_feed.summarize --config paper_feed_config.json --state state.j
 - 每篇发给 AI 的摘要先截断到 1200 个 Unicode 字符。
 - 每个筛选请求的输出上限为 4096 token；最终摘要请求的输出上限为 8192 token。
 - 采集会先持久化候选。首次 30 天回溯形成的大队列会跨天保留并按每天 40 篇逐步处理，不会扩大当天请求预算。
-- `ai_usage.json` 只保存日期、候选数、成功数、请求数及 token 统计。
+- `ai_usage.json` 只保存日期、候选数、成功数、请求数、token 统计及其完整性标记。超时不会自动重试；`token_usage_complete=false` 时，文件中的 token 只是已收到响应的部分，应以 DeepSeek 控制台为准。
 
 ## Failure report meanings
 

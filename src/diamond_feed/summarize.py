@@ -41,7 +41,8 @@ USAGE_NUMERIC_FIELDS = (
     "completion_tokens",
     "total_tokens",
 )
-USAGE_FIELDS = {"date", *USAGE_NUMERIC_FIELDS}
+USAGE_FIELDS = {"date", "token_usage_complete", *USAGE_NUMERIC_FIELDS}
+LEGACY_USAGE_FIELDS = USAGE_FIELDS - {"token_usage_complete"}
 
 CATEGORY_TITLES = {
     "growth-processing": "生长与加工",
@@ -79,11 +80,13 @@ class SummaryStats:
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
+    token_usage_complete: bool = True
 
-    def usage_entry(self, day: str) -> dict[str, int | str]:
+    def usage_entry(self, day: str) -> dict[str, int | str | bool]:
         return {
             "date": day,
             **{field: getattr(self, field) for field in USAGE_NUMERIC_FIELDS},
+            "token_usage_complete": self.token_usage_complete,
         }
 
 
@@ -91,21 +94,23 @@ def _strict_nonnegative_int(value: object) -> int | None:
     return value if type(value) is int and value >= 0 else None
 
 
-def _client_token_totals(client: object) -> tuple[int, int]:
+def _client_token_totals(client: object) -> tuple[int, int, bool]:
+    completeness = getattr(client, "token_usage_complete", True)
+    complete = completeness if type(completeness) is bool else False
     prompt = _strict_nonnegative_int(getattr(client, "prompt_tokens", None))
     completion = _strict_nonnegative_int(getattr(client, "completion_tokens", None))
     if prompt is not None and completion is not None:
-        return prompt, completion
+        return prompt, completion, complete
     usage = getattr(client, "usage", None)
     if type(usage) is dict:
         prompt = _strict_nonnegative_int(usage.get("prompt_tokens"))
         completion = _strict_nonnegative_int(usage.get("completion_tokens"))
         if prompt is not None and completion is not None:
-            return prompt, completion
-    return 0, 0
+            return prompt, completion, complete
+    return 0, 0, complete
 
 
-def _usage_entries(path: Path) -> list[dict[str, int | str]]:
+def _usage_entries(path: Path) -> list[dict[str, int | str | bool]]:
     if not path.exists():
         return []
     try:
@@ -114,10 +119,17 @@ def _usage_entries(path: Path) -> list[dict[str, int | str]]:
         raise ValueError(f"invalid AI usage file {path}") from error
     if type(raw) is not list:
         raise ValueError(f"invalid AI usage file {path}")
-    entries: list[dict[str, int | str]] = []
+    entries: list[dict[str, int | str | bool]] = []
     seen_dates: set[str] = set()
     for item in raw:
-        if type(item) is not dict or set(item) != USAGE_FIELDS or type(item["date"]) is not str:
+        if (
+            type(item) is not dict
+            or set(item) not in (USAGE_FIELDS, LEGACY_USAGE_FIELDS)
+            or type(item["date"]) is not str
+        ):
+            raise ValueError(f"invalid AI usage file {path}")
+        item = {**item, "token_usage_complete": item.get("token_usage_complete", True)}
+        if type(item["token_usage_complete"]) is not bool:
             raise ValueError(f"invalid AI usage file {path}")
         try:
             date.fromisoformat(item["date"])
@@ -138,8 +150,8 @@ def _usage_entries(path: Path) -> list[dict[str, int | str]]:
 
 
 def _merged_usage(
-    entries: list[dict[str, int | str]], current: dict[str, int | str]
-) -> list[dict[str, int | str]]:
+    entries: list[dict[str, int | str | bool]], current: dict[str, int | str | bool]
+) -> list[dict[str, int | str | bool]]:
     by_date = {str(entry["date"]): dict(entry) for entry in entries}
     day = str(current["date"])
     previous = by_date.get(day)
@@ -150,20 +162,22 @@ def _merged_usage(
                 field: int(previous[field]) + int(current[field])
                 for field in USAGE_NUMERIC_FIELDS
             },
+            "token_usage_complete": bool(previous["token_usage_complete"])
+            and bool(current["token_usage_complete"]),
         }
     by_date[day] = current
     return [by_date[key] for key in sorted(by_date)]
 
 
 def _usage_for_day(
-    entries: list[dict[str, int | str]], day: str
-) -> dict[str, int | str] | None:
+    entries: list[dict[str, int | str | bool]], day: str
+) -> dict[str, int | str | bool] | None:
     return next((entry for entry in entries if entry["date"] == day), None)
 
 
 def _publish_usage(
     path: Path,
-    previous_usage: list[dict[str, int | str]],
+    previous_usage: list[dict[str, int | str | bool]],
     stats: SummaryStats,
     day: str,
 ) -> None:
@@ -343,8 +357,8 @@ def _summary_stats(
     requests: int,
     remaining: int,
     failed: bool,
-    token_before: tuple[int, int],
-    token_after: tuple[int, int],
+    token_before: tuple[int, int, bool],
+    token_after: tuple[int, int, bool],
 ) -> SummaryStats:
     prompt = max(0, token_after[0] - token_before[0])
     completion = max(0, token_after[1] - token_before[1])
@@ -358,6 +372,7 @@ def _summary_stats(
         prompt_tokens=prompt,
         completion_tokens=completion,
         total_tokens=prompt + completion,
+        token_usage_complete=token_after[2],
     )
 
 
@@ -408,7 +423,8 @@ def run_summary(
         keys = candidate_keys[offset : offset + config.ai.batch_size]
         try:
             batch = screen_batch([state.papers[key] for key in keys], client, config.ai, budget)
-        except (RuntimeError, ValueError):
+        except (RuntimeError, ValueError) as error:
+            print(f"AI screening failed safely: {error}", file=sys.stderr)
             screening_failed = True
             break
         by_key = {decision.key: decision for decision in batch}
@@ -442,7 +458,8 @@ def run_summary(
             raw_digest = client.complete_json(
                 _digest_messages(selected), config.ai.digest_max_tokens, budget
             )
-        except (RuntimeError, ValueError):
+        except (RuntimeError, ValueError) as error:
+            print(f"AI digest failed safely: {error}", file=sys.stderr)
             raw_digest = None
         overview = _safe_fragment(raw_digest)
 

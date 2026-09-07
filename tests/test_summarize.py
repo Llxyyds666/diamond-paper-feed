@@ -5,6 +5,7 @@ from xml.etree import ElementTree
 
 import pytest
 
+from diamond_feed.ai import DeepSeekClient
 from diamond_feed.models import PaperRecord
 from diamond_feed.normalize import record_key
 from diamond_feed.state import FeedState, load_state, save_state
@@ -255,6 +256,35 @@ def test_ai_failure_preserves_previous_outputs_and_queue(
     assert not list(tmp_path.glob("*.tmp"))
 
 
+def test_timeout_failure_is_logged_safely_and_marks_token_usage_incomplete(
+    tmp_path, configured_state_with_100_pending, app_config, capsys
+):
+    secret = "do-not-print-this-key"
+    calls = 0
+
+    def timeout_transport(url, headers, payload, timeout):
+        nonlocal calls
+        calls += 1
+        raise TimeoutError(f"provider may still be billing {secret}")
+
+    client = DeepSeekClient(secret, app_config.ai, transport=timeout_transport)
+    stats = run_summary(
+        app_config,
+        configured_state_with_100_pending,
+        client,
+        datetime(2026, 9, 8, tzinfo=timezone.utc),
+        output_dir=tmp_path,
+    )
+    usage = json.loads((tmp_path / "ai_usage.json").read_text(encoding="utf-8"))[0]
+    captured = capsys.readouterr()
+
+    assert (calls, stats.requests, stats.processed) == (1, 1, 0)
+    assert stats.token_usage_complete is False
+    assert usage["token_usage_complete"] is False
+    assert "TimeoutError status=none attempt=1" in captured.err
+    assert secret not in captured.err
+
+
 def test_later_batch_failure_publishes_successful_batch_and_leaves_rest_queued(
     tmp_path, configured_state_with_100_pending, app_config
 ):
@@ -414,7 +444,7 @@ def test_usage_merges_same_day_preserves_history_and_counts_client_tokens(
     usage = json.loads((tmp_path / "ai_usage.json").read_text(encoding="utf-8"))
 
     assert (stats.prompt_tokens, stats.completion_tokens, stats.total_tokens) == (20, 6, 26)
-    assert usage[0] == prior[0]
+    assert usage[0] == {**prior[0], "token_usage_complete": True}
     assert usage[1] == {
         "date": "2026-09-06",
         "candidates": 2,
@@ -424,6 +454,7 @@ def test_usage_merges_same_day_preserves_history_and_counts_client_tokens(
         "prompt_tokens": 27,
         "completion_tokens": 9,
         "total_tokens": 36,
+        "token_usage_complete": True,
     }
     assert set(usage[1]) == summarize.USAGE_FIELDS
 

@@ -92,6 +92,7 @@ def _assert_repository_output_contract(root: Path) -> None:
         assert isinstance(usage, list) and usage
         assert all(entry["candidates"] <= config["ai"]["daily_candidates"] for entry in usage)
         assert all(entry["requests"] <= config["ai"]["max_requests"] for entry in usage)
+        assert all(type(entry["token_usage_complete"]) is bool for entry in usage)
 
 
 def _tracked_text_files() -> list[Path]:
@@ -349,12 +350,18 @@ def test_workflow_crons_and_secret_boundary_are_exact():
     assert "secrets." not in collect_workflow
     assert "python -m diamond_feed.summarize" not in collect_workflow
     assert "cron: '0 0 * * *'" in summary_workflow
-    assert summary_workflow.count("DEEPSEEK_API_KEY") == 2
+    assert summary_workflow.count("DEEPSEEK_API_KEY") == 5
     assert "DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}" in summary_workflow
     assert "python -m diamond_feed.collect" not in summary_workflow
 
+    smoke_step = _workflow_step(summary_workflow, "Run one-request DeepSeek smoke test")
+    assert "inputs.smoke_test == true" in smoke_step
+    assert "RequestBudget(1)" in smoke_step
+    assert "max_tokens=32" in smoke_step
+
     summary_step = _workflow_step(summary_workflow, "Generate bounded DeepSeek digest")
     assert "id: summarize" in summary_step
+    assert "inputs.smoke_test != true" in summary_step
     assert "continue-on-error: true" in summary_step
 
     publish_step = _workflow_step(summary_workflow, "Commit and push summary outputs")

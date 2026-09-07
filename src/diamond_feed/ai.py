@@ -2,10 +2,9 @@
 
 import json
 import math
-import socket
 from collections.abc import Callable, Sequence
 from threading import Lock
-from urllib.error import HTTPError, URLError
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from diamond_feed.config import AiConfig
@@ -36,7 +35,7 @@ CATEGORIES = {
     "adjacent-dlc",
     "other-diamond",
 }
-DEFAULT_TIMEOUT_SECONDS = 30.0
+DEFAULT_TIMEOUT_SECONDS = 660.0
 
 Transport = Callable[[str, dict[str, str], dict[str, object], float], object]
 
@@ -132,15 +131,9 @@ def _http_status(error: Exception) -> int | None:
     return None
 
 
-def _is_timeout(error: Exception) -> bool:
-    if isinstance(error, TimeoutError):
-        return True
-    return isinstance(error, URLError) and isinstance(getattr(error, "reason", None), (TimeoutError, socket.timeout))
-
-
 def _retryable(error: Exception) -> bool:
     status = _http_status(error)
-    return _is_timeout(error) or status == 429 or (status is not None and 500 <= status <= 599)
+    return status == 429 or (status is not None and 500 <= status <= 599)
 
 
 def _safe_request_error(error: Exception, attempt: int) -> RuntimeError:
@@ -158,6 +151,7 @@ class DeepSeekClient:
         self._transport = transport or self._default_transport
         self._prompt_tokens = 0
         self._completion_tokens = 0
+        self._token_usage_complete = True
         self._usage_lock = Lock()
 
     @property
@@ -174,6 +168,11 @@ class DeepSeekClient:
     def total_tokens(self) -> int:
         with self._usage_lock:
             return self._prompt_tokens + self._completion_tokens
+
+    @property
+    def token_usage_complete(self) -> bool:
+        with self._usage_lock:
+            return self._token_usage_complete
 
     def _default_transport(
         self, url: str, headers: dict[str, str], payload: dict[str, object], timeout: float
@@ -202,6 +201,7 @@ class DeepSeekClient:
             "model": self._config.model,
             "messages": list(messages),
             "stream": False,
+            "thinking": {"type": "disabled"},
             "temperature": 0.1,
             "max_tokens": max_tokens,
         }
@@ -214,6 +214,9 @@ class DeepSeekClient:
             except _ModelResponseError:
                 raise ValueError("invalid model response") from None
             except Exception as error:
+                if _http_status(error) is None:
+                    with self._usage_lock:
+                        self._token_usage_complete = False
                 if _retryable(error):
                     continue
                 raise _safe_request_error(error, attempt) from None
@@ -222,6 +225,9 @@ class DeepSeekClient:
                 with self._usage_lock:
                     self._prompt_tokens += usage[0]
                     self._completion_tokens += usage[1]
+            else:
+                with self._usage_lock:
+                    self._token_usage_complete = False
             try:
                 result = _extract_model_json(response)
             except _ModelResponseError:
