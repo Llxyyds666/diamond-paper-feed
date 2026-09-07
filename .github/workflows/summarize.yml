@@ -1,0 +1,52 @@
+name: Summarize diamond literature
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: diamond-paper-feed-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install project and test dependencies
+        run: python -m pip install ".[dev]"
+
+      - name: Test before summarization
+        run: python -m pytest -q
+
+      - name: Generate bounded DeepSeek digest
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: python -m diamond_feed.summarize --config paper_feed_config.json --state state.json
+
+      - name: Commit and push summary outputs
+        shell: bash
+        run: |
+          git add -- ai_summary_feed.xml ai_summary.html ai_usage.json state.json
+          if git diff --cached --quiet; then
+            echo "No summary output changes to publish."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: update DeepSeek diamond digest"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

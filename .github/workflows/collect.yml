@@ -1,0 +1,50 @@
+name: Collect diamond literature
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: diamond-paper-feed-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install project and test dependencies
+        run: python -m pip install ".[dev]"
+
+      - name: Test before collection
+        run: python -m pytest -q
+
+      - name: Collect diamond literature
+        run: python -m diamond_feed.collect --config paper_feed_config.json --state state.json
+
+      - name: Commit and push collection outputs
+        shell: bash
+        run: |
+          git add -- filtered_feed.xml state.json fetch_failures.tsv
+          if git diff --cached --quiet; then
+            echo "No collection output changes to publish."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: update collected diamond literature"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
