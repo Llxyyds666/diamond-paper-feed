@@ -34,11 +34,14 @@ jobs:
         run: python -m pytest -q
 
       - name: Generate bounded DeepSeek digest
+        id: summarize
+        continue-on-error: true
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: python -m diamond_feed.summarize --config paper_feed_config.json --state state.json
 
       - name: Commit and push summary outputs
+        if: ${{ always() && (steps.summarize.outcome == 'success' || steps.summarize.outcome == 'failure') }}
         shell: bash
         run: |
           allowed_outputs=(
@@ -65,3 +68,7 @@ jobs:
           git commit -m "data: update DeepSeek diamond digest"
           git pull --rebase origin "${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Propagate summary failure
+        if: ${{ always() && steps.summarize.outcome == 'failure' }}
+        run: exit 1

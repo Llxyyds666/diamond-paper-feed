@@ -4,14 +4,15 @@ import json
 from pathlib import Path
 import re
 import subprocess
+from urllib.parse import urlsplit
 from xml.etree import ElementTree
 
 from diamond_feed import collect
 from diamond_feed.collect import ScholarlyHarvest
 from diamond_feed.config import load_config
 from diamond_feed.filtering import load_rules, matches_rules
-from diamond_feed.models import PaperRecord
-from diamond_feed.state import SourceContinuation, load_state
+from diamond_feed.models import PaperRecord, SourceFailure
+from diamond_feed.state import FeedState, SourceContinuation, load_state, save_state
 from diamond_feed.summarize import run_summary
 from scripts.validate_rss_sources import DATABASE_ONLY_COVERAGE, SOFT_FAILURES
 
@@ -51,6 +52,7 @@ README_DATABASE_REASONS = {
     "Surface and Coatings Technology": "官方 RSS 未通过有界 GET 验证",
 }
 EXPECTED_BASE_URL = "https://llxyyds666.github.io/diamond-paper-feed"
+DATABASE_FAILURE_HOSTS = {"api.openalex.org", "api.crossref.org", "export.arxiv.org"}
 
 
 def _assert_repository_output_contract(root: Path) -> None:
@@ -103,18 +105,42 @@ def _tracked_text_files() -> list[Path]:
     ]
 
 
-def _registry_rows() -> list[dict[str, str]]:
-    with Path("config/rss_sources.tsv").open(encoding="utf-8-sig", newline="") as handle:
+def _registry_rows(path: Path = Path("config/rss_sources.tsv")) -> list[dict[str, str]]:
+    with path.open(encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle, delimiter="\t")
         assert tuple(reader.fieldnames or ()) == ("name", "category", "url")
         return list(reader)
 
 
-def _failure_rows() -> list[dict[str, str]]:
-    with Path("fetch_failures.tsv").open(encoding="utf-8", newline="") as handle:
+def _failure_rows(path: Path = Path("fetch_failures.tsv")) -> list[dict[str, str]]:
+    with path.open(encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle, delimiter="\t")
         assert tuple(reader.fieldnames or ()) == ("timestamp", "category", "url", "detail")
         return list(reader)
+
+
+def _assert_failure_report_contract(failures_path: Path, registry_path: Path) -> None:
+    failures = _failure_rows(failures_path)
+    registry_urls = {row["url"] for row in _registry_rows(registry_path)}
+    allowed_named_failures = set(SOFT_FAILURES) | {"parse_error", "retired"}
+
+    assert len({row["url"] for row in failures}) == len(failures)
+    for row in failures:
+        parsed = datetime.fromisoformat(row["timestamp"].replace("Z", "+00:00"))
+        assert parsed.tzinfo is not None and parsed.utcoffset() is not None
+        assert row["category"] in allowed_named_failures or re.fullmatch(
+            r"http_[1-5]\d\d", row["category"]
+        )
+        parsed_url = urlsplit(row["url"])
+        assert parsed_url.scheme == "https" and parsed_url.netloc
+        assert row["url"] in registry_urls or parsed_url.hostname in DATABASE_FAILURE_HOSTS
+        assert row["detail"].strip()
+
+
+def _workflow_step(workflow: str, name: str) -> str:
+    marker = f"      - name: {name}\n"
+    assert marker in workflow
+    return workflow.split(marker, 1)[1].split("\n      - name: ", 1)[0]
 
 
 def test_repository_outputs_have_sustainable_cross_file_invariants():
@@ -128,26 +154,36 @@ def test_repository_outputs_have_sustainable_cross_file_invariants():
 
 def test_source_progress_and_failure_taxonomy_are_consistent():
     state = load_state(Path("state.json"))
-    failures = _failure_rows()
-    allowed_named_failures = set(SOFT_FAILURES) | {"parse_error", "retired"}
-
-    assert len({row["url"] for row in failures}) == len(failures)
-    for row in failures:
-        parsed = datetime.fromisoformat(row["timestamp"].replace("Z", "+00:00"))
-        assert parsed.tzinfo is not None and parsed.utcoffset() is not None
-        assert row["category"] in allowed_named_failures or re.fullmatch(
-            r"http_[1-5]\d\d", row["category"]
-        )
-        assert row["url"].startswith("https://")
-        assert row["detail"].strip()
-        if row["category"] == "http_403":
-            assert row["url"].startswith("https://pubs.acs.org/")
+    _assert_failure_report_contract(
+        Path("fetch_failures.tsv"), Path("config/rss_sources.tsv")
+    )
 
     assert not (set(state.source_watermarks) & set(state.source_continuations))
     assert set(state.source_watermarks) | set(state.source_continuations)
     for continuation in state.source_continuations.values():
         assert continuation.cursor not in {"", "*"}
         assert continuation.from_date.isoformat() == continuation.from_date.strftime("%Y-%m-%d")
+
+
+def test_non_acs_registry_http_403_is_a_valid_recoverable_failure(tmp_path, monkeypatch):
+    source_url = "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science"
+    save_state(
+        tmp_path / "state.json",
+        FeedState({}, [], {f"rss:{source_url}": "2026-09-07T00:00:00+00:00"}),
+    )
+    (tmp_path / "fetch_failures.tsv").write_text(
+        "timestamp\tcategory\turl\tdetail\n"
+        f"2026-09-07T00:00:00+00:00\thttp_403\t{source_url}\tHTTP 403\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "config").mkdir()
+    (tmp_path / "config" / "rss_sources.tsv").write_text(
+        "name\tcategory\turl\nScience\tMultidisciplinary\t" + source_url + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    test_source_progress_and_failure_taxonomy_are_consistent()
 
 
 def test_isolated_collection_continuation_completion_and_summary_lifecycle(
@@ -161,8 +197,9 @@ def test_isolated_collection_continuation_completion_and_summary_lifecycle(
     failures_path = tmp_path / "fetch_failures.tsv"
     config_path.write_text(Path("paper_feed_config.json").read_text(encoding="utf-8"), encoding="utf-8")
     queries_path.write_text(Path("config/queries.json").read_text(encoding="utf-8"), encoding="utf-8")
+    source_url = "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science"
     sources_path.write_text(
-        "name\tcategory\turl\nTest Journal\tMaterials\thttps://example.test/feed.xml\n",
+        "name\tcategory\turl\nScience\tMultidisciplinary\t" + source_url + "\n",
         encoding="utf-8",
     )
     paper = PaperRecord(
@@ -173,11 +210,23 @@ def test_isolated_collection_continuation_completion_and_summary_lifecycle(
         published_at=datetime(2026, 9, 1, tzinfo=timezone.utc),
         doi="10.1000/lifecycle",
         url="https://doi.org/10.1000/lifecycle",
-        sources=["rss"],
-        source_ids=["rss:lifecycle"],
+        sources=["openalex"],
+        source_ids=["openalex:lifecycle"],
     )
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
-    monkeypatch.setattr(collect, "collect_rss", lambda url, fetcher: ([paper], None))
+    monkeypatch.setattr(
+        collect,
+        "collect_rss",
+        lambda url, fetcher: (
+            [],
+            SourceFailure(
+                datetime(2026, 9, 7, tzinfo=timezone.utc),
+                "http_403",
+                url,
+                "HTTP 403",
+            ),
+        ),
+    )
     openalex_calls = 0
 
     def deterministic_harvest(name, query, from_date, fetcher, rows, continuation):
@@ -189,7 +238,7 @@ def test_isolated_collection_continuation_completion_and_summary_lifecycle(
             assert continuation is None
             return ScholarlyHarvest(
                 name,
-                [],
+                [paper],
                 None,
                 SourceContinuation(date(2026, 8, 8), "next-page"),
                 False,
@@ -215,11 +264,13 @@ def test_isolated_collection_continuation_completion_and_summary_lifecycle(
         "ai_summary_feed.xml", "ai_summary.html", "ai_usage.json"
     ))
     _assert_repository_output_contract(tmp_path)
+    _assert_failure_report_contract(failures_path, sources_path)
 
     assert collect.main(args, now=lambda: datetime(2026, 9, 7, 6, tzinfo=timezone.utc)) == 0
     completed_state = load_state(state_path)
     assert "openalex" not in completed_state.source_continuations
     assert "openalex" in completed_state.source_watermarks
+    _assert_failure_report_contract(failures_path, sources_path)
 
     class DeterministicSummaryClient:
         def complete_json(self, messages, max_tokens, budget):
@@ -301,6 +352,21 @@ def test_workflow_crons_and_secret_boundary_are_exact():
     assert summary_workflow.count("DEEPSEEK_API_KEY") == 2
     assert "DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}" in summary_workflow
     assert "python -m diamond_feed.collect" not in summary_workflow
+
+    summary_step = _workflow_step(summary_workflow, "Generate bounded DeepSeek digest")
+    assert "id: summarize" in summary_step
+    assert "continue-on-error: true" in summary_step
+
+    publish_step = _workflow_step(summary_workflow, "Commit and push summary outputs")
+    assert "if: ${{ always()" in publish_step
+    assert "steps.summarize.outcome == 'success'" in publish_step
+    assert "steps.summarize.outcome == 'failure'" in publish_step
+    assert "git ls-files --error-unmatch" in publish_step
+    assert 'git add -- "${existing_outputs[@]}"' in publish_step
+
+    failure_step = _workflow_step(summary_workflow, "Propagate summary failure")
+    assert "if: ${{ always() && steps.summarize.outcome == 'failure' }}" in failure_step
+    assert "exit 1" in failure_step
 
 
 def test_all_tracked_text_is_free_of_credentials_and_local_machine_paths():

@@ -74,11 +74,20 @@ def test_github_workflows_obey_the_automation_contract():
         assert text.index("git pull --rebase") < text.index("git push")
 
     expected_digest_step = """      - name: Generate bounded DeepSeek digest
+        id: summarize
+        continue-on-error: true
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: python -m diamond_feed.summarize --config paper_feed_config.json --state state.json
 """
     assert expected_digest_step in summarize
+    assert """      - name: Commit and push summary outputs
+        if: ${{ always() && (steps.summarize.outcome == 'success' || steps.summarize.outcome == 'failure') }}
+""" in summarize
+    assert """      - name: Propagate summary failure
+        if: ${{ always() && steps.summarize.outcome == 'failure' }}
+        run: exit 1
+""" in summarize
 
 
 def test_empty_summary_queue_can_publish_without_preexisting_output_files():
