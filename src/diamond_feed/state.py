@@ -1,7 +1,7 @@
 """Durable, versioned storage for collected papers."""
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 import json
 import math
 from pathlib import Path
@@ -11,8 +11,10 @@ from diamond_feed.models import PaperRecord
 from diamond_feed.normalize import record_key
 
 
-STATE_VERSION = 1
-ROOT_FIELDS = {"version", "papers", "pending_ai", "source_watermarks"}
+STATE_VERSION = 2
+V1_ROOT_FIELDS = {"version", "papers", "pending_ai", "source_watermarks"}
+ROOT_FIELDS = V1_ROOT_FIELDS | {"source_continuations"}
+CONTINUATION_FIELDS = {"from_date", "cursor"}
 PAPER_FIELDS = {
     "title",
     "abstract",
@@ -30,11 +32,18 @@ PAPER_FIELDS = {
 }
 
 
+@dataclass(frozen=True, slots=True)
+class SourceContinuation:
+    from_date: date
+    cursor: str
+
+
 @dataclass(slots=True)
 class FeedState:
     papers: dict[str, PaperRecord] = field(default_factory=dict)
     pending_ai: list[str] = field(default_factory=list)
     source_watermarks: dict[str, str] = field(default_factory=dict)
+    source_continuations: dict[str, SourceContinuation] = field(default_factory=dict)
 
     @classmethod
     def empty(cls) -> "FeedState":
@@ -60,6 +69,31 @@ def _persisted_string(value: object, field_name: str) -> str:
     except UnicodeEncodeError as error:
         raise ValueError(f"{field_name} contains an unpaired Unicode surrogate") from error
     return value
+
+
+def _date(value: object, field_name: str) -> date:
+    persisted = _persisted_string(value, field_name)
+    try:
+        parsed = date.fromisoformat(persisted)
+    except ValueError as error:
+        raise ValueError(f"{field_name} must be an ISO date") from error
+    if parsed.isoformat() != persisted:
+        raise ValueError(f"{field_name} must use YYYY-MM-DD")
+    return parsed
+
+
+def _continuation_from_payload(source: str, payload: object) -> SourceContinuation:
+    if source not in {"openalex", "crossref"}:
+        raise ValueError("only cursor-paginated sources may have continuations")
+    if type(payload) is not dict or set(payload) != CONTINUATION_FIELDS:
+        raise ValueError("source continuation must contain the exact schema fields")
+    cursor = _persisted_string(payload["cursor"], "source continuation cursor")
+    if not cursor:
+        raise ValueError("source continuation cursor must not be empty")
+    return SourceContinuation(
+        from_date=_date(payload["from_date"], "source continuation from_date"),
+        cursor=cursor,
+    )
 
 
 def _string_list(value: object, field_name: str) -> list[str]:
@@ -131,19 +165,32 @@ def _validate_state(state: FeedState) -> None:
     for key, value in state.source_watermarks.items():
         _persisted_string(key, "source watermark key")
         _aware_datetime(value, "source watermark")
+    if type(state.source_continuations) is not dict or not all(
+        type(key) is str and isinstance(value, SourceContinuation)
+        for key, value in state.source_continuations.items()
+    ):
+        raise ValueError("source_continuations must map source names to continuations")
+    for key, continuation in state.source_continuations.items():
+        _persisted_string(key, "source continuation key")
+        _continuation_from_payload(key, _continuation_payload(continuation))
+    if set(state.source_continuations) & set(state.source_watermarks):
+        raise ValueError("a source cannot have both a watermark and a continuation")
 
 
 def _as_state(payload: object) -> FeedState:
     if type(payload) is not dict:
         raise ValueError("state must be a JSON object")
-    if payload.get("version") != STATE_VERSION or type(payload.get("version")) is not int:
+    version = payload.get("version")
+    if type(version) is not int or version not in {1, STATE_VERSION}:
         raise ValueError(f"unsupported state version: {payload.get('version')!r}")
-    if set(payload) != ROOT_FIELDS:
+    expected_fields = V1_ROOT_FIELDS if version == 1 else ROOT_FIELDS
+    if set(payload) != expected_fields:
         raise ValueError("state must contain the exact schema fields")
     papers = payload.get("papers")
     pending_ai = payload.get("pending_ai")
     source_watermarks = payload.get("source_watermarks")
-    if type(papers) is not dict or type(pending_ai) is not list or type(source_watermarks) is not dict:
+    source_continuations = {} if version == 1 else payload.get("source_continuations")
+    if type(papers) is not dict or type(pending_ai) is not list or type(source_watermarks) is not dict or type(source_continuations) is not dict:
         raise ValueError("malformed state schema")
     normalized_watermarks = {}
     for key, value in source_watermarks.items():
@@ -157,9 +204,16 @@ def _as_state(payload: object) -> FeedState:
         papers={key: _paper_from_payload(value) for key, value in papers.items() if type(key) is str},
         pending_ai=list(pending_ai),
         source_watermarks=normalized_watermarks,
+        source_continuations={
+            key: _continuation_from_payload(key, value)
+            for key, value in source_continuations.items()
+            if type(key) is str
+        },
     )
     if len(state.papers) != len(papers):
         raise ValueError("paper keys must be strings")
+    if len(state.source_continuations) != len(source_continuations):
+        raise ValueError("source continuation keys must be strings")
     _validate_state(state)
     return state
 
@@ -184,6 +238,19 @@ def _payload(state: FeedState) -> dict[str, object]:
             key: _aware_datetime(value, "source watermark").isoformat()
             for key, value in state.source_watermarks.items()
         },
+        "source_continuations": {
+            key: _continuation_payload(value)
+            for key, value in state.source_continuations.items()
+        },
+    }
+
+
+def _continuation_payload(continuation: SourceContinuation) -> dict[str, str]:
+    return {
+        "from_date": continuation.from_date.isoformat()
+        if isinstance(continuation.from_date, date)
+        else continuation.from_date,
+        "cursor": continuation.cursor,
     }
 
 

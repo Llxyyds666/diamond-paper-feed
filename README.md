@@ -33,9 +33,11 @@ Diamond Paper Feed 是一个面向金刚石研究的高召回文献监测项目�
 所有适配器都转换为同一种 `PaperRecord`，后续筛选、去重和发布不依赖具体来源：
 
 1. `config/rss_sources.tsv` 保存经真实 GET 验证的官方 RSS/Atom 地址。
-2. OpenAlex、Crossref 和 arXiv 使用 30 天首次回溯及后续来源水位补足没有稳定 RSS 的期刊。
+2. OpenAlex、Crossref 和 arXiv 使用 30 天首次回溯及后续来源水位补足没有稳定 RSS 的期刊。OpenAlex 与 Crossref 使用数据库游标逐页抓取：每个来源每轮最多解析 2000 条；若仍有后页，`state.json` 会同时保存原始起始日期和不透明续页游标，不推进该来源水位，下一轮从该页继续。只有完整走完该日期范围后才清除续页并更新水位。
 3. 宽松规则产生高召回候选，DOI 优先去重；无 DOI 时按规范化题名和年份去重。
 4. 候选先写入 `state.json` 的 `pending_ai`，再由独立摘要任务按日限额消费。
+
+当前清单含 158 个活动 RSS 源。2026-09-07 的无 AI 凭据 fresh smoke 中，154 个 RSS 源成功，Crossref 与 arXiv 完成并写入水位；OpenAlex 在后续页发生瞬时网络故障，已保留 368 条规则筛选后的 OpenAlex 记录、原始起始日期和失败页游标，且未推进 OpenAlex 水位。确定性噪声复核后，最终状态和 RSS 各含 723 篇，失败报告含 2 个空 feed、2 个 HTTP 403 和 1 个网络错误。
 
 以下期刊族没有通过有界真实 GET 获得稳定官方 RSS，或官方端点受反爬限制，因此标记为“仅数据库覆盖”。它们仍由 OpenAlex、Crossref 和 arXiv 查询覆盖，不应把猜测 URL 加入 RSS 清单：
 
@@ -100,6 +102,7 @@ python -m diamond_feed.summarize --config paper_feed_config.json --state state.j
 
 - `collection.lookback_days`：数据库首次回溯 30 天。
 - `collection.raw_feed_max_items`：原始 RSS 最多 2000 条。
+- OpenAlex 单页最多 200 条、Crossref 单页最多 1000 条；每来源每轮合计最多 2000 条，未完成范围由状态中的数据库游标续抓。
 - `collection.http_timeout_seconds` / `http_attempts`：网络超时和有界重试。
 - `ai.base_url`：`https://api.deepseek.com`。
 - `ai.model`：`deepseek-v4-flash-vision-exp`。
@@ -178,7 +181,7 @@ python -m pytest tests/test_source_tools.py tests/test_rss_source.py -q
 
 ## State recovery
 
-`state.json` 与输出文件都使用同目录临时文件后原子替换。恢复时不要手工删掉 `pending_ai`；它是 AI 故障后继续处理的依据。
+`state.json` 与输出文件都使用同目录临时文件后原子替换。恢复时不要手工删掉 `pending_ai` 或 `source_continuations`；前者是 AI 故障后继续处理的依据，后者保存 OpenAlex/Crossref 尚未完成范围的原始日期和数据库游标，删除会造成漏抓或重复抓取。
 
 - 工作流失败但 `state.json` 可解析：保留文件并重新运行失败的工作流。队列和上一版摘要会继续使用。
 - `state.json` 损坏：先在 GitHub 的提交历史中找到最近一个通过测试的版本，下载或 `git restore --source=<good-commit> -- state.json`，运行 `python -m pytest -q`，再手动运行采集。这样保留已有去重键和队列。

@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pytest
+
 from diamond_feed.filtering import load_rules, matches_rules
 from diamond_feed.models import PaperRecord
 from diamond_feed.normalize import merge_records, normalize_doi, record_key
@@ -54,6 +56,50 @@ def test_rules_keep_material_research_and_drop_obvious_semantic_noise():
     assert matches_rules(paper("Boron-doped diamond electrodes for electrochemistry"), rules)
     assert not matches_rules(paper("A diamond graph algorithm for network routing"), rules)
     assert not matches_rules(paper("Baseball diamond geometry for player tracking"), rules)
+
+
+@pytest.mark.parametrize(
+    "title",
+    [
+        "Neuropsychological outcomes in Shwachman-Diamond syndrome",
+        "Quantum fields inside a causal diamond",
+        "Entanglement across spacetime diamonds",
+        "India's diamond crossroads: challenges and shifting markets",
+        "Global diamond trade and market outlook",
+        "Diamond Cut Veneers in restorative dentistry",
+        "Iwasawa Continued Fractions via Diamond Lattice — E8 Intelligence Research",
+        "Hyperbolic 3-Space via Diamond Lattice",
+        "DART-SD: Diamond-topology Aware Retrieval for Tool-Calling Agents",
+        "Diamond topology for tool calling",
+        "The Diamond Covenant and religious identity",
+        "The Art of Indian Jewelry: Kundan, Jadau & Contemporary Elegance",
+        "Diamond-Blackfan anemia syndrome patient outcomes",
+        "Mapping Schwarzschild Spacetime: From Kruskal to Diamond Representations",
+        "Reasoning accuracy on the GPQA Diamond benchmark",
+        "Voices of Indigenous Youth as diamond mines begin closing",
+        "Porous Ti6Al4V scaffolds with a hexagonal diamond structure",
+    ],
+)
+def test_explicit_noise_senses_are_unconditional_even_with_material_context(title):
+    rules = load_rules(Path("config/queries.json"))
+
+    assert not matches_rules(
+        paper(title, "quantum carbon diamond crystal film surface sensor research"), rules
+    )
+
+
+@pytest.mark.parametrize(
+    "title",
+    [
+        "Quantum transport in the cubic diamond crystal lattice",
+        "Hyperbolic phonon polaritons in a diamond crystal",
+        "Defect topology in boron-doped diamond lattice materials",
+    ],
+)
+def test_noise_regressions_keep_genuine_diamond_crystal_lattice_research(title):
+    rules = load_rules(Path("config/queries.json"))
+
+    assert matches_rules(paper(title, "Carbon crystal defects and phonon transport"), rules)
 
 
 def test_record_round_trip_uses_json_native_values_and_utc_timestamp():

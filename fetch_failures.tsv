@@ -1,5 +1,6 @@
 timestamp	category	url	detail
-2026-09-07T05:42:11.880960+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
-2026-09-07T05:42:16.109144+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
-2026-09-07T05:42:16.745453+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aaemcq&type=etoc&feed=rss	HTTP 403
-2026-09-07T05:42:17.375900+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aelccp&type=etoc&feed=rss	HTTP 403
+2026-09-07T06:28:23.323262+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
+2026-09-07T06:28:28.665986+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
+2026-09-07T06:28:29.256985+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aaemcq&type=etoc&feed=rss	HTTP 403
+2026-09-07T06:28:29.889313+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aelccp&type=etoc&feed=rss	HTTP 403
+2026-09-07T06:29:05.750605+00:00	network_error	https://api.openalex.org/works?search=diamond&filter=from_publication_date%3A2026-08-08&per-page=200&cursor=Ils1LjAyOTY4MTcsIDE3ODg1NjY0MDAwMDAsICdodHRwczovL29wZW5hbGV4Lm9yZy9XNzIwODgyODE0MSddIg%3D%3D&select=id%2Cdoi%2Ctitle%2Cdisplay_name%2Cpublication_date%2Cauthorships%2Cprimary_location%2Cabstract_inverted_index	network_error

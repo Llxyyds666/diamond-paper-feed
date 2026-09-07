@@ -32,6 +32,6 @@ def matches_rules(record: PaperRecord, rules: QueryRules) -> bool:
     text = _normalize_text(f"{record.title} {record.abstract}")
     if not any(term in text for term in rules.include_any):
         return False
-    has_material_context = any(term in text for term in rules.material_context)
-    has_obvious_noise = any(term in text for term in rules.obvious_noise)
-    return has_material_context or not has_obvious_noise
+    if any(term in text for term in rules.obvious_noise):
+        return False
+    return True

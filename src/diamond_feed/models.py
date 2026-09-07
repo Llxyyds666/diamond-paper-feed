@@ -72,6 +72,13 @@ class SourceFailure:
 
 
 @dataclass(frozen=True, slots=True)
+class ScholarlyPage:
+    records: list[PaperRecord]
+    next_cursor: str | None
+    item_count: int
+
+
+@dataclass(frozen=True, slots=True)
 class AiDecision:
     key: str
     relevant: bool

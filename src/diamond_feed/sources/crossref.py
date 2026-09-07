@@ -6,7 +6,7 @@ import json
 import re
 from urllib.parse import urlencode
 
-from diamond_feed.models import PaperRecord
+from diamond_feed.models import PaperRecord, ScholarlyPage
 from diamond_feed.normalize import normalize_doi
 
 
@@ -16,10 +16,10 @@ _MAX_PAGE_SIZE = 1000
 _TAGS = re.compile(r"<[^>]+>")
 
 
-def build_url(query: str, from_date: date, rows: int) -> str:
+def build_url(query: str, from_date: date, rows: int, cursor: str = "*") -> str:
     """Build the Crossref works request for a caller-supplied date window."""
     page_size = min(rows, _MAX_PAGE_SIZE)
-    return f"{_BASE_URL}?{urlencode({'query.bibliographic': query, 'filter': f'from-pub-date:{from_date.isoformat()}', 'rows': page_size, 'select': _SELECT})}"
+    return f"{_BASE_URL}?{urlencode({'query.bibliographic': query, 'filter': f'from-pub-date:{from_date.isoformat()}', 'rows': page_size, 'cursor': cursor, 'select': _SELECT})}"
 
 
 def _strip_tags(value: object) -> str:
@@ -100,3 +100,18 @@ def parse_response(body: bytes) -> list[PaperRecord]:
         except (TypeError, ValueError, OverflowError):
             continue
     return records
+
+
+def parse_page(body: bytes) -> ScholarlyPage:
+    """Parse records plus the opaque cursor needed for the next Crossref page."""
+    payload = json.loads(body)
+    if not isinstance(payload, dict) or not isinstance(payload.get("message"), dict):
+        raise ValueError("invalid Crossref response envelope")
+    message = payload["message"]
+    items = message.get("items")
+    if not isinstance(items, list):
+        raise ValueError("invalid Crossref response envelope")
+    next_cursor = message.get("next-cursor")
+    if next_cursor is not None and (type(next_cursor) is not str or not next_cursor):
+        raise ValueError("invalid Crossref next cursor")
+    return ScholarlyPage(parse_response(body), next_cursor, len(items))

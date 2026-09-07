@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import stat
+from urllib.parse import parse_qs, urlparse
 from xml.etree import ElementTree
 
 import pytest
@@ -56,13 +57,69 @@ def test_save_state_returns_publication_result(tmp_path):
     assert result.status == "committed"
 
 
-@pytest.mark.parametrize("payload", [{"version": 2, "papers": {}, "pending_ai": [], "source_watermarks": {}}, {"version": "1"}])
+@pytest.mark.parametrize("payload", [{"version": 3, "papers": {}, "pending_ai": [], "source_watermarks": {}, "source_continuations": {}}, {"version": "1"}])
 def test_load_state_rejects_unsupported_or_malformed_version(tmp_path, payload):
     from diamond_feed.state import load_state
 
     path = tmp_path / "state.json"
     path.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(ValueError, match="version"):
+        load_state(path)
+
+
+def test_load_state_migrates_exact_v1_to_v2_and_current_writes_use_v2(tmp_path):
+    from diamond_feed.state import load_state, save_state
+
+    path = tmp_path / "state.json"
+    path.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "papers": {},
+                "pending_ai": [],
+                "source_watermarks": {"openalex": "2026-09-01T00:00:00+00:00"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    state = load_state(path)
+    assert state.source_continuations == {}
+    save_state(path, state)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["version"] == 2
+    assert payload["source_continuations"] == {}
+
+
+@pytest.mark.parametrize(
+    "continuations",
+    [
+        {"openalex": {"from_date": "2026-08-01", "cursor": "next", "extra": True}},
+        {"openalex": {"from_date": "2026-08-01"}},
+        {"openalex": {"from_date": "2026-8-1", "cursor": "next"}},
+        {"openalex": {"from_date": "2026-08-01", "cursor": ""}},
+        {"openalex": {"from_date": "2026-08-01", "cursor": "bad\ud800"}},
+        {"arxiv": {"from_date": "2026-08-01", "cursor": "next"}},
+    ],
+)
+def test_load_state_rejects_non_strict_v2_continuations(tmp_path, continuations):
+    from diamond_feed.state import load_state
+
+    path = tmp_path / "state.json"
+    path.write_text(
+        json.dumps(
+            {
+                "version": 2,
+                "papers": {},
+                "pending_ai": [],
+                "source_watermarks": {},
+                "source_continuations": continuations,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="invalid state"):
         load_state(path)
 
 
@@ -327,7 +384,11 @@ def test_collection_isolates_adapters_persists_success_and_reports_failures(tmp_
         return [_paper("Diamond success", "abstract", "10.1000/success", 4)], None
 
     monkeypatch.setattr(collect, "collect_rss", fake_rss)
-    monkeypatch.setattr(collect, "_collect_scholarly", lambda *args, **kwargs: [])
+    monkeypatch.setattr(
+        collect,
+        "_collect_scholarly",
+        lambda *args, **kwargs: collect.ScholarlyHarvest(args[0], [], None, None, True, 1),
+    )
     now = datetime(2026, 9, 5, tzinfo=timezone.utc)
     assert collect.main(["--config", str(config), "--state", str(state_path), "--sources", str(sources), "--queries", str(queries), "--feed", str(feed_path), "--failures", str(failures)], now=lambda: now) == 0
 
@@ -337,6 +398,171 @@ def test_collection_isolates_adapters_persists_success_and_reports_failures(tmp_
     loaded = load_state(state_path)
     assert loaded.source_watermarks["rss:https://two.test/rss"] == now.isoformat()
     assert loaded.pending_ai == ["doi:10.1000/success"]
+
+
+def test_openalex_collection_paginates_to_aggregate_cap_and_returns_next_cursor():
+    from diamond_feed.collect import _collect_scholarly
+    from diamond_feed.http import HttpResult
+
+    requested: list[tuple[str, int]] = []
+
+    def fetcher(url):
+        query = parse_qs(urlparse(url).query)
+        cursor = query["cursor"][0]
+        page_size = int(query["per-page"][0])
+        requested.append((cursor, page_size))
+        page_index = 0 if cursor == "*" else int(cursor.removeprefix("oa-"))
+        items = [
+            {
+                "id": f"https://openalex.org/W{page_index * page_size + offset}",
+                "title": f"Diamond material {page_index * page_size + offset}",
+                "publication_date": "2026-09-01",
+            }
+            for offset in range(page_size)
+        ]
+        body = json.dumps(
+            {"meta": {"count": 2500, "next_cursor": f"oa-{page_index + 1}"}, "results": items}
+        ).encode()
+        return HttpResult(body, 200, url)
+
+    result = _collect_scholarly(
+        "openalex", "diamond", datetime(2026, 8, 1).date(), fetcher, 2000
+    )
+
+    assert len(result.records) == 2000
+    assert result.complete is False
+    assert result.failure is None
+    assert result.continuation.cursor == "oa-10"
+    assert result.continuation.from_date.isoformat() == "2026-08-01"
+    assert requested == [("*", 200)] + [(f"oa-{index}", 200) for index in range(1, 10)]
+
+
+def test_crossref_collection_paginates_with_1000_row_pages_until_completion():
+    from diamond_feed.collect import _collect_scholarly
+    from diamond_feed.http import HttpResult
+
+    requested: list[tuple[str, int]] = []
+
+    def fetcher(url):
+        query = parse_qs(urlparse(url).query)
+        cursor = query["cursor"][0]
+        rows = int(query["rows"][0])
+        requested.append((cursor, rows))
+        count = 1000 if cursor == "*" else 1
+        start = 0 if cursor == "*" else 1000
+        items = [
+            {
+                "DOI": f"10.1000/page-{start + offset}",
+                "title": [f"Diamond material {start + offset}"],
+                "published-online": {"date-parts": [[2026, 9, 1]]},
+            }
+            for offset in range(count)
+        ]
+        next_cursor = "cr-1" if cursor == "*" else "cr-unused"
+        body = json.dumps(
+            {"message": {"total-results": 1001, "next-cursor": next_cursor, "items": items}}
+        ).encode()
+        return HttpResult(body, 200, url)
+
+    result = _collect_scholarly(
+        "crossref", "diamond", datetime(2026, 8, 1).date(), fetcher, 2000
+    )
+
+    assert len(result.records) == 1001
+    assert result.complete is True
+    assert result.continuation is None
+    assert requested == [("*", 1000), ("cr-1", 1000)]
+
+
+def test_later_page_failure_keeps_records_and_retries_failed_cursor():
+    from diamond_feed.collect import _collect_scholarly
+    from diamond_feed.http import HttpResult
+
+    requested: list[str] = []
+
+    def fetcher(url):
+        cursor = parse_qs(urlparse(url).query)["cursor"][0]
+        requested.append(cursor)
+        if cursor == "retry-this-page":
+            return HttpResult(b"failure", 503, url)
+        body = json.dumps(
+            {
+                "meta": {"count": 3, "next_cursor": "retry-this-page"},
+                "results": [
+                    {
+                        "id": "https://openalex.org/W-first",
+                        "title": "Diamond material first page",
+                        "publication_date": "2026-09-01",
+                    }
+                ],
+            }
+        ).encode()
+        return HttpResult(body, 200, url)
+
+    result = _collect_scholarly(
+        "openalex", "diamond", datetime(2026, 8, 1).date(), fetcher, 2000
+    )
+
+    assert [record.source_ids for record in result.records] == [["https://openalex.org/W-first"]]
+    assert result.complete is False
+    assert result.failure.category == "http_503"
+    assert result.continuation.cursor == "retry-this-page"
+    assert result.pages_fetched == 1
+    assert requested == ["*", "retry-this-page"]
+
+
+def test_collection_persists_partial_page_then_resumes_and_only_watermarks_on_completion(
+    tmp_path, monkeypatch
+):
+    from diamond_feed import collect
+    from diamond_feed.state import SourceContinuation, load_state
+
+    paths = _collection_paths(tmp_path)
+    config, sources, queries, state_path, feed_path, failures = paths
+    sources.write_text("name\tcategory\turl\n", encoding="utf-8")
+    queries.write_text(
+        json.dumps(
+            {"include_any": ["diamond"], "material_context": ["material"], "obvious_noise": []}
+        ),
+        encoding="utf-8",
+    )
+    start_date = datetime(2026, 8, 6).date()
+    next_page = SourceContinuation(start_date, "retry-this-page")
+    first = _paper("Diamond material page one", "material", "10.1000/page-one", 1, source="openalex")
+    second = _paper("Diamond material page two", "material", "10.1000/page-two", 2, source="openalex")
+    seen: list[tuple[str, SourceContinuation | None]] = []
+    run = 1
+
+    def harvest(name, query, from_date, fetcher, rows, continuation):
+        seen.append((name, continuation))
+        if name != "openalex":
+            failure = SourceFailure(datetime.now(timezone.utc), "timeout", name, "slow")
+            return collect.ScholarlyHarvest(name, [], failure, None, False, 0)
+        if run == 1:
+            failure = SourceFailure(datetime.now(timezone.utc), "http_503", name, "HTTP 503")
+            return collect.ScholarlyHarvest(name, [first], failure, next_page, False, 1)
+        assert continuation == next_page
+        return collect.ScholarlyHarvest(name, [second], None, None, True, 1)
+
+    monkeypatch.setattr(collect, "_collect_scholarly", harvest)
+    first_now = datetime(2026, 9, 5, tzinfo=timezone.utc)
+
+    assert collect.main(_collection_args(paths), now=lambda: first_now) == 0
+    partial = load_state(state_path)
+    assert set(partial.papers) == {record_key(first)}
+    assert partial.source_continuations["openalex"] == next_page
+    assert "openalex" not in partial.source_watermarks
+    assert "http_503" in failures.read_text(encoding="utf-8")
+
+    run = 2
+    second_now = datetime(2026, 9, 6, tzinfo=timezone.utc)
+    assert collect.main(_collection_args(paths), now=lambda: second_now) == 0
+    complete = load_state(state_path)
+    assert set(complete.papers) == {record_key(first), record_key(second)}
+    assert "openalex" not in complete.source_continuations
+    assert complete.source_watermarks["openalex"] == second_now.isoformat()
+    assert seen[0] == ("openalex", None)
+    assert seen[3] == ("openalex", next_page)
 
 
 def test_collection_uses_watermark_or_30_day_bootstrap_and_all_failure_preserves_outputs(tmp_path, monkeypatch):
@@ -352,7 +578,19 @@ def test_collection_uses_watermark_or_30_day_bootstrap_and_all_failure_preserves
     requested_dates = []
 
     monkeypatch.setattr(collect, "collect_rss", lambda url, fetcher: ([], SourceFailure(datetime.now(timezone.utc), "timeout", url, "slow")))
-    monkeypatch.setattr(collect, "_collect_scholarly", lambda name, query, from_date, *args: requested_dates.append((name, from_date)) or [(name, [], SourceFailure(datetime.now(timezone.utc), "timeout", name, "slow"))])
+    monkeypatch.setattr(
+        collect,
+        "_collect_scholarly",
+        lambda name, query, from_date, *args: requested_dates.append((name, from_date))
+        or collect.ScholarlyHarvest(
+            name,
+            [],
+            SourceFailure(datetime.now(timezone.utc), "timeout", name, "slow"),
+            None,
+            False,
+            0,
+        ),
+    )
     now = datetime(2026, 9, 5, tzinfo=timezone.utc)
 
     result = collect.main(["--config", str(config), "--state", str(state_path), "--sources", str(sources), "--queries", str(queries), "--feed", str(feed_path), "--failures", str(failures)], now=lambda: now)
@@ -1579,7 +1817,11 @@ def _successful_collection(tmp_path, monkeypatch):
     paths = _collection_paths(tmp_path)
     paths[1].write_text("name\tcategory\turl\n", encoding="utf-8")
     record = _paper("Diamond transaction", "abstract", "10.1000/transaction", 1)
-    monkeypatch.setattr(collect, "_collect_scholarly", lambda *args, **kwargs: [(args[0], [record], None)])
+    monkeypatch.setattr(
+        collect,
+        "_collect_scholarly",
+        lambda *args, **kwargs: collect.ScholarlyHarvest(args[0], [record], None, None, True, 1),
+    )
     return paths
 
 

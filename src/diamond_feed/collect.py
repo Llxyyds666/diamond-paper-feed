@@ -18,7 +18,7 @@ from diamond_feed.normalize import merge_records, record_key
 from diamond_feed.render import render_rss
 from diamond_feed.sources import arxiv, crossref, openalex
 from diamond_feed.sources.rss import collect_rss
-from diamond_feed.state import FeedState, load_state, stage_state
+from diamond_feed.state import FeedState, SourceContinuation, load_state, stage_state
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,6 +26,16 @@ class CollectionStats:
     added: int = 0
     merged: int = 0
     filtered: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class ScholarlyHarvest:
+    source_name: str
+    records: list[PaperRecord]
+    failure: SourceFailure | None
+    continuation: SourceContinuation | None
+    complete: bool
+    pages_fetched: int
 
 
 def merge_into_state(state: FeedState, incoming: Iterable[PaperRecord], rules: QueryRules) -> CollectionStats:
@@ -85,17 +95,84 @@ def _collect_scholarly(
     from_date: date,
     fetcher: Callable[[str], object],
     rows: int,
-) -> list[tuple[str, list[PaperRecord], SourceFailure | None]]:
+    continuation: SourceContinuation | None = None,
+) -> ScholarlyHarvest:
     module = {"openalex": openalex, "crossref": crossref, "arxiv": arxiv}[name]
-    url = module.build_url(query, from_date, rows)
-    try:
-        result = fetcher(url)
-        status = getattr(result, "status")
-        if not 200 <= status < 300:
-            return [(name, [], SourceFailure(datetime.now(timezone.utc), f"http_{status}", url, f"HTTP {status}"))]
-        return [(name, module.parse_response(getattr(result, "body")), None)]
-    except Exception as error:
-        return [(name, [], _failure(url, error))]
+    limit = min(rows, 2000)
+    original_from_date = continuation.from_date if continuation is not None else from_date
+    cursor = continuation.cursor if continuation is not None else "*"
+    records: list[PaperRecord] = []
+    pages_fetched = 0
+
+    if name == "arxiv":
+        url = module.build_url(query, original_from_date, limit)
+        try:
+            result = fetcher(url)
+            status = getattr(result, "status")
+            if not 200 <= status < 300:
+                failure = SourceFailure(datetime.now(timezone.utc), f"http_{status}", url, f"HTTP {status}")
+                return ScholarlyHarvest(name, [], failure, None, False, 0)
+            return ScholarlyHarvest(name, module.parse_response(getattr(result, "body")), None, None, True, 1)
+        except Exception as error:
+            return ScholarlyHarvest(name, [], _failure(url, error), None, False, 0)
+
+    page_limit = {"openalex": 200, "crossref": 1000}[name]
+    while len(records) < limit:
+        requested_rows = min(limit - len(records), page_limit)
+        url = module.build_url(query, original_from_date, requested_rows, cursor)
+        try:
+            result = fetcher(url)
+            status = getattr(result, "status")
+            if not 200 <= status < 300:
+                failure = SourceFailure(datetime.now(timezone.utc), f"http_{status}", url, f"HTTP {status}")
+                return ScholarlyHarvest(
+                    name,
+                    records,
+                    failure,
+                    SourceContinuation(original_from_date, cursor),
+                    False,
+                    pages_fetched,
+                )
+            page = module.parse_page(getattr(result, "body"))
+        except Exception as error:
+            return ScholarlyHarvest(
+                name,
+                records,
+                _failure(url, error),
+                SourceContinuation(original_from_date, cursor),
+                False,
+                pages_fetched,
+            )
+
+        pages_fetched += 1
+        records.extend(page.records)
+        if page.next_cursor is None or (name == "crossref" and page.item_count < requested_rows):
+            return ScholarlyHarvest(name, records, None, None, True, pages_fetched)
+        if page.next_cursor == cursor:
+            failure = SourceFailure(
+                datetime.now(timezone.utc),
+                "parse_error",
+                url,
+                "pagination cursor did not advance",
+            )
+            return ScholarlyHarvest(
+                name,
+                records,
+                failure,
+                SourceContinuation(original_from_date, cursor),
+                False,
+                pages_fetched,
+            )
+        cursor = page.next_cursor
+
+    return ScholarlyHarvest(
+        name,
+        records,
+        None,
+        SourceContinuation(original_from_date, cursor),
+        False,
+        pages_fetched,
+    )
 
 
 def _write_failures(path: Path, failures: list[SourceFailure]) -> CommitResult:
@@ -133,6 +210,7 @@ def main(argv: list[str] | None = None, *, now: Callable[[], datetime] | None = 
     records: list[PaperRecord] = []
     failures: list[SourceFailure] = []
     successful_sources: list[str] = []
+    scholarly_progress = False
 
     for row in _read_sources(args.sources):
         url = row["url"].strip()
@@ -146,17 +224,35 @@ def main(argv: list[str] | None = None, *, now: Callable[[], datetime] | None = 
 
     query = rules.include_any[0] if rules.include_any else "diamond"
     for name in ("openalex", "crossref", "arxiv"):
-        from_date = _watermark_date(state, name, current_time, config.collection.lookback_days)
-        for source_name, collected, failure in _collect_scholarly(name, query, from_date, fetcher, config.collection.raw_feed_max_items):
-            if failure is None:
-                records.extend(collected)
-                successful_sources.append(source_name)
-            else:
-                failures.append(failure)
+        continuation = state.source_continuations.get(name)
+        from_date = continuation.from_date if continuation is not None else _watermark_date(
+            state, name, current_time, config.collection.lookback_days
+        )
+        harvest = _collect_scholarly(
+            name,
+            query,
+            from_date,
+            fetcher,
+            config.collection.raw_feed_max_items,
+            continuation,
+        )
+        records.extend(harvest.records)
+        if harvest.failure is not None:
+            failures.append(harvest.failure)
+        if harvest.complete:
+            state.source_continuations.pop(name, None)
+            successful_sources.append(name)
+            scholarly_progress = True
+        elif harvest.pages_fetched:
+            if harvest.continuation is None:
+                raise RuntimeError(f"{name} pagination stopped without a continuation")
+            state.source_continuations[name] = harvest.continuation
+            state.source_watermarks.pop(name, None)
+            scholarly_progress = True
 
     failure_result = _write_failures(args.failures, failures)
     _report_cleanup_debt(failure_result)
-    if not successful_sources:
+    if not successful_sources and not scholarly_progress:
         return 2
 
     merge_into_state(state, records, rules)

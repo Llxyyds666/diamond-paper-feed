@@ -11,13 +11,14 @@ from diamond_feed.sources import arxiv, crossref, openalex
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
-def test_source_urls_have_date_window_encoded_query_and_rows():
+def test_source_urls_have_date_window_encoded_query_rows_and_initial_cursor():
     query = "boron-doped diamond & sensors"
     for module in (openalex, crossref):
         url = module.build_url(query, date(2026, 8, 1), 50)
         parsed = parse_qs(urlparse(url).query)
         assert "diamond" in unquote_plus(url)
         assert parsed.get("per-page", parsed.get("rows")) == ["50"]
+        assert parsed["cursor"] == ["*"]
         assert "2026-08-01" in unquote_plus(url)
         assert "%26" in url
 
@@ -39,6 +40,33 @@ def test_json_source_page_sizes_are_capped_at_public_api_limits():
 
     assert openalex_query["per-page"] == ["200"]
     assert crossref_query["rows"] == ["1000"]
+
+
+def test_json_source_urls_accept_opaque_continuation_cursors():
+    cursor = "opaque cursor/+?=Unicode-游标"
+
+    for module in (openalex, crossref):
+        parsed = parse_qs(
+            urlparse(module.build_url("diamond", date(2026, 8, 1), 10, cursor)).query
+        )
+        assert parsed["cursor"] == [cursor]
+
+
+def test_json_page_parsers_return_records_and_next_cursor_without_breaking_parse_response():
+    openalex_payload = json.loads((FIXTURES / "openalex.json").read_bytes())
+    openalex_payload["meta"] = {"count": 400, "next_cursor": "oa-next"}
+    openalex_body = json.dumps(openalex_payload).encode()
+    crossref_payload = json.loads((FIXTURES / "crossref.json").read_bytes())
+    crossref_payload["message"]["next-cursor"] = "cr-next"
+    crossref_body = json.dumps(crossref_payload).encode()
+
+    oa_page = openalex.parse_page(openalex_body)
+    cr_page = crossref.parse_page(crossref_body)
+
+    assert oa_page.records == openalex.parse_response(openalex_body)
+    assert oa_page.next_cursor == "oa-next"
+    assert cr_page.records == crossref.parse_response(crossref_body)
+    assert cr_page.next_cursor == "cr-next"
 
 
 def test_openalex_reconstructs_inverted_abstract_stably_and_handles_none():
