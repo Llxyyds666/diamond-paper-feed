@@ -28,10 +28,14 @@ def load_rules(path: Path) -> QueryRules:
     )
 
 
+def _contains_phrase(text: str, phrase: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(phrase)}(?:s)?(?!\w)", text) is not None
+
+
 def matches_rules(record: PaperRecord, rules: QueryRules) -> bool:
     text = _normalize_text(f"{record.title} {record.abstract}")
     if not any(term in text for term in rules.include_any):
         return False
-    if any(term in text for term in rules.obvious_noise):
+    if any(_contains_phrase(text, term) for term in rules.obvious_noise):
         return False
     return True

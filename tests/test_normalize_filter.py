@@ -102,6 +102,22 @@ def test_noise_regressions_keep_genuine_diamond_crystal_lattice_research(title):
     assert matches_rules(paper(title, "Carbon crystal defects and phonon transport"), rules)
 
 
+@pytest.mark.parametrize(
+    "title",
+    [
+        "Thermal transport across diamond-graphene heterostructures",
+        "Diamond graphene field-effect transistors",
+        "Diamond-coated Ti6Al4V scaffolds for biomedical implants",
+    ],
+)
+def test_noise_phrases_do_not_swallow_diamond_devices_or_coatings(title):
+    rules = load_rules(Path("config/queries.json"))
+
+    assert matches_rules(
+        paper(title, "CVD diamond semiconductor carbon film surface"), rules
+    )
+
+
 def test_record_round_trip_uses_json_native_values_and_utc_timestamp():
     value = paper("Diamond sensor", doi="10.1000/sensor")
     value.published_at = datetime(2026, 9, 1, 8, tzinfo=timezone.utc)

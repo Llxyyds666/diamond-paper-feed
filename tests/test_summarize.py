@@ -79,6 +79,134 @@ def test_first_run_processes_at_most_40_and_uses_at_most_5_requests(
     assert (tmp_path / "ai_usage.json").exists()
 
 
+def test_same_utc_day_reuses_persisted_candidate_and_request_limits(
+    tmp_path, configured_state_with_100_pending, app_config
+):
+    first_client = RecordingClient()
+    first = run_summary(
+        app_config,
+        configured_state_with_100_pending,
+        first_client,
+        datetime(2026, 9, 7, 7, tzinfo=timezone.utc),
+        output_dir=tmp_path,
+    )
+    second_client = RecordingClient()
+    second = run_summary(
+        app_config,
+        configured_state_with_100_pending,
+        second_client,
+        datetime(2026, 9, 7, 23, tzinfo=timezone.utc),
+        output_dir=tmp_path,
+    )
+    usage = json.loads((tmp_path / "ai_usage.json").read_text(encoding="utf-8"))
+
+    assert (first.candidates, first.requests) == (40, 5)
+    assert (second.candidates, second.requests, second.processed) == (0, 0, 0)
+    assert second_client.payloads == []
+    assert usage[-1]["date"] == "2026-09-07"
+    assert usage[-1]["candidates"] == 40
+    assert usage[-1]["requests"] == 5
+
+
+def test_failed_attempt_is_persisted_and_reduces_same_day_request_budget(
+    tmp_path, configured_state_with_100_pending, failing_deepseek_client, app_config
+):
+    previous_feed = "<rss>previous feed</rss>"
+    previous_html = "<html><body>previous digest</body></html>"
+    (tmp_path / "ai_summary_feed.xml").write_text(previous_feed, encoding="utf-8")
+    (tmp_path / "ai_summary.html").write_text(previous_html, encoding="utf-8")
+    before = configured_state_with_100_pending.read_text(encoding="utf-8")
+
+    first = run_summary(
+        app_config,
+        configured_state_with_100_pending,
+        failing_deepseek_client,
+        datetime(2026, 9, 7, tzinfo=timezone.utc),
+        output_dir=tmp_path,
+    )
+    assert (first.failed, first.candidates, first.requests, first.processed) == (
+        True,
+        40,
+        1,
+        0,
+    )
+    assert (tmp_path / "ai_summary_feed.xml").read_text(encoding="utf-8") == previous_feed
+    assert (tmp_path / "ai_summary.html").read_text(encoding="utf-8") == previous_html
+    assert configured_state_with_100_pending.read_text(encoding="utf-8") == before
+
+    second_client = RecordingClient()
+    second = run_summary(
+        app_config,
+        configured_state_with_100_pending,
+        second_client,
+        datetime(2026, 9, 7, 12, tzinfo=timezone.utc),
+        output_dir=tmp_path,
+    )
+
+    usage = json.loads((tmp_path / "ai_usage.json").read_text(encoding="utf-8"))[-1]
+    assert (second.candidates, second.requests) == (0, 0)
+    assert second_client.payloads == []
+    assert (usage["candidates"], usage["requests"]) == (40, 1)
+
+
+def test_next_utc_day_restores_candidate_and_request_limits(
+    tmp_path, configured_state_with_100_pending, app_config
+):
+    shanghai = timezone(timedelta(hours=8))
+    run_summary(
+        app_config,
+        configured_state_with_100_pending,
+        RecordingClient(),
+        datetime(2026, 9, 8, 7, 59, tzinfo=shanghai),
+        output_dir=tmp_path,
+    )
+    client = RecordingClient()
+    stats = run_summary(
+        app_config,
+        configured_state_with_100_pending,
+        client,
+        datetime(2026, 9, 8, 8, 0, tzinfo=shanghai),
+        output_dir=tmp_path,
+    )
+
+    assert (stats.candidates, stats.requests, stats.processed) == (40, 5, 40)
+    usage = json.loads((tmp_path / "ai_usage.json").read_text(encoding="utf-8"))
+    assert [(entry["date"], entry["candidates"], entry["requests"]) for entry in usage] == [
+        ("2026-09-07", 40, 5),
+        ("2026-09-08", 40, 5),
+    ]
+
+
+def test_same_day_prior_usage_leaves_only_remaining_request_attempts(
+    tmp_path, configured_state_with_100_pending, app_config
+):
+    prior = [{
+        "date": "2026-09-07",
+        "candidates": 10,
+        "processed": 10,
+        "selected": 10,
+        "requests": 4,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+    }]
+    (tmp_path / "ai_usage.json").write_text(json.dumps(prior), encoding="utf-8")
+    client = RecordingClient()
+
+    stats = run_summary(
+        app_config,
+        configured_state_with_100_pending,
+        client,
+        datetime(2026, 9, 7, 8, tzinfo=timezone.utc),
+        output_dir=tmp_path,
+    )
+    usage = json.loads((tmp_path / "ai_usage.json").read_text(encoding="utf-8"))[-1]
+
+    assert (stats.candidates, stats.processed, stats.requests, stats.failed) == (30, 10, 1, True)
+    assert len(client.payloads) == 1
+    assert (usage["candidates"], usage["processed"], usage["requests"]) == (40, 20, 5)
+
+
 def test_candidate_limit_selects_the_oldest_40_even_if_queue_order_is_stale(
     tmp_path, configured_state_with_100_pending, fake_deepseek_client, app_config
 ):
@@ -106,10 +234,10 @@ def test_ai_failure_preserves_previous_outputs_and_queue(
     previous = {
         "ai_summary_feed.xml": "<rss>previous feed</rss>",
         "ai_summary.html": "<html><body>previous digest</body></html>",
-        "ai_usage.json": "[]\n",
     }
     for name, contents in previous.items():
         (tmp_path / name).write_text(contents, encoding="utf-8")
+    (tmp_path / "ai_usage.json").write_text("[]\n", encoding="utf-8")
     before = configured_state_with_100_pending.read_text(encoding="utf-8")
     stats = run_summary(
         app_config,
@@ -121,6 +249,8 @@ def test_ai_failure_preserves_previous_outputs_and_queue(
     assert stats.failed is True
     for name, contents in previous.items():
         assert (tmp_path / name).read_text(encoding="utf-8") == contents
+    usage = json.loads((tmp_path / "ai_usage.json").read_text(encoding="utf-8"))
+    assert (usage[0]["candidates"], usage[0]["requests"]) == (40, 1)
     assert configured_state_with_100_pending.read_text(encoding="utf-8") == before
     assert not list(tmp_path.glob("*.tmp"))
 

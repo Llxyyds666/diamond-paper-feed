@@ -155,6 +155,30 @@ def _merged_usage(
     return [by_date[key] for key in sorted(by_date)]
 
 
+def _usage_for_day(
+    entries: list[dict[str, int | str]], day: str
+) -> dict[str, int | str] | None:
+    return next((entry for entry in entries if entry["date"] == day), None)
+
+
+def _publish_usage(
+    path: Path,
+    previous_usage: list[dict[str, int | str]],
+    stats: SummaryStats,
+    day: str,
+) -> None:
+    contents = json.dumps(
+        _merged_usage(previous_usage, stats.usage_entry(day)),
+        ensure_ascii=False,
+        indent=2,
+    ) + "\n"
+    staged = stage_text(path, contents)
+    try:
+        commit_staged([staged])
+    except Exception as commit_error:
+        raise_with_cleanup(commit_error, "publish AI usage", discard_staged([staged]))
+
+
 class _SafeFragmentParser(HTMLParser):
     _CONTAINERS = {"section", "h2", "h3", "p", "ul", "ol", "li", "strong", "em"}
 
@@ -358,19 +382,27 @@ def run_summary(
     destinations = (rss_path, html_path, usage_path, state_path)
     validate_output_layout(destinations)
     previous_usage = _usage_entries(usage_path)
+    today_usage = _usage_for_day(previous_usage, day)
+    used_candidates = int(today_usage["candidates"]) if today_usage is not None else 0
+    used_requests = int(today_usage["requests"]) if today_usage is not None else 0
+    candidate_limit = max(0, config.ai.daily_candidates - used_candidates)
+    request_limit = max(0, config.ai.max_requests - used_requests)
+
+    if candidate_limit == 0 or request_limit == 0:
+        return SummaryStats(0, 0, 0, 0, len(state.pending_ai), False)
 
     candidate_keys = sorted(
         state.pending_ai, key=lambda key: state.papers[key].published_at
-    )[: config.ai.daily_candidates]
+    )[:candidate_limit]
     if not candidate_keys:
         return SummaryStats(0, 0, 0, 0, len(state.pending_ai), False)
 
-    budget = RequestBudget(config.ai.max_requests)
+    budget = RequestBudget(request_limit)
     token_before = _client_token_totals(client)
     decisions: list[AiDecision] = []
     screening_failed = False
     for offset in range(0, len(candidate_keys), config.ai.batch_size):
-        if budget.remaining <= 1:
+        if budget.remaining == 0:
             screening_failed = True
             break
         keys = candidate_keys[offset : offset + config.ai.batch_size]
@@ -384,7 +416,7 @@ def run_summary(
 
     token_after_screening = _client_token_totals(client)
     if not decisions:
-        return _summary_stats(
+        stats = _summary_stats(
             candidates=len(candidate_keys),
             processed=0,
             selected=0,
@@ -394,6 +426,8 @@ def run_summary(
             token_before=token_before,
             token_after=token_after_screening,
         )
+        _publish_usage(usage_path, previous_usage, stats, day)
+        return stats
 
     processed_keys = {decision.key for decision in decisions}
     for decision in decisions:
