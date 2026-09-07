@@ -122,7 +122,7 @@ def _inspect(
     if not 200 <= result.status < 300:
         return f"http_{result.status}", result.status, final_url, f"HTTP {result.status}"
     parsed = feedparser.parse(result.body)
-    if parsed.bozo and not parsed.entries:
+    if parsed.bozo:
         return "parse_error", result.status, final_url, "malformed feed"
     if not parsed.entries:
         return "empty_feed", result.status, final_url, "feed contained no entries"

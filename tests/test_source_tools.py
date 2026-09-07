@@ -139,6 +139,26 @@ def test_validation_treats_malformed_feed_as_hard(tmp_path):
     assert _read_tsv(failures)[0]["category"] == "parse_error"
 
 
+def test_validation_treats_recoverable_malformed_feed_as_hard(tmp_path):
+    sources = tmp_path / "sources.tsv"
+    failures = tmp_path / "failures.tsv"
+    write_sources(sources, [SourceRow("Broken", "journal", "https://broken.test/rss")])
+    malformed_with_entry = b"""<?xml version='1.0'?>
+<rss version='2.0'><channel><title>Broken but readable</title>
+<item><title>Recovered paper</title><link>https://broken.test/paper</link></item>
+</channel>"""
+
+    summary = validate_registry(
+        sources,
+        failures,
+        fetcher=lambda url: HttpResult(malformed_with_entry, 200, url),
+    )
+
+    assert summary.hard == 1
+    assert _read_tsv(sources) == []
+    assert _read_tsv(failures)[0]["category"] == "parse_error"
+
+
 def test_validation_requires_hard_failure_to_repeat(tmp_path):
     sources = tmp_path / "sources.tsv"
     failures = tmp_path / "failures.tsv"

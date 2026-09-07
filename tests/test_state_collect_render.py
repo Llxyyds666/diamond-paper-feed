@@ -74,6 +74,11 @@ def test_default_rss_registry_is_readable():
     assert rows
     assert all(set(row) == {"name", "category", "url"} for row in rows)
     assert all(row["url"].startswith("https://") for row in rows)
+    assert len({row["url"] for row in rows}) == len(rows)
+    assert rows == sorted(
+        rows,
+        key=lambda row: (row["name"].casefold(), row["category"].casefold(), row["url"]),
+    )
 
 
 @pytest.mark.parametrize(

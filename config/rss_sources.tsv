@@ -3,8 +3,13 @@ AAAS: Science Advances: Table of Contents	unknown	https://www.science.org/action
 AAAS: Science: Table of Contents	unknown	https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science
 Actuators	unknown	https://www.mdpi.com/rss/journal/actuators
 Applied Mechanics	unknown	https://www.mdpi.com/rss/journal/applmech
-Applied Surface Science	unknown	https://rss.sciencedirect.com/publication/science/01694332
 Applied Sciences	unknown	https://www.mdpi.com/rss/journal/applsci
+Applied Surface Science	unknown	https://rss.sciencedirect.com/publication/science/01694332
+"arXiv Query: search_query=all:""dion-jacobson"" AND all:perovskite&id_list=&start=0&max_results=50"	unknown	https://export.arxiv.org/api/query?search_query=all:%22dion-jacobson%22+AND+all:perovskite&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending
+"arXiv Query: search_query=all:""quasi-2d"" AND all:perovskite&id_list=&start=0&max_results=50"	unknown	https://export.arxiv.org/api/query?search_query=all:%22quasi-2d%22+AND+all:perovskite&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending
+"arXiv Query: search_query=all:""ruddlesden-popper"" AND all:perovskite&id_list=&start=0&max_results=50"	unknown	https://export.arxiv.org/api/query?search_query=all:%22ruddlesden-popper%22+AND+all:perovskite&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending
+"arXiv Query: search_query=all:perovskite AND all:""solar cell""&id_list=&start=0&max_results=50"	unknown	https://export.arxiv.org/api/query?search_query=all:perovskite+AND+all:%22solar+cell%22&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending
+arXiv Query: search_query=all:perovskite AND all:tandem&id_list=&start=0&max_results=50	unknown	https://export.arxiv.org/api/query?search_query=all:perovskite+AND+all:tandem&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending
 Batteries	unknown	https://www.mdpi.com/rss/journal/batteries
 Bioengineering	unknown	https://www.mdpi.com/rss/journal/bioengineering
 Biomolecules	unknown	https://www.mdpi.com/rss/journal/biomolecules
@@ -104,6 +109,27 @@ Recent Articles in Phys. Rev. B	unknown	https://feeds.aps.org/rss/recent/prb.xml
 Recent Articles in Phys. Rev. Materials	unknown	https://feeds.aps.org/rss/recent/prmaterials.xml
 Recent Articles in Phys. Rev. Research	unknown	https://feeds.aps.org/rss/recent/prresearch.xml
 Recycling	unknown	https://www.mdpi.com/rss/journal/recycling
+ScienceDirect Publication: Acta Materialia	unknown	https://rss.sciencedirect.com/publication/science/13596454
+ScienceDirect Publication: Ceramics International	unknown	https://rss.sciencedirect.com/publication/science/02728842
+ScienceDirect Publication: Energy Conversion and Management	unknown	https://rss.sciencedirect.com/publication/science/01968904
+ScienceDirect Publication: Heliyon	unknown	https://rss.sciencedirect.com/publication/science/24058440
+ScienceDirect Publication: Integration	unknown	https://rss.sciencedirect.com/publication/science/01679260
+ScienceDirect Publication: Journal of Energy Storage	unknown	https://rss.sciencedirect.com/publication/science/2352152X
+ScienceDirect Publication: Materials Chemistry and Physics	unknown	https://rss.sciencedirect.com/publication/science/02540584
+ScienceDirect Publication: Materials Science in Semiconductor Processing	unknown	https://rss.sciencedirect.com/publication/science/13698001
+ScienceDirect Publication: Materials Today Physics	unknown	https://rss.sciencedirect.com/publication/science/25425293
+ScienceDirect Publication: Microelectronic Engineering	unknown	https://rss.sciencedirect.com/publication/science/01679317
+ScienceDirect Publication: Microelectronics Journal	unknown	https://rss.sciencedirect.com/publication/science/18792391
+ScienceDirect Publication: Nano Energy	unknown	https://rss.sciencedirect.com/publication/science/22112855
+ScienceDirect Publication: Optical Materials	unknown	https://rss.sciencedirect.com/publication/science/09253467
+ScienceDirect Publication: Physica E: Low-dimensional Systems and Nanostructures	unknown	https://rss.sciencedirect.com/publication/science/13869477
+ScienceDirect Publication: Results in Physics	unknown	https://rss.sciencedirect.com/publication/science/22113797
+ScienceDirect Publication: Science Bulletin	unknown	https://rss.sciencedirect.com/publication/science/20959273
+ScienceDirect Publication: Solar Energy Advances	unknown	https://rss.sciencedirect.com/publication/science/26671131
+ScienceDirect Publication: Solar Energy Materials and Solar Cells	unknown	https://rss.sciencedirect.com/publication/science/09270248
+ScienceDirect Publication: Solid-State Electronics	unknown	https://rss.sciencedirect.com/publication/science/00381101
+ScienceDirect Publication: Superlattices and Microstructures	unknown	https://rss.sciencedirect.com/publication/science/07496036
+ScienceDirect Publication: Synthetic Metals	unknown	https://rss.sciencedirect.com/publication/science/03796779
 Sensors	unknown	https://www.mdpi.com/rss/journal/sensors
 Solar	unknown	https://www.mdpi.com/rss/journal/solar
 Solids	unknown	https://www.mdpi.com/rss/journal/solids
@@ -114,37 +140,10 @@ tandf: High Pressure Research: Table of Contents	unknown	https://www.tandfonline
 tandf: International Journal of Electronics: Table of Contents	unknown	https://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=tetn
 Technologies	unknown	https://www.mdpi.com/rss/journal/technologies
 Thin Solid Films	unknown	https://rss.sciencedirect.com/publication/science/00406090
-unknown	unknown	https://export.arxiv.org/api/query?search_query=all:%22dion-jacobson%22+AND+all:perovskite&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending
-unknown	unknown	https://export.arxiv.org/api/query?search_query=all:%22quasi-2d%22+AND+all:perovskite&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending
-unknown	unknown	https://export.arxiv.org/api/query?search_query=all:%22ruddlesden-popper%22+AND+all:perovskite&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending
-unknown	unknown	https://export.arxiv.org/api/query?search_query=all:perovskite+AND+all:%22solar+cell%22&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending
-unknown	unknown	https://export.arxiv.org/api/query?search_query=all:perovskite+AND+all:tandem&start=0&max_results=50&sortBy=submittedDate&sortOrder=descending
 unknown	unknown	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest
 unknown	unknown	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest
 unknown	unknown	https://pubs.acs.org/action/showFeed?jc=aaemcq&type=etoc&feed=rss
 unknown	unknown	https://pubs.acs.org/action/showFeed?jc=aelccp&type=etoc&feed=rss
-unknown	unknown	https://rss.sciencedirect.com/publication/science/00381101
-unknown	unknown	https://rss.sciencedirect.com/publication/science/01679260
-unknown	unknown	https://rss.sciencedirect.com/publication/science/01679317
-unknown	unknown	https://rss.sciencedirect.com/publication/science/01968904
-unknown	unknown	https://rss.sciencedirect.com/publication/science/02540584
-unknown	unknown	https://rss.sciencedirect.com/publication/science/02728842
-unknown	unknown	https://rss.sciencedirect.com/publication/science/03796779
-unknown	unknown	https://rss.sciencedirect.com/publication/science/07496036
-unknown	unknown	https://rss.sciencedirect.com/publication/science/09253467
-unknown	unknown	https://rss.sciencedirect.com/publication/science/09270248
-unknown	unknown	https://rss.sciencedirect.com/publication/science/13596454
-unknown	unknown	https://rss.sciencedirect.com/publication/science/13698001
-unknown	unknown	https://rss.sciencedirect.com/publication/science/13869477
-unknown	unknown	https://rss.sciencedirect.com/publication/science/18716763
-unknown	unknown	https://rss.sciencedirect.com/publication/science/18792391
-unknown	unknown	https://rss.sciencedirect.com/publication/science/20959273
-unknown	unknown	https://rss.sciencedirect.com/publication/science/22112855
-unknown	unknown	https://rss.sciencedirect.com/publication/science/22113797
-unknown	unknown	https://rss.sciencedirect.com/publication/science/2352152X
-unknown	unknown	https://rss.sciencedirect.com/publication/science/24058440
-unknown	unknown	https://rss.sciencedirect.com/publication/science/25425293
-unknown	unknown	https://rss.sciencedirect.com/publication/science/26671131
 Water	unknown	https://www.mdpi.com/rss/journal/water
 Wiley: Advanced Electronic Materials: Table of Contents	unknown	https://onlinelibrary.wiley.com/feed/2199160X/most-recent
 Wiley: Advanced Energy Materials: Table of Contents	unknown	https://onlinelibrary.wiley.com/feed/16146840/most-recent
