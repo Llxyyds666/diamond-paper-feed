@@ -1,0 +1,12 @@
+[
+  {
+    "date": "2026-09-07",
+    "candidates": 40,
+    "processed": 0,
+    "selected": 0,
+    "requests": 5,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  }
+]
