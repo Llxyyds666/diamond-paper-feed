@@ -47,11 +47,12 @@ jobs:
         run: |
           python - <<'PY'
           import os
+          from pathlib import Path
 
           from diamond_feed.ai import DeepSeekClient, RequestBudget
           from diamond_feed.config import load_config
 
-          config = load_config("paper_feed_config.json")
+          config = load_config(Path("paper_feed_config.json"))
           client = DeepSeekClient(os.environ["DEEPSEEK_API_KEY"], config.ai)
           budget = RequestBudget(1)
           result = client.complete_json(

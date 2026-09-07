@@ -356,6 +356,7 @@ def test_workflow_crons_and_secret_boundary_are_exact():
 
     smoke_step = _workflow_step(summary_workflow, "Run one-request DeepSeek smoke test")
     assert "inputs.smoke_test == true" in smoke_step
+    assert 'load_config(Path("paper_feed_config.json"))' in smoke_step
     assert "RequestBudget(1)" in smoke_step
     assert "max_tokens=32" in smoke_step
 
