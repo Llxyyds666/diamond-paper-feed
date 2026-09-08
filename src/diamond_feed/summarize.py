@@ -26,6 +26,7 @@ from diamond_feed.atomic import (
 from diamond_feed.config import AppConfig, load_config
 from diamond_feed.models import AiDecision, PaperRecord
 from diamond_feed.normalize import group_records
+from diamond_feed.publication import cumulative_records, load_withheld_aliases
 from diamond_feed.render import render_rss
 from diamond_feed.state import FeedState, load_state, stage_state
 
@@ -298,13 +299,22 @@ def _deterministic_overview(count: int) -> str:
 
 
 def _render_html(
-    records: list[PaperRecord], publication_title: str, day: str, overview: str | None
+    records: list[PaperRecord], publication_title: str, day: str, overview: str | None,
+    *,
+    new_count: int | None = None,
+    cumulative_count: int | None = None,
 ) -> str:
     groups: dict[str, list[PaperRecord]] = {}
     for record in records:
         groups.setdefault(_record_category(record), []).append(record)
 
-    body = [overview or _deterministic_overview(len(records))]
+    body = []
+    if new_count is not None and cumulative_count is not None:
+        body.append(
+            "<section><h2>发布统计</h2>"
+            f"<p>本次新增 {new_count} 篇，累计收录 {cumulative_count} 篇。</p></section>"
+        )
+    body.append(overview or _deterministic_overview(new_count if new_count is not None else len(records)))
     for category in sorted(groups):
         body.append(
             f'<section class="paper-group"><h2>{escape(CATEGORY_TITLES[category])}</h2>'
@@ -351,6 +361,36 @@ def _apply_decision(state: FeedState, decision: AiDecision) -> None:
     record.summary_zh = decision.summary_zh
 
 
+def render_publication(
+    state: FeedState,
+    config: AppConfig,
+    day: str,
+    overview: str | None,
+    withheld_aliases: set[str],
+    *,
+    new_count: int,
+) -> tuple[str, str]:
+    """Render cumulative AI outputs for online screening or offline promotion."""
+    records = cumulative_records(state, withheld_aliases)
+    feed_records = [replace(record, abstract=record.summary_zh or "") for record in records]
+    rss = render_rss(
+        feed_records,
+        f"{config.publication.title} · 中文摘要",
+        config.publication.base_url,
+        len(feed_records),
+        cap_at_2000=False,
+    )
+    html = _render_html(
+        records,
+        config.publication.title,
+        day,
+        overview,
+        new_count=new_count,
+        cumulative_count=len(records),
+    )
+    return rss, html
+
+
 def _summary_stats(
     *,
     candidates: int,
@@ -385,11 +425,15 @@ def run_summary(
     now: datetime,
     *,
     output_dir: Path = Path("."),
+    policy_path: Path | None = None,
 ) -> SummaryStats:
     """Process one bounded oldest-first queue slice and atomically publish its digest."""
     state_path = Path(state_path)
     output_dir = Path(output_dir)
     state = load_state(state_path)
+    withheld_aliases = load_withheld_aliases(
+        Path(policy_path) if policy_path is not None else state_path.parent / "config/ai_publication.json"
+    )
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError("now must include a timezone")
     day = now.astimezone(timezone.utc).date().isoformat()
@@ -408,8 +452,19 @@ def run_summary(
     if candidate_limit == 0 or request_limit == 0:
         return SummaryStats(0, 0, 0, 0, len(state.pending_ai), False)
 
-    groups = group_records([state.papers[key] for key in state.pending_ai])
-    candidate_keys = sorted(groups, key=lambda key: groups[key][0].published_at)[:candidate_limit]
+    groups = group_records(list(state.papers.values()))
+    pending = set(state.pending_ai)
+    pending_groups = {
+        key: group for key, group in groups.items() if pending.intersection(group[1])
+    }
+    queue_position = {key: index for index, key in enumerate(state.pending_ai)}
+    candidate_keys = sorted(
+        pending_groups,
+        key=lambda key: (
+            pending_groups[key][0].published_at,
+            min(queue_position[alias] for alias in pending_groups[key][1] if alias in pending),
+        ),
+    )[:candidate_limit]
     if not candidate_keys:
         return SummaryStats(0, 0, 0, 0, len(state.pending_ai), False)
 
@@ -423,7 +478,7 @@ def run_summary(
             break
         keys = candidate_keys[offset : offset + config.ai.batch_size]
         try:
-            batch = screen_batch([groups[key][0] for key in keys], client, config.ai, budget)
+            batch = screen_batch([pending_groups[key][0] for key in keys], client, config.ai, budget)
         except (RuntimeError, ValueError) as error:
             print(f"AI screening failed safely: {error}", file=sys.stderr)
             screening_failed = True
@@ -446,12 +501,20 @@ def run_summary(
         _publish_usage(usage_path, previous_usage, stats, day)
         return stats
 
-    processed_keys = {alias for decision in decisions for alias in groups[decision.key][1]}
+    processed_keys = {
+        alias for decision in decisions for alias in pending_groups[decision.key][1]
+    }
     for decision in decisions:
-        for alias in groups[decision.key][1]:
+        for alias in pending_groups[decision.key][1]:
             _apply_decision(state, replace(decision, key=alias))
     state.pending_ai = [key for key in state.pending_ai if key not in processed_keys]
-    selected = [state.papers[decision.key] for decision in decisions if decision.relevant]
+    selected: list[PaperRecord] = []
+    for decision in decisions:
+        if not decision.relevant:
+            continue
+        member_keys = pending_groups[decision.key][1]
+        group_state = FeedState(papers={key: state.papers[key] for key in member_keys})
+        selected.extend(cumulative_records(group_state, withheld_aliases))
 
     overview = None
     screening_complete = not screening_failed and len(decisions) == len(candidate_keys)
@@ -476,14 +539,14 @@ def run_summary(
         token_before=token_before,
         token_after=token_after,
     )
-    feed_records = [replace(record, abstract=record.summary_zh or "") for record in selected]
-    rss = render_rss(
-        feed_records,
-        f"{config.publication.title} · 中文摘要",
-        config.publication.base_url,
-        len(feed_records),
+    rss, html = render_publication(
+        state,
+        config,
+        day,
+        overview,
+        withheld_aliases,
+        new_count=len(selected),
     )
-    html = _render_html(selected, config.publication.title, day, overview)
     usage = json.dumps(
         _merged_usage(previous_usage, stats.usage_entry(day)),
         ensure_ascii=False,

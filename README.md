@@ -9,8 +9,8 @@ Diamond Paper Feed 是一个面向金刚石研究的高召回文献监测项目�
 项目生成：
 
 - `filtered_feed.xml`：规则筛选后的高召回 RSS，最多 2000 条，适合立即订阅。
-- `ai_summary_feed.xml`：DeepSeek 判定相关的中文精选 RSS。
-- `ai_summary.html`：按主题展示的中文摘要页面。
+- `ai_summary_feed.xml`：累计保留、去重的中文精选 RSS，不再被最新一轮覆盖。
+- `ai_summary.html`：按主题展示的累计中文摘要页面，单独注明本轮概览与累计数量。
 - `state.json`：去重论文、来源水位和待处理 AI 队列。
 - `ai_usage.json`：每日候选数、成功数、请求数和 token 用量，不含提示词或凭据；`token_usage_complete=false` 表示超时请求可能已在服务端计费，应以 DeepSeek 控制台为准。
 - `fetch_failures.tsv`：当前一轮来源故障分类。
@@ -138,6 +138,20 @@ python -m diamond_feed.summarize --config paper_feed_config.json --state state.j
 - 中文摘要页：<https://llxyyds666.github.io/diamond-paper-feed/ai_summary.html>
 
 在 Zotero 中选择 **File → New Library → New Feed → From URL**（中文界面为“文件 → 新建文献库 → 新建订阅 → 从 URL”），粘贴上面的任一 RSS 地址并保存。建议先订阅高召回 RSS；需要更少、带中文摘要的结果时再订阅 AI 精选 RSS。若 Pages 刚启用返回 404，等待本次 Pages 部署完成后刷新。
+
+## Cumulative publication and offline promotion
+
+正式 AI 订阅从 2026-09-08 的新版评测 34175877785 中 15 篇唯一论文开始累计。按用户要求，旧版正式订阅的 10 篇暂不并入：`config/ai_publication.json` 的 `withheld_identity_aliases` 保存其稳定身份标识。暂缓只影响发布，旧论文、摘要和既有判定仍在 `state.json` 与 Git 历史中；以后用户确认后可解除对应暂缓。
+
+每轮发布从状态中重建全部已接受、未暂缓的论文，按 DOI/arXiv/Figshare 身份去重。历史记录不重复发送给 AI，本轮概览只总结本轮通过的论文；即使当天没有新入选，也不清空历史。AI RSS 和 HTML 保留全部累计入选，原始高召回 RSS 仍最多 2000 条。新的否定判定会同步到同一篇论文的所有别名，避免旧副本继续被发布。
+
+已有完整评测可以不花额外模型费用直接转为正式发布：
+
+```powershell
+python -m diamond_feed.promote --report evaluations/34175877785/report.json --state state.json --config paper_feed_config.json --output-dir .
+```
+
+此命令不需要 API Key，不请求模型；它先校验报告完成状态、记录身份、标题/摘要输入及重复别名的一致性，再同步既有判定并移除已处理队列项。RSS、HTML 和状态作为同一组原子发布，反复导入不产生重复。`ai_usage.json` 不会改写：评测已产生的请求和费用仍保存在原评测目录，不能记成离线同步的新消费。原始评测结果保持不变。
 
 ## AI hard limits
 

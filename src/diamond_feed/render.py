@@ -27,8 +27,15 @@ def _xml_text(value: str) -> str:
     )
 
 
-def render_rss(records: list[PaperRecord], title: str, link: str, limit: int) -> str:
-    """Render newest records first as an RSS 2.0 document, capped at 2,000 items."""
+def render_rss(
+    records: list[PaperRecord],
+    title: str,
+    link: str,
+    limit: int,
+    *,
+    cap_at_2000: bool = True,
+) -> str:
+    """Render newest records first; raw-feed callers retain the 2,000-item cap."""
     if limit < 0:
         raise ValueError("limit must not be negative")
     root = ElementTree.Element("rss", {"version": "2.0"})
@@ -37,7 +44,8 @@ def render_rss(records: list[PaperRecord], title: str, link: str, limit: int) ->
     _element(channel, "link", link)
     _element(channel, "description", title)
 
-    for record in sorted(records, key=lambda item: item.published_at, reverse=True)[: min(limit, 2000)]:
+    effective_limit = min(limit, 2000) if cap_at_2000 else limit
+    for record in sorted(records, key=lambda item: item.published_at, reverse=True)[:effective_limit]:
         item = ElementTree.SubElement(channel, "item")
         _element(item, "title", record.title)
         _element(item, "link", record.url)
