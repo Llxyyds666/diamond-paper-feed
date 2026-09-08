@@ -25,6 +25,7 @@ from diamond_feed.atomic import (
 )
 from diamond_feed.config import AppConfig, load_config
 from diamond_feed.models import AiDecision, PaperRecord
+from diamond_feed.normalize import group_records
 from diamond_feed.render import render_rss
 from diamond_feed.state import FeedState, load_state, stage_state
 
@@ -407,9 +408,8 @@ def run_summary(
     if candidate_limit == 0 or request_limit == 0:
         return SummaryStats(0, 0, 0, 0, len(state.pending_ai), False)
 
-    candidate_keys = sorted(
-        state.pending_ai, key=lambda key: state.papers[key].published_at
-    )[:candidate_limit]
+    groups = group_records([state.papers[key] for key in state.pending_ai])
+    candidate_keys = sorted(groups, key=lambda key: groups[key][0].published_at)[:candidate_limit]
     if not candidate_keys:
         return SummaryStats(0, 0, 0, 0, len(state.pending_ai), False)
 
@@ -423,7 +423,7 @@ def run_summary(
             break
         keys = candidate_keys[offset : offset + config.ai.batch_size]
         try:
-            batch = screen_batch([state.papers[key] for key in keys], client, config.ai, budget)
+            batch = screen_batch([groups[key][0] for key in keys], client, config.ai, budget)
         except (RuntimeError, ValueError) as error:
             print(f"AI screening failed safely: {error}", file=sys.stderr)
             screening_failed = True
@@ -446,9 +446,10 @@ def run_summary(
         _publish_usage(usage_path, previous_usage, stats, day)
         return stats
 
-    processed_keys = {decision.key for decision in decisions}
+    processed_keys = {alias for decision in decisions for alias in groups[decision.key][1]}
     for decision in decisions:
-        _apply_decision(state, decision)
+        for alias in groups[decision.key][1]:
+            _apply_decision(state, replace(decision, key=alias))
     state.pending_ai = [key for key in state.pending_ai if key not in processed_keys]
     selected = [state.papers[decision.key] for decision in decisions if decision.relevant]
 

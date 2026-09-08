@@ -1,0 +1,22 @@
+{
+  "basis": "Manual reading of the saved titles and 1200-character abstracts before the v2 live replay; not a full-text or independent expert gold standard.",
+  "policy": "Actual diamond-material research, including diamond-property computations and NV sensing proposals; exclude generic DAC use and homonyms.",
+  "expected_by_original_index": {
+    "1": true, "2": true, "3": false, "4": true, "5": false,
+    "6": false, "7": true, "8": false, "9": true, "10": true,
+    "11": false, "12": null, "13": true, "14": false, "15": false,
+    "16": false, "17": true, "18": true, "19": true, "20": true,
+    "21": false, "22": true, "23": false, "24": false, "25": false,
+    "26": true, "27": false, "28": false, "29": false, "30": false,
+    "31": true, "32": false, "33": false, "34": false, "35": true,
+    "36": false, "37": true, "38": false, "39": false, "40": false
+  },
+  "caveats": {
+    "12": "WBG probe-card review mentions diamond among many materials, but the truncated abstract cannot establish a diamond-specific contribution; excluded from accuracy calculation.",
+    "26": "Relevant NV-diamond coherence proposal, not evidence of consciousness-dependent decoherence. Summary must explicitly label the proposal and absence of demonstrated results.",
+    "1,4,7,9,18,19,37": "Clear material relevance from title; abstract absent or only bibliographic boilerplate. Do not invent methods or results.",
+    "27,28": "Same chair description with distinct Zenodo DOIs. Exclude both, but do not silently assert they are the same deposit."
+  },
+  "definite_previous_false_positives": [5, 24, 27, 28, 29, 30],
+  "expected_duplicate_groups": [[22, 31], [23, 32], [24, 33], [29, 30]]
+}

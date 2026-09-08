@@ -150,6 +150,16 @@ python -m diamond_feed.summarize --config paper_feed_config.json --state state.j
 - 采集会先持久化候选。首次 30 天回溯形成的大队列会跨天保留并按每天 40 篇逐步处理，不会扩大当天请求预算。
 - `ai_usage.json` 只保存日期、候选数、成功数、请求数、token 统计及其完整性标记。超时不会自动重试；`token_usage_complete=false` 时，文件中的 token 只是已收到响应的部分，应以 DeepSeek 控制台为准。
 
+## Relevance policy and reproducible evaluation
+
+筛选针对真实金刚石材料及其器件、性能、量子传感和天然地质研究，DLC 单列为邻近方向；排除菱形几何、数学概念、DIAMOND 软件、装饰、品牌/人名，以及仅用金刚石压砧或通用刀具研究其他材料的论文。关键词预筛仍偏召回，`material_context` 不作为硬门槛（几何陶瓷同样可能有这些词），最终使用明确的语义标准。模型 confidence 是自报判断，不等于经校准的正确率。
+
+采集及 AI 待处理队列按 DOI、arXiv DOI/URL/版本标识、Figshare 版本标识合并；不同 DOI 的同名论文不会仅按标题合并。AI 每个唯一候选只判一次，所有原始别名共享结论。矛盾输出会保留队列等待复核，不盲目重试。
+
+手动 `Evaluate full daily digest` 可填写 `baseline=evaluations/34174147048/report.json`，重放原始 40 条记录。评估使用独立临时状态与费用记录，不消费或修改正式队列；去重后候选数、原始记录数分别统计。仍最多 5 次模型请求，不会因回归测试扩大日常预算。评估额外费用独立产生。
+
+`evaluations/34174147048/review_labels.json` 是实测前按保存的标题/摘要整理的复核标签；存在证据不足项，不把程序测试通过或单批样本一致率宣传为全库准确率。
+
 ## Failure report meanings
 
 `fetch_failures.tsv` 的列为 `timestamp`、`category`、`url`、`detail`。每次采集会重新生成本轮报告，单个来源失败不阻断其他来源。

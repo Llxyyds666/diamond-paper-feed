@@ -13,6 +13,8 @@ from urllib.request import Request, urlopen
 
 from diamond_feed.ai import CATEGORIES, DECISION_FIELDS, DeepSeekClient
 from diamond_feed.config import load_config
+from diamond_feed.models import PaperRecord
+from diamond_feed.normalize import group_records, record_key
 from diamond_feed.state import FeedState, load_state, save_state
 from diamond_feed.summarize import run_summary
 
@@ -20,6 +22,7 @@ from diamond_feed.summarize import run_summary
 class ObservedClient(DeepSeekClient):
     def __init__(self, key, config):
         self.calls = []
+        self.decisions = {}
         self.phase = "screening"
         super().__init__(key, config, transport=self._observed_transport)
 
@@ -58,6 +61,8 @@ class ObservedClient(DeepSeekClient):
             decisions = result.get("decisions") if isinstance(result, dict) else result
             diagnostic = {"response_type": type(result).__name__}
             if isinstance(decisions, list):
+                self.decisions.update({d["key"]: d for d in decisions
+                                       if isinstance(d, dict) and type(d.get("key")) is str})
                 expected = {p["key"] for p in request["papers"]}
                 returned = [d.get("key") for d in decisions if isinstance(d, dict)]
                 diagnostic["decision_count"] = len(decisions)
@@ -106,12 +111,35 @@ def balance_change(before, after):
     return {currency: str(value) for currency, value in differences.items()}
 
 
-def run_evaluation(config, state_path, client, now, *, output_dir):
+def run_evaluation(config, state_path, client, now, *, output_dir, baseline_path=None):
     """Run the same daily pipeline against an isolated oldest-first sample."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=False)
     state = load_state(Path(state_path))
     keys = sorted(state.pending_ai, key=lambda k: state.papers[k].published_at)[:config.ai.daily_candidates]
+    baseline = None
+    if baseline_path is not None:
+        baseline = json.loads(Path(baseline_path).read_text(encoding="utf-8"))
+        inputs = baseline["papers"]
+        if not 0 < len(inputs) <= config.ai.daily_candidates:
+            raise ValueError("baseline must fit the bounded daily candidate limit")
+        originals = state.papers
+        state = FeedState()
+        for item in inputs:
+            key = item["key"]
+            record = PaperRecord(
+                title=item["title"], abstract=item["input_abstract"],
+                authors=item.get("authors", originals[key].authors if key in originals else []),
+                journal=item["journal"], published_at=datetime.fromisoformat(item["published_at"]),
+                doi=item["doi"], url=item["url"], sources=["baseline"], source_ids=[key],
+            )
+            if record_key(record) != key or key in state.papers:
+                raise ValueError("baseline keys must be unique and canonical")
+            state.papers[key] = record
+            state.pending_ai.append(key)
+        keys = state.pending_ai
+    groups = group_records([state.papers[key] for key in keys])
+    canonical = {alias: key for key, (_, aliases) in groups.items() for alias in aliases}
     started = monotonic()
     with TemporaryDirectory(prefix="diamond-evaluation-") as temporary:
         sample_path = Path(temporary) / "state.json"
@@ -119,18 +147,26 @@ def run_evaluation(config, state_path, client, now, *, output_dir):
         stats = run_summary(config, sample_path, client, now, output_dir=output_dir)
         result = load_state(sample_path)
     papers = [
-        {"key": key, "title": p.title, "doi": p.doi, "url": p.url,
+        {"key": key, "canonical_key": canonical[key], "title": p.title, "doi": p.doi, "url": p.url,
+         "authors": p.authors,
          "published_at": p.published_at.isoformat(), "journal": p.journal,
          "input_abstract": p.abstract[:config.ai.max_abstract_chars],
          "ai_relevant": p.ai_relevant, "ai_confidence": p.ai_confidence,
-         "categories": p.categories, "summary_zh": p.summary_zh}
+         "categories": p.categories, "summary_zh": p.summary_zh,
+         "reason": getattr(client, "decisions", {}).get(canonical[key], {}).get("reason"),
+         "baseline_relevant": next((item["ai_relevant"] for item in baseline["papers"]
+                                    if item["key"] == key), None) if baseline else None}
         for key in keys for p in [result.papers[key]]
     ]
     html_path = output_dir / "ai_summary.html"
     overview_generated = html_path.exists() and "<p>本期精选 " not in html_path.read_text(encoding="utf-8")
     return {
         "date": now.isoformat(), "model": config.ai.model,
-        "sample": "oldest 40 pending candidates (historical backlog, not publication-date today)",
+        "sample": "fixed baseline replay" if baseline else "oldest pending candidates (historical backlog, not publication-date today)",
+        "baseline": Path(baseline_path).as_posix() if baseline_path else None,
+        "screening_policy": "diamond-material-v2",
+        "input_records": len(keys), "unique_records": len(groups),
+        "duplicates_removed": len(keys) - len(groups),
         "source_commit": os.environ.get("GITHUB_SHA"),
         "run_id": os.environ.get("GITHUB_RUN_ID"),
         "stats": asdict(stats), "elapsed_seconds": round(monotonic() - started, 3),
@@ -142,6 +178,7 @@ def run_evaluation(config, state_path, client, now, *, output_dir):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument("--baseline", type=Path)
     args = parser.parse_args(argv)
     key = os.environ.get("DEEPSEEK_API_KEY")
     if not key:
@@ -150,7 +187,7 @@ def main(argv=None):
     before = read_balance(key, config.ai.base_url)
     client = ObservedClient(key, config.ai)
     report = run_evaluation(config, Path("state.json"), client,
-                            datetime.now(timezone.utc), output_dir=args.output_dir)
+                            datetime.now(timezone.utc), output_dir=args.output_dir, baseline_path=args.baseline)
     after = read_balance(key, config.ai.base_url)
     report["balance_decrease"] = balance_change(before, after)
     report["balance_note"] = "Account-level difference; other API activity or billing delay may affect it."

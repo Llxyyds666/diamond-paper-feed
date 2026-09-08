@@ -1,3 +1,4 @@
+from dataclasses import replace
 import re
 import unicodedata
 from urllib.parse import urlparse
@@ -30,6 +31,57 @@ def record_key(record: PaperRecord) -> str:
     if doi:
         return f"doi:{doi}"
     return f"title:{_normalized_title(record.title)}:{record.published_at.year}"
+
+
+def identity_aliases(record: PaperRecord) -> set[str]:
+    """Strong identifiers only: never equate unrelated works by similar titles."""
+    aliases = {record_key(record)}
+    doi = normalize_doi(record.doi) or ""
+    arxiv = re.fullmatch(r"10\.48550/arxiv\.(.+?)(?:v\d+)?", doi)
+    if arxiv:
+        aliases.add("arxiv:" + arxiv[1])
+    url = urlparse(record.url)
+    if url.hostname in {"arxiv.org", "www.arxiv.org", "export.arxiv.org"}:
+        match = re.fullmatch(r"/(?:abs|pdf)/(.+?)(?:v\d+)?(?:\.pdf)?/?", url.path)
+        if match:
+            aliases.add("arxiv:" + match[1].lower())
+    figshare = re.fullmatch(r"10\.6084/m9\.figshare\.(\d+)(?:\.v\d+)?", doi)
+    if figshare:
+        aliases.add("figshare:" + figshare[1])
+    return aliases
+
+
+def group_records(records: list[PaperRecord]) -> dict[str, tuple[PaperRecord, list[str]]]:
+    """Merge metadata by stable identifiers; retain every original key for decisions."""
+    parents = list(range(len(records)))
+
+    def root(index):
+        while parents[index] != index:
+            parents[index] = parents[parents[index]]
+            index = parents[index]
+        return index
+
+    seen = {}
+    for index, record in enumerate(records):
+        for alias in identity_aliases(record):
+            if alias in seen:
+                parents[root(index)] = root(seen[alias])
+            seen[alias] = index
+    groups = {}
+    for index, record in enumerate(records):
+        groups.setdefault(root(index), []).append(record)
+    result = {}
+    for members in groups.values():
+        # Prefer a DOI-bearing representative, then the unversioned identifier.
+        ordered = sorted(members, key=lambda p: (not bool(p.doi), len(record_key(p)), record_key(p)))
+        merged = ordered[0]
+        for other in ordered[1:]:
+            merged = merge_records(merged, other)
+        if not merged.doi:
+            # Keep an existing title/year key even when version metadata changed.
+            merged = replace(merged, title=ordered[0].title, published_at=ordered[0].published_at)
+        result[record_key(merged)] = (merged, [record_key(p) for p in members])
+    return result
 
 
 def _stable_union(first: list[str], second: list[str]) -> list[str]:

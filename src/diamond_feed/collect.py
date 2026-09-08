@@ -14,7 +14,7 @@ from diamond_feed.config import load_config
 from diamond_feed.filtering import QueryRules, load_rules, matches_rules
 from diamond_feed.http import FetchError, fetch_bytes
 from diamond_feed.models import PaperRecord, SourceFailure
-from diamond_feed.normalize import merge_records, record_key
+from diamond_feed.normalize import group_records, merge_records, record_key
 from diamond_feed.render import render_rss
 from diamond_feed.sources import arxiv, crossref, openalex
 from diamond_feed.sources.rss import collect_rss
@@ -41,6 +41,7 @@ class ScholarlyHarvest:
 def merge_into_state(state: FeedState, incoming: Iterable[PaperRecord], rules: QueryRules) -> CollectionStats:
     """Filter and merge records while preserving the oldest-first AI work queue."""
     added = merged = filtered = 0
+    explicit_requeue = set(state.pending_ai)
     for record in incoming:
         if not matches_rules(record, rules):
             filtered += 1
@@ -60,8 +61,25 @@ def merge_into_state(state: FeedState, incoming: Iterable[PaperRecord], rules: Q
         is_processed = current.ai_relevant is not None
         if is_processed and was_empty and state.papers[key].abstract.strip() and key not in state.pending_ai:
             state.pending_ai.append(key)
+            explicit_requeue.add(key)
 
-    state.pending_ai.sort(key=lambda key: (state.papers[key].published_at, key))
+    groups = group_records(list(state.papers.values()))
+    pending = set(state.pending_ai)
+    new_pending = []
+    for key, (record, aliases) in groups.items():
+        judgments = {state.papers[alias].ai_relevant for alias in aliases} - {None}
+        if len(judgments) > 1:
+            record.ai_relevant = record.ai_confidence = record.summary_zh = None
+            record.categories = []
+        enriched = bool(record.abstract.strip()) and any(
+            state.papers[alias].ai_relevant is not None and not state.papers[alias].abstract.strip()
+            for alias in aliases
+        )
+        if (explicit_requeue.intersection(aliases) or len(judgments) > 1 or enriched
+                or (not judgments and pending.intersection(aliases))):
+            new_pending.append(key)
+    state.papers = {key: record for key, (record, _) in groups.items()}
+    state.pending_ai = sorted(new_pending, key=lambda key: (state.papers[key].published_at, key))
     return CollectionStats(added=added, merged=merged, filtered=filtered)
 
 
