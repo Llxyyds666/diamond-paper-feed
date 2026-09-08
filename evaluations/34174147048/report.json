@@ -1,0 +1,719 @@
+{
+  "date": "2026-09-08T00:41:52.538848+00:00",
+  "model": "deepseek-v4-flash-vision-exp",
+  "sample": "oldest 40 pending candidates (historical backlog, not publication-date today)",
+  "source_commit": "86117e01571ab296563ef28f40a2d8436d6e3185",
+  "run_id": "34174147048",
+  "stats": {
+    "candidates": 40,
+    "processed": 40,
+    "selected": 25,
+    "requests": 5,
+    "remaining": 0,
+    "failed": false,
+    "prompt_tokens": 18344,
+    "completion_tokens": 5157,
+    "total_tokens": 23501,
+    "token_usage_complete": true
+  },
+  "elapsed_seconds": 43.198,
+  "model_overview_generated": true,
+  "calls": [
+    {
+      "phase": "screening",
+      "attempt": 1,
+      "seconds": 10.247,
+      "usage": {
+        "prompt_tokens": 3328,
+        "completion_tokens": 1165,
+        "total_tokens": 4493,
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 3328
+      },
+      "finish_reason": "stop",
+      "validation": {
+        "response_type": "dict",
+        "decision_count": 10,
+        "keys_match": true,
+        "invalid_fields_at": []
+      }
+    },
+    {
+      "phase": "screening",
+      "attempt": 2,
+      "seconds": 9.398,
+      "usage": {
+        "prompt_tokens": 3365,
+        "completion_tokens": 1157,
+        "total_tokens": 4522,
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 3365
+      },
+      "finish_reason": "stop",
+      "validation": {
+        "response_type": "dict",
+        "decision_count": 10,
+        "keys_match": true,
+        "invalid_fields_at": []
+      }
+    },
+    {
+      "phase": "screening",
+      "attempt": 3,
+      "seconds": 8.577,
+      "usage": {
+        "prompt_tokens": 3462,
+        "completion_tokens": 1028,
+        "total_tokens": 4490,
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 3462
+      },
+      "finish_reason": "stop",
+      "validation": {
+        "response_type": "dict",
+        "decision_count": 10,
+        "keys_match": true,
+        "invalid_fields_at": []
+      }
+    },
+    {
+      "phase": "screening",
+      "attempt": 4,
+      "seconds": 8.342,
+      "usage": {
+        "prompt_tokens": 3404,
+        "completion_tokens": 1034,
+        "total_tokens": 4438,
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 3404
+      },
+      "finish_reason": "stop",
+      "validation": {
+        "response_type": "dict",
+        "decision_count": 10,
+        "keys_match": true,
+        "invalid_fields_at": []
+      }
+    },
+    {
+      "phase": "digest",
+      "attempt": 5,
+      "seconds": 6.61,
+      "usage": {
+        "prompt_tokens": 4785,
+        "completion_tokens": 773,
+        "total_tokens": 5558,
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 4785
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "papers": [
+    {
+      "key": "doi:10.1049/ell2.70574",
+      "title": "Low‐Resistivity Au‐Free Ohmic Contacts for Diamond",
+      "doi": "10.1049/ell2.70574",
+      "url": "https://ietresearch.onlinelibrary.wiley.com/doi/10.1049/ell2.70574?af=R",
+      "published_at": "2026-03-26T23:25:28+00:00",
+      "journal": "Electronics Letters",
+      "input_abstract": "Electronics Letters, Volume 62, Issue 1, January/December 2026.",
+      "ai_relevant": true,
+      "ai_confidence": 0.95,
+      "categories": [
+        "electronics-optoelectronics"
+      ],
+      "summary_zh": "本文报道了用于金刚石的低电阻无金欧姆接触，对金刚石电子器件具有重要意义。"
+    },
+    {
+      "key": "doi:10.3390/opt7020024",
+      "title": "Optics, Vol. 7, Pages 24: Broadband Antireflective Microstructures on Diamond Fabricated by Femtosecond Laser and Selective Wet Etching",
+      "doi": "10.3390/opt7020024",
+      "url": "https://www.mdpi.com/2673-3269/7/2/24",
+      "published_at": "2026-03-27T00:00:00+00:00",
+      "journal": "Optics",
+      "input_abstract": "Diamond antireflection techniques are of high interest for optical windows operating at extreme conditions. Herein, diamond antireflective microstructures in mid-infrared (MIR) spectral range were theoretically designed and experimentally fabricated. Finite difference time domain (FDTD) simulations were used to optimize the transmission performance of the diamond microstructures. Based on the simulation results, the optimized microstructures were fabricated by femtosecond (fs) laser direct writing (1030 nm, 300 fs, 25 kHz) followed by wet etching. After wet etching, the laser-modified zones and the accumulated graphitized clusters were effectively removed, thereby achieving the desired depth. The influences of laser power and scanning strategy on the morphology evolution of diamond microstructures were investigated. It was found that at the optimal conditions, the transmittance of the diamond increased from 70.9% to 81.4% (single-side) over a broad spectrum from 8 to 22 &amp;mu;m. This work demonstrates a promising hybrid fs laser/wet etching technique for diamond antireflective microstructures in MIR spectral range.",
+      "ai_relevant": true,
+      "ai_confidence": 0.95,
+      "categories": [
+        "films-membranes"
+      ],
+      "summary_zh": "本文通过飞秒激光和湿法刻蚀在金刚石上制备宽带减反射微结构，提高了中红外透射率。"
+    },
+    {
+      "key": "doi:10.3390/opt7020025",
+      "title": "Optics, Vol. 7, Pages 25: Compact Monolithic Star Tracker System",
+      "doi": "10.3390/opt7020025",
+      "url": "https://www.mdpi.com/2673-3269/7/2/25",
+      "published_at": "2026-03-30T00:00:00+00:00",
+      "journal": "Optics",
+      "input_abstract": "A compact, low-cost star tracker system tailored for small satellite applications was designed and prototyped. The system was designed with a fast f/1.2 aperture, a 20 &amp;times; 13&amp;deg; field of view, and a theoretical angular resolution of 10 arcs&amp;mdash;sufficient for the determination of attitude and orbit of a satellite. The optical design is based on a monolithic Maksutov&amp;ndash;Cassegrain architecture, with lens assemblies fabricated from CR39 or PMMA to eliminate collimation requirements and improve vibration resistance. The lens was machined using Single-Point Diamond Turning to a precision better than &amp;lambda;/14. It was coated with a multilayer antireflective and highly reflective coatings applied via magnetron sputtering to reduce stray reflections and improve light throughput. The housing was produced using electron beam powder-bed fusion with Ti-64 alloy, while the use of commercial imaging sensors minimizes overall cost. Prototype testing confirmed to plate-solve star patterns with precision better than 27 arcs at 100 ms imaging time across all analysed images.",
+      "ai_relevant": false,
+      "ai_confidence": 0.9,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "本文设计了一种用于小卫星的紧凑型星敏感器系统，采用单点金刚石车削加工透镜。"
+    },
+    {
+      "key": "doi:10.1080/08957959.2026.2651875",
+      "title": "Development of wide-field magnetic imaging at high pressure and low temperature with diamond quantum sensor",
+      "doi": "10.1080/08957959.2026.2651875",
+      "url": "https://www.tandfonline.com/doi/full/10.1080/08957959.2026.2651875?af=R",
+      "published_at": "2026-04-01T02:12:01+00:00",
+      "journal": "High Pressure Research",
+      "input_abstract": "Volume 46, Issue 3, September 2026, Page 292-301<br />. <br />",
+      "ai_relevant": true,
+      "ai_confidence": 0.95,
+      "categories": [
+        "quantum-color-centers"
+      ],
+      "summary_zh": "本文开发了高压低温下使用金刚石量子传感器的宽场磁成像技术。"
+    },
+    {
+      "key": "doi:10.3390/materproc2026031004",
+      "title": "Materials Proceedings, Vol. 31, Pages 4: Lithography-Based Ceramic Manufacturing of Diamond Lattice Structure for Bone Regeneration Scaffolds",
+      "doi": "10.3390/materproc2026031004",
+      "url": "https://www.mdpi.com/2673-4605/31/1/4",
+      "published_at": "2026-04-14T00:00:00+00:00",
+      "journal": "Materials Proceedings",
+      "input_abstract": "This study investigates the mechanical and biological properties of diamond lattice structure produced through lithography-based ceramic manufacturing, an additive manufacturing technique. HA480 specimens, cubes of 5 × 5 × 5 mm, were manufactured with appropriate pore sizes and porosity. Printed HA480 specimens were tested and analysed for compression strength, cell proliferation, and cell attachment. The printed cubes displayed interconnected pore geometry. A set of ten HA480 diamond lattice structure specimens were compressed until failure to obtain a compressive strength of 10.7 MPa. HA480 solid scaffolds were seeded with the human osteoblast cell line hFOB 1.19 cells. The fluorescence level results were higher on day 3 and decreased on days 5 and 7. Cell attachment was observed from day 1 to day 7. In this study, biodegradation was also evaluated with diamond lattice structure immersed in the simulated body fluid for days 1 and 7 and 28 days. The Scanning Electron Microscopy showed precipitation after 7 days immersion and evidence of apatite after 28 days on the HA480 surface. The findings provide evidence that HA480 reacts with biological fluids and can be used as a material f",
+      "ai_relevant": true,
+      "ai_confidence": 0.9,
+      "categories": [
+        "nanodiamond-biomedical"
+      ],
+      "summary_zh": "本文研究了基于光固化陶瓷制造的金刚石晶格结构用于骨再生支架的力学和生物学性能。"
+    },
+    {
+      "key": "doi:10.3390/ceramics9050043",
+      "title": "Ceramics, Vol. 9, Pages 43: Additive Manufacturing of Ceramics and Ceramic-Based Composites: Processing, Properties, and Engineering Applications",
+      "doi": "10.3390/ceramics9050043",
+      "url": "https://www.mdpi.com/2571-6131/9/5/43",
+      "published_at": "2026-04-22T00:00:00+00:00",
+      "journal": "Ceramics",
+      "input_abstract": "Ceramics are widely evaluated for their extreme hardness, high-temperature stability, and corrosion resistance, which enable applications in harsh service environments. However, these same properties, high melting points, brittleness, and low thermal shock resistance, make conventional manufacturing of complex ceramic components difficult and expensive. Traditional processes often require costly diamond tooling or energy-intensive sintering and tend to produce only simple geometries, with significant waste material and risk of defects. Additive manufacturing (AM) has recently emerged as a promising route to fabricate intricate, near-net-shape ceramic parts without these drawbacks. By building components layer by layer, AM reduces the need for extensive machining and enables the fabrication of geometrically complex, near-net-shape ceramic structures with reduced material waste, although challenges such as porosity, interlayer defects, and cracking during post-processing remain. Nonetheless, ceramic AM technologies lag behind their metal and polymer counterparts, and significant challenges remain in achieving fully dense parts with reliable mechanical properties. This review provides",
+      "ai_relevant": false,
+      "ai_confidence": 0.9,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "本文综述了陶瓷及陶瓷基复合材料的增材制造，包括加工、性能和应用。"
+    },
+    {
+      "key": "doi:10.1080/08957959.2026.2661257",
+      "title": "High-pressure magnetic transition in iron observed via diamond quantum sensing",
+      "doi": "10.1080/08957959.2026.2661257",
+      "url": "https://www.tandfonline.com/doi/full/10.1080/08957959.2026.2661257?af=R",
+      "published_at": "2026-04-24T07:57:25+00:00",
+      "journal": "High Pressure Research",
+      "input_abstract": ". <br />",
+      "ai_relevant": true,
+      "ai_confidence": 0.95,
+      "categories": [
+        "quantum-color-centers"
+      ],
+      "summary_zh": "本文通过金刚石量子传感观察铁的高压磁转变。"
+    },
+    {
+      "key": "doi:10.1080/08957959.2026.2645383",
+      "title": "Radio-frequency gasket for studies of superconductivity in diamond anvil cells",
+      "doi": "10.1080/08957959.2026.2645383",
+      "url": "https://www.tandfonline.com/doi/full/10.1080/08957959.2026.2645383?af=R",
+      "published_at": "2026-05-11T07:04:30+00:00",
+      "journal": "High Pressure Research",
+      "input_abstract": "Volume 46, Issue 3, September 2026, Page 245-257<br />. <br />",
+      "ai_relevant": false,
+      "ai_confidence": 0.9,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "本文报道了用于金刚石对顶砧中超导研究的射频垫圈。"
+    },
+    {
+      "key": "doi:10.1080/08957959.2026.2682353",
+      "title": "Machinable semi-sintered boron-doped diamond as a heater for high pressure experiments",
+      "doi": "10.1080/08957959.2026.2682353",
+      "url": "https://www.tandfonline.com/doi/full/10.1080/08957959.2026.2682353?af=R",
+      "published_at": "2026-06-08T10:11:25+00:00",
+      "journal": "High Pressure Research",
+      "input_abstract": ". <br />",
+      "ai_relevant": true,
+      "ai_confidence": 0.9,
+      "categories": [
+        "thermal-mechanical-acoustic"
+      ],
+      "summary_zh": "本文研究了可加工的半烧结硼掺杂金刚石作为高压实验加热器的性能。"
+    },
+    {
+      "key": "title:vrfst voiceprint based robust wear detection for diamond abrasive tools via fuzzy enhanced spatiotemporal features:2026",
+      "title": "VRFST: Voiceprint-Based Robust Wear Detection for Diamond Abrasive Tools via Fuzzy-Enhanced Spatiotemporal Features",
+      "doi": null,
+      "url": "http://ieeexplore.ieee.org/document/11561065",
+      "published_at": "2026-06-12T13:16:41+00:00",
+      "journal": "IEEE Transactions on Fuzzy Systems - new TOC",
+      "input_abstract": "Accurate and robust wear detection of diamond abrasive tools is crucial in Industry 5.0, yet challenging due to inherent fuzziness and uncertainties in multicondition, high-noise industrial environments. This article presents a novel voiceprint-based robust method via fuzzy-enhanced spatiotemporal features (VRFST) to address this challenge by exploiting the power of fuzzy neural networks in handling uncertainty. First, to theoretically guide model design, the acoustic-based wear detection problem of diamond abrasive tools is formally described as a multiobjective optimization task. Second, to obtain robust representations, acoustic signals are preprocessed, including time series encoding and frame-level feature aggregation. Critically, the core innovation lies in integrating three synergistic feature extractors: a temporal feature extractor using stacked bidirectional long short-term memory (SBiLSTM) and multihead attention, a spatial feature extractor with convolutional block and spatial pyramid pooling (SPP) block, and a fuzzy feature extractor utilizing overlapping Gaussian membership functions to suppress multisource uncertainties adaptively. Third, voiceprint representations a",
+      "ai_relevant": true,
+      "ai_confidence": 0.9,
+      "categories": [
+        "thermal-mechanical-acoustic"
+      ],
+      "summary_zh": "本文提出了一种基于声纹的鲁棒磨损检测方法，用于金刚石磨具，利用模糊增强时空特征。"
+    },
+    {
+      "key": "doi:10.1080/08957959.2026.2675615",
+      "title": "Improving pressure and temperature metrology in laser-heated diamond anvil cell experiments: a new perspective on KCl as a pressure marker",
+      "doi": "10.1080/08957959.2026.2675615",
+      "url": "https://www.tandfonline.com/doi/full/10.1080/08957959.2026.2675615?af=R",
+      "published_at": "2026-06-13T05:42:43+00:00",
+      "journal": "High Pressure Research",
+      "input_abstract": ". <br />",
+      "ai_relevant": true,
+      "ai_confidence": 0.9,
+      "categories": [
+        "growth-processing"
+      ],
+      "summary_zh": "本文提出在激光加热金刚石压砧实验中改进压力和温度计量，探讨KCl作为压力标记的新视角。"
+    },
+    {
+      "key": "doi:10.3390/chips5030018",
+      "title": "Chips, Vol. 5, Pages 18: Probe Card Technologies in Advanced Semiconductor Testing for Wide Band Gap Devices",
+      "doi": "10.3390/chips5030018",
+      "url": "https://www.mdpi.com/2674-0729/5/3/18",
+      "published_at": "2026-07-09T00:00:00+00:00",
+      "journal": "Chips",
+      "input_abstract": "The rapid adoption of Wide Band Gap (WBG) semiconductor technologies, particularly Silicon Carbide (SiC) and Gallium Nitride (GaN), together with emerging Ultra-Wide Band Gap (UWBG) materials such as AlGaN, Aluminum Nitride (AlN), Diamond, &amp;beta;-gallium oxide (&amp;beta;-Ga2O3), and Hexagonal Boron Nitride (h-BN), is reshaping wafer-level electrical testing beyond the capabilities of conventional silicon-based probing infrastructures. The increasingly demanding electrical, thermal, and mechanical operating conditions of these devices require probe cards to evolve from passive interconnects into integrated multiphysics systems capable of supporting high voltages, high current densities, and fast switching transients. This review analyzes the fundamental design constraints governing advanced probe card technologies, including probe-to-wafer contact physics, electrothermal behavior, insulation requirements, parasitic effects, and high-frequency performance. Particular attention is devoted to Vertical MEMS probe card architectures, which enable high contact density, low parasitic inductance, and improved current-carrying capability, making them particularly suitable for modern WBG",
+      "ai_relevant": true,
+      "ai_confidence": 0.85,
+      "categories": [
+        "electronics-optoelectronics"
+      ],
+      "summary_zh": "本文综述了用于宽禁带半导体测试的探针卡技术，包括金刚石等超宽禁带材料。"
+    },
+    {
+      "key": "doi:10.3390/jfb17080382",
+      "title": "JFB, Vol. 17, Pages 382: Effect of Nanodiamond Incorporation on the Surface, Mechanical, and Tribological Properties of Glass Ionomer Cement",
+      "doi": "10.3390/jfb17080382",
+      "url": "https://www.mdpi.com/2079-4983/17/8/382",
+      "published_at": "2026-08-03T00:00:00+00:00",
+      "journal": "Journal of Functional Biomaterials",
+      "input_abstract": "Background/Objectives: Glass ionomer cements (GICs), high-biocompatibility dental materials that release fluoride with a cariostatic and remineralising effect on hard dental tissues, are widely used in many fields of dentistry, including conservative dentistry, pediatric dentistry, prosthodontics, and orthodontics; however, their mechanical performance and wear resistance remain limited. This study investigated the effect of nanodiamond (ND) addition (0.5&amp;ndash;4.0 wt.%) on the surface, mechanical, and tribological properties of a conventional self-curing GIC. Methods: Surface roughness, microhardness, wear resistance, coefficient of friction, and chemical composition were evaluated using confocal microscopy, Vickers microhardness testing, tribological measurements, and EDX analysis. Results: The incorporation of NDs reduced the coefficient of friction and modified the surface morphology of the cement. The lowest friction coefficient (0.444) was observed for the sample containing 2 wt.% ND. However, ND addition also resulted in an approximately 50 per cent decrease in microhardness and wear resistance compared with the unmodified cement. EDX analysis confirmed that the chemical",
+      "ai_relevant": true,
+      "ai_confidence": 0.95,
+      "categories": [
+        "nanodiamond-biomedical"
+      ],
+      "summary_zh": "本研究探讨了纳米金刚石添加对玻璃离子水门汀表面、机械和摩擦学性能的影响。"
+    },
+    {
+      "key": "doi:10.3390/jfb17080383",
+      "title": "JFB, Vol. 17, Pages 383: Proximal Post-Curing Improves Microhardness of Class-II Resin Composite Restorations",
+      "doi": "10.3390/jfb17080383",
+      "url": "https://www.mdpi.com/2079-4983/17/8/383",
+      "published_at": "2026-08-04T00:00:00+00:00",
+      "journal": "Journal of Functional Biomaterials",
+      "input_abstract": "Aim: This in vitro study investigated the effect of additional proximal post-curing on the microhardness of Class-II resin composite restorations. Methods: Thirty-two extracted human third molars received narrow (N) or wide (W) MO Class-II cavities with cervical margins extending below the cemento-enamel junction. Cavities were restored with Venus Diamond using an adhesive protocol and incremental layering. Specimens were assigned to four groups: N.O, N.OT, W.O, W.OT, representing cavity width (N/W) and curing protocol (O: occlusal light curing only, OT: occlusal plus proximal post-curing after matrix band removal). After 7 days of storage in artificial saliva, restorations were sectioned into three vertical planes, and Vickers microhardness (HV2/30 s) was measured. Results: The highest overall microhardness was observed in Group W.OT (81.35 HV2), whereas Group N.O showed the lowest values (73.14 HV2) (p &amp;lt; 0.05). Proximal post-curing significantly increased microhardness, with Group N.OT (78.34 HV2) exceeding both occlusal-only groups (W.O: 74.68 HV2; p &amp;lt; 0.05). In all groups, microhardness decreased with increasing restoration depth (p &amp;lt; 0.05), although this r",
+      "ai_relevant": false,
+      "ai_confidence": 0.9,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "本研究调查了额外近端后固化对II类树脂复合材料修复体显微硬度的影响。"
+    },
+    {
+      "key": "doi:10.1103/phh6-zjwm",
+      "title": "Nanometer-spaced inversion domain boundaries as the weakening origin in wurtzite boron nitride",
+      "doi": "10.1103/phh6-zjwm",
+      "url": "http://link.aps.org/doi/10.1103/phh6-zjwm",
+      "published_at": "2026-08-07T10:00:00+00:00",
+      "journal": "Physical Review Materials",
+      "input_abstract": "Author(s): Shihao Zhang, Hanqing Wei, and D. Legut<br /><p>Planar defects, widely observed in diamond and boron nitride, have been shown to markedly enhance hardness and toughness, yet the mechanical role of inversion domain boundaries (IDBs) in metastable wurtzite boron nitride (w-BN) remains largely unexplored. In this work, we present a comprehensive inv…</p><br />[Phys. Rev. Materials 10, 083602] Published Fri Aug 07, 2026",
+      "ai_relevant": true,
+      "ai_confidence": 0.9,
+      "categories": [
+        "thermal-mechanical-acoustic"
+      ],
+      "summary_zh": "本文研究了纤锌矿氮化硼中纳米间距反相畴界作为弱化起源的机制。"
+    },
+    {
+      "key": "doi:10.1007/978-3-032-33877-8_25",
+      "title": "Thermosolutal Convection in a Differentially Heated and Salted Diamond-Shaped Cavity with Dominant Heat Generation",
+      "doi": "10.1007/978-3-032-33877-8_25",
+      "url": "https://doi.org/10.1007/978-3-032-33877-8_25",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "Lecture notes in mechanical engineering",
+      "input_abstract": "",
+      "ai_relevant": false,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "本文研究了菱形腔体中的热溶质对流，与金刚石无关。"
+    },
+    {
+      "key": "doi:10.1016/j.diamond.2026.114060",
+      "title": "Localized nitrogen and hydrogen defect heterogeneities at mineral inclusion interfaces in eclogitic diamonds",
+      "doi": "10.1016/j.diamond.2026.114060",
+      "url": "https://doi.org/10.1016/j.diamond.2026.114060",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "Diamond and Related Materials",
+      "input_abstract": "The incorporation of nitrogen (N) and hydrogen (H) into the diamond lattice is a fundamental aspect of diamond growth and defect chemistry. While these impurities are typically linked to parental fluids composition, the influence of encapsulated mineral phases on defect distribution remains largely unexplored. This study utilizes synchrotron radiation micro-Fourier transform infrared mapping to resolve the spatial interplay between N and H impurities and mineral inclusions (sulfide, garnet, and graphite) in four eclogitic diamonds from the Yakutian field, Siberian craton. Mapping of the characteristic infrared absorption bands reveals significant point-defect heterogeneities localized at the inclusion-diamond interfaces. A coupled increase in N- and H-related absorbance is uniquely associated with sulfide inclusions, suggesting that sulfides may act as a local source (or sink) for these species during (and following) the entrapment. In contrast, proximity to garnet and graphite only correlates with localized enrichment of H-related defects (specifically the 3107 cm −1 , 1405 cm −1 , and 3236 cm −1 bands). Previous studies on N and H incorporation in minerals at high pressures and t",
+      "ai_relevant": true,
+      "ai_confidence": 0.95,
+      "categories": [
+        "natural-diamond-geoscience"
+      ],
+      "summary_zh": "本研究利用同步辐射显微红外光谱映射，揭示了榴辉岩型金刚石中矿物包裹体界面处的氮和氢缺陷异质性。"
+    },
+    {
+      "key": "doi:10.1016/j.diamond.2026.114061",
+      "title": "Enhancing alkaline oxygen reduction activity of Fe-N-C single-atom catalysts anchored on a diamond substrate",
+      "doi": "10.1016/j.diamond.2026.114061",
+      "url": "https://doi.org/10.1016/j.diamond.2026.114061",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "Diamond and Related Materials",
+      "input_abstract": "",
+      "ai_relevant": true,
+      "ai_confidence": 0.9,
+      "categories": [
+        "electrochemistry-catalysis"
+      ],
+      "summary_zh": "本文研究了锚定在金刚石基底上的Fe-N-C单原子催化剂增强碱性氧还原活性。"
+    },
+    {
+      "key": "doi:10.1016/j.jmapro.2026.07.054",
+      "title": "Mechanism of iron-catalyzed chemical-mechanical coupled polishing of diamond crystals",
+      "doi": "10.1016/j.jmapro.2026.07.054",
+      "url": "https://doi.org/10.1016/j.jmapro.2026.07.054",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "Journal of Manufacturing Processes",
+      "input_abstract": "",
+      "ai_relevant": true,
+      "ai_confidence": 0.9,
+      "categories": [
+        "growth-processing"
+      ],
+      "summary_zh": "本文研究了铁催化化学机械耦合抛光金刚石晶体的机理。"
+    },
+    {
+      "key": "doi:10.1038/s41598-026-66027-w",
+      "title": "Polarization imaging for gemstone identification and metrology",
+      "doi": "10.1038/s41598-026-66027-w",
+      "url": "https://doi.org/10.1038/s41598-026-66027-w",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "Scientific Reports",
+      "input_abstract": "Abstract This study applies polarization raytracing and full-Stokes polarization imaging using transmission, reflection, and side-view configurations to analyze the polarimetric signatures of four brilliant round-cut gemstones: cubic zirconia (CZ), natural diamond, chemical vapor deposition (CVD) synthetic diamond, and moissanite. Raytracing simulations provide a theoretical baseline for ideal light-facet interactions, while experimental measurements of the DoLP, AoLP, and DoCP reveal distinct optical behaviors. Isotropic CZ exhibits symmetric, geometry-driven polarization patterns, while birefringent moissanite shows extreme linear polarization responses dictated by its optical axis. Differences in polarization signatures are observed between the natural and CVD diamond samples examined, despite their identical chemical compositions. The natural diamonds in this study exhibit more symmetric polarization patterns and a distinct secondary DoLP peak (0.46) in transmission, while the CVD samples show more spatially fragmented AoLP distributions and asymmetric DoCP distributions, consistent with stress-induced anomalous birefringence associated with synthetic growth. These trends highl",
+      "ai_relevant": true,
+      "ai_confidence": 0.9,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "本文应用偏振成像技术对包括天然金刚石和CVD合成金刚石在内的宝石进行鉴定和计量。"
+    },
+    {
+      "key": "doi:10.3390/jfb17080392",
+      "title": "JFB, Vol. 17, Pages 392: Effect of Polishing Systems and Accelerated Artificial Aging on the Optical Properties (Color and Translucency) and Surface Roughness of Single-Shade Resin Composites",
+      "doi": "10.3390/jfb17080392",
+      "url": "https://doi.org/10.3390/jfb17080392",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "Journal of Functional Biomaterials",
+      "input_abstract": "This in vitro study aimed to evaluate the effects of different polishing systems and accelerated artificial aging on the optical properties and surface roughness of structurally different single-shade resin composites (SSRCs). Five SSRCs (Omnichroma (OM), Essentia Universal (EU), Admira Fusion X-tra Universal (AFX), Charisma Diamond ONE Shade (CDO), and Zenchroma (ZC)) were evaluated in this study. A total of 250 disc-shaped specimens were randomly assigned to five polishing groups: unpolished control, Sof-lex XT, Clearfil Twist Dia, Enhance-PoGo, and Opti One Step. Measurements were taken after a 24 h incubation in distilled water (37 &amp;deg;C) and repeated after accelerated aging. Changes in color and translucency were calculated using the CIEDE2000 formula. Statistical analyses included the Mann&amp;ndash;Whitney U test with Bonferroni correction, the Kruskal&amp;ndash;Wallis test, and Spearman&amp;rsquo;s correlation for interrelationships among &amp;Delta;E00, &amp;Delta;TP00, and &amp;Delta;SR. CDO and AFX showed lower &amp;Delta;E00 values across all polishing groups (p &amp;lt; 0.05). &amp;Delta;SR differed among resin composites and was generally higher in CDO and AFX (p",
+      "ai_relevant": false,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "该研究评估了不同抛光系统和加速人工老化对单色树脂复合材料光学性能和表面粗糙度的影响，与金刚石无关。"
+    },
+    {
+      "key": "doi:10.48550/arxiv.2608.08152",
+      "title": "Denoising Diffusion Monte Carlo Electron Densities with Physically Informed Variance Stabilization: From Fourier Filters to 3D UNETs",
+      "doi": "10.48550/arxiv.2608.08152",
+      "url": "https://arxiv.org/abs/2608.08152",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "arXiv (Cornell University)",
+      "input_abstract": "Obtaining accurate electron densities is important for the fundamental description of molecular and condensed matter systems, as well as for the development of next-generation density functionals. Diffusion Monte Carlo (DMC), in particular, is known to produce benchmark-quality data; however, the predicted real-space electron densities contain substantial amounts of statistical noise. In this work, we study denoising approaches for DMC densities, judged on the basis of the information-theoretic Jensen-Shannon divergence. The denoising is facilitated by an approximate heteroscedastic to homoscedastic transformation leveraging the density functional theory density as a physical prior. We systematically compare a range of denoising techniques-including Fourier transform, regression, and 3D UNETs-on materials showing a wide range of density variations: carbon diamond, blue phosphorus, and rutile VO2. Our results indicate that simple flattened machine learning models and 2D image-based models introduce line artifacts and struggle to capture the full spatial correlation. In contrast, when using variance stabilization, regression methods outperform all others in both the high and low- noi",
+      "ai_relevant": true,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "该研究使用去噪扩散蒙特卡洛方法获得电子密度，并应用于碳金刚石等材料，涉及金刚石电子结构计算。"
+    },
+    {
+      "key": "doi:10.48550/arxiv.2608.08351",
+      "title": "Pressure-Induced Stacking Disorder and Suppression of Long-Range Sm-type Order in Medium-Entropy Rare-Earth Alloys",
+      "doi": "10.48550/arxiv.2608.08351",
+      "url": "https://arxiv.org/abs/2608.08351",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "arXiv (Cornell University)",
+      "input_abstract": "Rare-earth medium-entropy alloys provide a platform for investigating how chemical disorder modifies the well-established pressure-induced structural evolution of close-packed $4f$ lanthanides. Here, we study TbHoEr and TbHoDy using synchrotron X-ray diffraction in diamond anvil cells. Both alloys transform from the ambient hexagonal close-packed (hcp) structure to a double hexagonal close-packed (dhcp) phase, while no well-resolved bulk Sm-type intermediate phase is observed. For TbHoEr, compression to 70 GPa further reveals a high-pressure rhombohedral hR24 phase. Unlike the constituent heavy lanthanides, however, both alloys bypass the intermediate Sm-type phase. Two-dimensional diffraction images further reveal streak-like diffuse scattering in the transition region, indicating stacking disorder and limited stacking coherence along the close-packed direction. These observations indicate that the transformation proceeds through a stacking-disordered close-packed state rather than through a well-ordered bulk Sm-type phase. We propose that configurational disorder, local lattice distortion, stacking-fault energetics, and transformation kinetics collectively suppress the developmen",
+      "ai_relevant": true,
+      "ai_confidence": 0.95,
+      "categories": [
+        "natural-diamond-geoscience"
+      ],
+      "summary_zh": "该研究使用金刚石对顶砧研究稀土合金的高压结构转变，涉及金刚石作为高压实验工具。"
+    },
+    {
+      "key": "doi:10.48550/arxiv.2608.08364",
+      "title": "Isometries of the Diamond",
+      "doi": "10.48550/arxiv.2608.08364",
+      "url": "https://arxiv.org/abs/2608.08364",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "arXiv (Cornell University)",
+      "input_abstract": "Chavan and Zwonek recently proved that every $C^1$ Kobayashi distance isometry of the diamond is holomorphic or antiholomorphic. We show that the $C^1$ assumption is superfluous.",
+      "ai_relevant": true,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "该数学论文研究金刚石区域的等距变换，涉及复几何中的金刚石域。"
+    },
+    {
+      "key": "doi:10.5281/zenodo.21849298",
+      "title": "Jean-Louis Verdier — Des catégories dérivées des catégories abéliennes: separate French and English working editions",
+      "doi": "10.5281/zenodo.21849298",
+      "url": "https://doi.org/10.5281/zenodo.21849298",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "Zenodo (CERN European Organization for Nuclear Research)",
+      "input_abstract": "Reader files: english.pdf and french.pdf are the two separate 114-page cumulative standalone working editions. Their cumulative LaTeX masters are english.tex and french.tex. There is no combined, side-by-side, paired, or interleaved reader. This checkpoint covers physical authority pages 2–137 of 270; physical pages 15, 17, 33, 65, 107, 109, and 127 are verified blank. Physical page 137 / printed page 120 completes the SM2 commutative diamond and composite roof D3, closes the composition description for Theorem 2.2.2, gives Remark 2.2.3 on the localization universal property, and begins Corollary 2.2.4(a) with the opposite-category and filtered-colimit isomorphisms. The source uses the same plain S in the opposite category; no S-circ is invented. Physical page 138 / printed page 121 begins Corollary 2.2.4(b), the additivity assertion, and is excluded. This is a partial checkpoint, not completion of Astérisque 239, and the historically unfinished thesis body is not silently repaired. source.zip contains compact TeX sources, stable anchors, semantic and reference tables, sanitized append-only provenance, and the checkpoint PASS receipt. workflow.zip contains the controlling workflow ",
+      "ai_relevant": false,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "该文档是数学著作的翻译版本，涉及范畴论，与金刚石无关。"
+    },
+    {
+      "key": "doi:10.5281/zenodo.21850613",
+      "title": "The Silence Experiment: A Multi-State Protocol for Detecting Consciousness-Dependent Decoherence in Shielded Environments",
+      "doi": "10.5281/zenodo.21850613",
+      "url": "https://doi.org/10.5281/zenodo.21850613",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "Zenodo (CERN European Organization for Nuclear Research)",
+      "input_abstract": "This paper specifies a controlled experimental protocol for testing the von Neumann-Wigner interpretation of quantum mechanics, the hypothesis that consciousness plays a role in quantum state reduction, against the prevailing environmental decoherence framework. It measures whether the cognitive state of a nearby conscious observer measurably affects the decoherence rate of a prepared quantum system. The platform places an experienced meditator in EEG-verified states inside a five-layer shielded chamber. A single nitrogen-vacancy centre in diamond measures coherence times across seven consciousness conditions spanning the cognitive-excitation axis, from active cognition to objectless awareness, against an empty-chamber instrumental baseline and a thermal-dummy control cell that reproduces the metabolic heat load of a seated occupant with no observer present. All seven conditions run in one randomised session, so chamber drift is common to the chain and differences out of the within-participant contrasts. Three primary tests are pre-registered at a family-wise threshold of 0.005 one-sided, Bonferroni corrected to approximately 0.00167 per test: an ordered test across the excitation ",
+      "ai_relevant": true,
+      "ai_confidence": 0.95,
+      "categories": [
+        "quantum-color-centers"
+      ],
+      "summary_zh": "该实验方案使用金刚石中的氮-空位中心测量量子相干时间，研究意识对量子退相干的影响。"
+    },
+    {
+      "key": "doi:10.5281/zenodo.21851489",
+      "title": "Rattan chair \"Belse-8\" Schulting, densely woven with diamond decoration",
+      "doi": "10.5281/zenodo.21851489",
+      "url": "https://doi.org/10.5281/zenodo.21851489",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "Zenodo (CERN European Organization for Nuclear Research)",
+      "input_abstract": "Chair with 4 loop legs that form a figure 8. \"Belse-8\". Fa. P. G. Schulting, Rattan Furniture Factory # 280 high back woven with diamond decoration.",
+      "ai_relevant": true,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "该物品为藤编椅子，带有菱形装饰，属于家具设计。"
+    },
+    {
+      "key": "doi:10.5281/zenodo.21851490",
+      "title": "Rattan chair \"Belse-8\" Schulting, densely woven with diamond decoration",
+      "doi": "10.5281/zenodo.21851490",
+      "url": "https://doi.org/10.5281/zenodo.21851490",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "Zenodo (CERN European Organization for Nuclear Research)",
+      "input_abstract": "Chair with 4 loop legs that form a figure 8. \"Belse-8\". Fa. P. G. Schulting, Rattan Furniture Factory # 280 high back woven with diamond decoration.",
+      "ai_relevant": true,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "该物品为藤编椅子，带有菱形装饰，属于家具设计。"
+    },
+    {
+      "key": "doi:10.6084/m9.figshare.33070367",
+      "title": "De novo transcriptome of the sandmason Lanice conchilega using Nanopore long-read sequencing",
+      "doi": "10.6084/m9.figshare.33070367",
+      "url": "https://doi.org/10.6084/m9.figshare.33070367",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "Figshare",
+      "input_abstract": "The sandmason worm Lanice conchilega is a key ecosystem engineer on European intertidal and subtidal shores, forming dense tube aggregations (biogenic reefs) that enhance benthic biodiversity and support biogeochemical cycling in coastal areas. However, the pumping behavior of this polychaete may be sensitive to external stressors. We aimed to characterize the transcriptomic response of L. conchilega to low-frequency noise exposure and provide a de novo reference transcriptome for the species.This dataset contains the following folders with data derived from the functional characterization of the de novo transcriptome assembly:predicted_proteins: Amino acid sequences predicted from the transcriptome with EvidentialGene;functional_annot_diamond_interproscan: Functional annotation generated with DIAMOND (NR and UniProtKB databases) and InterProScan, including GO terms inferred from the DIAMOND–UniProtKB annotation using a custom Python script;esmc_sae_data_record: ESMC-SAE and Swiss-Prot data records from the functional association analysis.",
+      "ai_relevant": true,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "该数据集包含沙蚕的转录组注释，使用DIAMOND软件进行功能注释，与金刚石材料无关。"
+    },
+    {
+      "key": "doi:10.6084/m9.figshare.33070367.v1",
+      "title": "De novo transcriptome of the sandmason Lanice conchilega using Nanopore long-read sequencing",
+      "doi": "10.6084/m9.figshare.33070367.v1",
+      "url": "https://doi.org/10.6084/m9.figshare.33070367.v1",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "journal": "Figshare",
+      "input_abstract": "The sandmason worm Lanice conchilega is a key ecosystem engineer on European intertidal and subtidal shores, forming dense tube aggregations (biogenic reefs) that enhance benthic biodiversity and support biogeochemical cycling in coastal areas. However, the pumping behavior of this polychaete may be sensitive to external stressors. We aimed to characterize the transcriptomic response of L. conchilega to low-frequency noise exposure and provide a de novo reference transcriptome for the species.This dataset contains the following folders with data derived from the functional characterization of the de novo transcriptome assembly:predicted_proteins: Amino acid sequences predicted from the transcriptome with EvidentialGene;functional_annot_diamond_interproscan: Functional annotation generated with DIAMOND (NR and UniProtKB databases) and InterProScan, including GO terms inferred from the DIAMOND–UniProtKB annotation using a custom Python script;esmc_sae_data_record: ESMC-SAE and Swiss-Prot data records from the functional association analysis.",
+      "ai_relevant": true,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "该数据集包含沙蚕的转录组注释，使用DIAMOND软件进行功能注释，与金刚石材料无关。"
+    },
+    {
+      "key": "title:denoising diffusion monte carlo electron densities with physically informed variance stabilization from fourier filters to 3d unets:2026",
+      "title": "Denoising Diffusion Monte Carlo Electron Densities with Physically Informed Variance Stabilization: From Fourier Filters to 3D UNETs",
+      "doi": null,
+      "url": "https://arxiv.org/abs/2608.08152",
+      "published_at": "2026-08-08T14:27:26+00:00",
+      "journal": "",
+      "input_abstract": "Obtaining accurate electron densities is important for the fundamental description of molecular and condensed matter systems, as well as for the development of next-generation density functionals. Diffusion Monte Carlo (DMC), in particular, is known to produce benchmark-quality data; however, the predicted real-space electron densities contain substantial amounts of statistical noise. In this work, we study denoising approaches for DMC densities, judged on the basis of the information-theoretic Jensen-Shannon divergence. The denoising is facilitated by an approximate heteroscedastic to homoscedastic transformation leveraging the density functional theory density as a physical prior. We systematically compare a range of denoising techniques-including Fourier transform, regression, and 3D UNETs-on materials showing a wide range of density variations: carbon diamond, blue phosphorus, and rutile VO2. Our results indicate that simple flattened machine learning models and 2D image-based models introduce line artifacts and struggle to capture the full spatial correlation. In contrast, when using variance stabilization, regression methods outperform all others in both the high and low- noi",
+      "ai_relevant": false,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "该论文研究扩散蒙特卡洛电子密度的去噪方法，涉及金刚石等材料，但主要关注计算方法，并非金刚石本身。"
+    },
+    {
+      "key": "title:pressure induced stacking disorder and suppression of long range sm type order in medium entropy rare earth alloys:2026",
+      "title": "Pressure-Induced Stacking Disorder and Suppression of Long-Range Sm-type Order in Medium-Entropy Rare-Earth Alloys",
+      "doi": null,
+      "url": "https://arxiv.org/abs/2608.08351",
+      "published_at": "2026-08-08T22:25:52+00:00",
+      "journal": "",
+      "input_abstract": "Rare-earth medium-entropy alloys provide a platform for investigating how chemical disorder modifies the well-established pressure-induced structural evolution of close-packed $4f$ lanthanides. Here, we study TbHoEr and TbHoDy using synchrotron X-ray diffraction in diamond anvil cells. Both alloys transform from the ambient hexagonal close-packed (hcp) structure to a double hexagonal close-packed (dhcp) phase, while no well-resolved bulk Sm-type intermediate phase is observed. For TbHoEr, compression to 70 GPa further reveals a high-pressure rhombohedral hR24 phase. Unlike the constituent heavy lanthanides, however, both alloys bypass the intermediate Sm-type phase. Two-dimensional diffraction images further reveal streak-like diffuse scattering in the transition region, indicating stacking disorder and limited stacking coherence along the close-packed direction. These observations indicate that the transformation proceeds through a stacking-disordered close-packed state rather than through a well-ordered bulk Sm-type phase. We propose that configurational disorder, local lattice distortion, stacking-fault energetics, and transformation kinetics collectively suppress the developmen",
+      "ai_relevant": false,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "该论文研究稀土合金在高压下的结构变化，使用金刚石压砧，但研究对象不是金刚石。"
+    },
+    {
+      "key": "title:isometries of the diamond:2026",
+      "title": "Isometries of the Diamond",
+      "doi": null,
+      "url": "https://arxiv.org/abs/2608.08364",
+      "published_at": "2026-08-08T23:25:11+00:00",
+      "journal": "",
+      "input_abstract": "Chavan and Zwonek recently proved that every $C^1$ Kobayashi distance isometry of the diamond is holomorphic or antiholomorphic. We show that the $C^1$ assumption is superfluous.",
+      "ai_relevant": false,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "该论文是数学研究，关于菱形区域的等距变换，与金刚石材料无关。"
+    },
+    {
+      "key": "doi:10.1007/s40747-026-02423-z",
+      "title": "IHFD: an improved heartbeat-based failure detector of $$\\Diamond \\,P$$ class for partially synchronous hierarchical distributed systems",
+      "doi": "10.1007/s40747-026-02423-z",
+      "url": "https://doi.org/10.1007/s40747-026-02423-z",
+      "published_at": "2026-08-09T00:00:00+00:00",
+      "journal": "Complex &amp; Intelligent Systems",
+      "input_abstract": "Fundamentally, failure detectors are important for failure detection in distributed systems, particularly in partially synchronous environments, where message delays and process failures are unavoidable. This paper proposed an Improved Heartbeat-based Failure Detector (IHFD) for hierarchical distributed systems that combines adaptive timeout-based estimation, statistical deviation handling, and structured failure results aggregation within a health monitoring tree (HMT). By integrating local failure detection and classification into a global health monitoring tree (GlobalHMT), the proposed algorithm provides a consolidated, system-wide view of node health at the root level. The performance evaluation of IHFD is conducted using real-world PlanetLab heartbeat traces and compared against six state-of-the-art failure detectors, including HFD, Chen, Bertier, PHI, EDFD, and 2WFD failure detectors. At the root monitoring node, IHFD achieves a Mistake Rate of \\(6.6 \\times 10^{-5}\\) , and a Query Accuracy Probability of 0.9999. Across all hierarchy levels, IHFD maintains Mistake Rate values of (0.066– \\(2.731)\\times 10^{-3}\\) , while Bertier and PHI record substantially higher ranges of (34",
+      "ai_relevant": false,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "该论文提出一种心跳故障检测器，用于分布式系统，与金刚石无关。"
+    },
+    {
+      "key": "doi:10.1007/s42823-026-01123-5",
+      "title": "Effect of methane concentration on the growth kinetics, microstructure, and crystalline quality of thick MPCVD-grown polycrystalline diamond",
+      "doi": "10.1007/s42823-026-01123-5",
+      "url": "https://doi.org/10.1007/s42823-026-01123-5",
+      "published_at": "2026-08-09T00:00:00+00:00",
+      "journal": "Carbon letters",
+      "input_abstract": "In diamond growth using microwave plasma chemical vapor deposition (MPCVD) process, the methane fraction controls the balance between carbon supply and hydrogen etching, while substrate temperature governs surface diffusion and facet‑dependent growth. Yet for polycrystalline diamond (PCD) films used as optical windows and heat spreaders, the combined influence of these two parameters is rarely quantified across multiple, cross‑validated metrics. Here we isolate the role of CH 4 at fixed temperature by growing PCD on identically prepared Si (100) wafers with all parameters held constant except the methane fraction (4 to 8% at 890 °C). In addition, at a fixed CH 4 concentration of 4%, the growth temperature was varied from 840 °C to 890 °C. Freestanding films with thicknesses of ~ 190–325 μm were obtained, enabling correlation of growth kinetics with texture, grain coarsening, and defect content. Raising temperature from 840 °C to 890 °C at 4% CH 4 more than doubled the growth rate and strengthened a (220) preferred orientation. At 890 °C, increasing CH 4 from 4% to 6% maximized the growth rate (~ 2.8 μm h − 1 ) but increased sp² signatures (Raman I 1450 /I 1332 ), the SiV-related em",
+      "ai_relevant": true,
+      "ai_confidence": 0.98,
+      "categories": [
+        "growth-processing"
+      ],
+      "summary_zh": "研究甲烷浓度对MPCVD生长多晶金刚石薄膜的动力学、微观结构和晶体质量的影响。"
+    },
+    {
+      "key": "doi:10.1007/s44288-026-00663-7",
+      "title": "Geochemical studies and economic perspective of light rare earth element (LREE) enriched carbonatite from Khaderpet, Eastern Dharwar Craton",
+      "doi": "10.1007/s44288-026-00663-7",
+      "url": "https://doi.org/10.1007/s44288-026-00663-7",
+      "published_at": "2026-08-09T00:00:00+00:00",
+      "journal": "Discover Geoscience",
+      "input_abstract": "An account of petrographic features, geochemical character, enriched light rare earth elements (LREEs), and stable isotope (C–O) concentrations in carbonatite occurring in association with lamprophyre clan rock (LCR) from Khaderpet is presented here. The Khaderpet carbonatite (KC) intrudes as a plug into LCR (ultramafic lamprophyre or aillikite) which is emplaced in granites of Archaean age forming granitoid breccia. A total of 10 fresh outcrop samples of carbonatite have been analysed. Petrographically, the carbonatites are dominated by calcite crystals showing an equigranular texture with accessory minerals like phlogopite, fluorite, chlorite, apatite along with REE bearing minerals such as monazite, titanite and allanite. Geochemical analyses reveal that the major element content shows high proportions of CaO (46.8–53.8 wt.%), with MgO (0.11–0.48 wt.%), FeO (0.21–0.23 wt.%), classifying the rock as a calcio-carbonatite. The ∑REE ranges from 4100 to 4500 ppm of which ∑LREE contributes maximum, (4092 to 4509 ppm) and Y ranges from 43 to 50 ppm. The δ 18 O values range from 6.6 to 8.76‰ and δ 13 C ranges from −7.45 to −6.33‰ indicating its primary carbonatite character. Geochemistr",
+      "ai_relevant": false,
+      "ai_confidence": 0.95,
+      "categories": [
+        "natural-diamond-geoscience"
+      ],
+      "summary_zh": "该论文研究碳酸岩的地球化学特征，与金刚石无关。"
+    },
+    {
+      "key": "doi:10.1016/j.diamond.2026.114067",
+      "title": "Diamond boron-doped channel MOSFET with ohmic contacts on CH diamond surface",
+      "doi": "10.1016/j.diamond.2026.114067",
+      "url": "https://doi.org/10.1016/j.diamond.2026.114067",
+      "published_at": "2026-08-09T00:00:00+00:00",
+      "journal": "Diamond and Related Materials",
+      "input_abstract": "",
+      "ai_relevant": true,
+      "ai_confidence": 0.98,
+      "categories": [
+        "electronics-optoelectronics"
+      ],
+      "summary_zh": "研究金刚石硼掺杂沟道MOSFET，在CH金刚石表面形成欧姆接触。"
+    },
+    {
+      "key": "doi:10.1021/acsami.6c13720",
+      "title": "Ultra Broad Range Pressure Tunable CaZrO3:Ce3+ Luminescence for Multiparametric Manometry",
+      "doi": "10.1021/acsami.6c13720",
+      "url": "https://doi.org/10.1021/acsami.6c13720",
+      "published_at": "2026-08-09T00:00:00+00:00",
+      "journal": "ACS Applied Materials & Interfaces",
+      "input_abstract": "Optical manometry is essential in diamond anvil cell experiments, motivating pressure-sensitive phosphors that provide robust broadband readouts over a wide pressure range. Here we report a Ce3+-activated CaZrO3 perovskite phosphor with a low dopant level of about 0.40 atom % Ce quantified by EDS, and we evaluate its pressure-dependent luminescence response. Powder XRD and SEM-EDS confirm a single-phase CaZrO3 host and successful incorporation of the Ce activator. Temperature-dependent photoluminescence and lifetime measurements reveal that the material exhibits good thermal stability. Under compression up to 45 GPa, the broadband Ce3+ 5d-4f emission exhibits an almost linear redshift of the band centroid with dλ/dP about 2.45 nm GPa-1 and a concurrent broadening of FWHM with dFWHM/dP about 1.15 nm GPa-1. In parallel, the CIE 1931 chromaticity coordinates derived from the full emission spectrum evolve regularly with pressure, enabling a continuous color change from blue to green and offering a convenient visual readout. High-pressure Raman spectra indicate a structural transition near 30 GPa, consistent with synchrotron XRD reports for CaZrO3, yet no discontinuity is observed in th",
+      "ai_relevant": false,
+      "ai_confidence": 0.95,
+      "categories": [
+        "piezoelectric-sensing"
+      ],
+      "summary_zh": "该论文研究CaZrO3:Ce3+荧光粉的压力传感，使用金刚石压砧，但材料不是金刚石。"
+    },
+    {
+      "key": "doi:10.1145/3815598.3815719",
+      "title": "Odd Diamond: How Deadlines Shape Game Design",
+      "doi": "10.1145/3815598.3815719",
+      "url": "https://doi.org/10.1145/3815598.3815719",
+      "published_at": "2026-08-09T00:00:00+00:00",
+      "journal": "Proceedings of the 21st International Conference on the Foundations of Digital Games",
+      "input_abstract": "",
+      "ai_relevant": false,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "该论文讨论游戏设计中的截止日期，与金刚石无关。"
+    },
+    {
+      "key": "doi:10.32614/cran.package.bscm",
+      "title": "bscm: Bayesian Synthetic Control Models",
+      "doi": "10.32614/cran.package.bscm",
+      "url": "https://doi.org/10.32614/cran.package.bscm",
+      "published_at": "2026-08-09T00:00:00+00:00",
+      "journal": "",
+      "input_abstract": "Implements the synthetic control method of Abadie, Diamond, and Hainmueller (2010) within a Bayesian framework, enabling straightforward uncertainty quantification of treatment effects and other quantities of interest. Supports time-varying covariates with potentially time-varying effects, single or multiple treated units, and staggered treatment adoption. Provides methods for model assessment, comparison, and selection based on placebo studies, cross-validation, and posterior predictive checks. Posterior sampling is performed using Markov chain Monte Carlo via Stan.",
+      "ai_relevant": false,
+      "ai_confidence": 0.95,
+      "categories": [
+        "other-diamond"
+      ],
+      "summary_zh": "该论文介绍一个R包，用于贝叶斯合成控制模型，与金刚石无关。"
+    }
+  ],
+  "balance_decrease": {
+    "USD": "0.00",
+    "CNY": "0.00"
+  },
+  "balance_note": "Account-level difference; other API activity or billing delay may affect it."
+}
