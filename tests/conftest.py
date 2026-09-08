@@ -31,7 +31,7 @@ class FakeDeepSeekClient:
                 "relevant": True,
                 "confidence": 0.95,
                 "category": "other-diamond",
-                "matched_topics": ["diamond"],
+                "matched_topics": [],
                 "summary_zh": f"{item['title']} 的中文摘要。",
                 "reason": "论文研究对象是金刚石。",
             }

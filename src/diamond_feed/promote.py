@@ -20,6 +20,13 @@ from diamond_feed.atomic import (
     validate_output_layout,
 )
 from diamond_feed.config import AppConfig, load_config
+from diamond_feed.focus import (
+    FOCUS_LABELS,
+    FOCUS_RSS_NAME,
+    focused_records,
+    load_focus_overrides,
+    render_focused_rss,
+)
 from diamond_feed.models import AiDecision, PaperRecord
 from diamond_feed.normalize import group_records, record_key
 from diamond_feed.publication import cumulative_records, load_withheld_aliases
@@ -79,9 +86,12 @@ def _decision(item: dict[str, object]) -> AiDecision:
         raise ValueError("evaluation report has invalid AI confidence")
     if (
         type(categories) is not list
-        or len(categories) != 1
-        or type(categories[0]) is not str
+        or not categories
+        or any(type(category) is not str for category in categories)
         or categories[0] not in CATEGORIES
+        or len(categories[1:]) != len(set(categories[1:]))
+        or not set(categories[1:]).issubset(FOCUS_LABELS)
+        or (not relevant and categories[1:])
     ):
         raise ValueError("evaluation report has invalid AI category")
     if type(summary) is not str or type(reason) is not str:
@@ -93,7 +103,7 @@ def _decision(item: dict[str, object]) -> AiDecision:
         relevant=relevant,
         confidence=float(confidence),
         category=categories[0],
-        matched_topics=[],
+        matched_topics=list(categories[1:]),
         summary_zh=summary,
         reason=reason,
     )
@@ -172,6 +182,7 @@ def _validated_report(
                 decision.relevant,
                 decision.confidence,
                 decision.category,
+                tuple(decision.matched_topics),
                 decision.summary_zh,
                 decision.reason,
             )
@@ -200,6 +211,7 @@ def promote_evaluation(
     *,
     output_dir: Path = Path("."),
     policy_path: Path | None = None,
+    focus_overrides_path: Path | None = None,
 ) -> dict[str, object]:
     """Validate and atomically publish saved decisions without a provider request."""
     if now.tzinfo is None or now.utcoffset() is None:
@@ -212,14 +224,32 @@ def promote_evaluation(
         if policy_path is not None
         else state_path.parent / "config" / "ai_publication.json"
     )
+    focus_overrides_path = (
+        Path(focus_overrides_path)
+        if focus_overrides_path is not None
+        else state_path.parent / "config" / "device_focus_overrides.json"
+    )
     rss_path = output_dir / RSS_NAME
     html_path = output_dir / HTML_NAME
+    focus_rss_path = output_dir / FOCUS_RSS_NAME
     usage_path = output_dir / USAGE_NAME
     # Read-only inputs are included so that no input can alias a destination.
-    validate_output_layout((rss_path, html_path, state_path, report_path, policy_path, usage_path))
+    validate_output_layout(
+        (
+            rss_path,
+            html_path,
+            focus_rss_path,
+            state_path,
+            report_path,
+            policy_path,
+            focus_overrides_path,
+            usage_path,
+        )
+    )
 
     state = load_state(state_path)
     report_payload = _load_report(report_path)
+    focus_overrides = load_focus_overrides(focus_overrides_path)
     day, decisions, report_groups, accepted_groups = _validated_report(
         report_payload, state, config
     )
@@ -255,10 +285,18 @@ def promote_evaluation(
         withheld_aliases,
         new_count=accepted_groups,
     )
+    focus_rss = render_focused_rss(
+        state,
+        config,
+        withheld_aliases,
+        focus_overrides,
+    )
+    focused_count = len(focused_records(state, withheld_aliases, focus_overrides))
     staged: list[StagedFile] = []
     try:
         staged.append(stage_text(rss_path, rss))
         staged.append(stage_text(html_path, html))
+        staged.append(stage_text(focus_rss_path, focus_rss))
         staged.append(stage_state(state_path, state))
     except Exception as staging_error:
         raise_with_cleanup(
@@ -279,6 +317,7 @@ def promote_evaluation(
         "imported": len(decisions),
         "selected": accepted_groups,
         "published": len(published_records),
+        "focused": focused_count,
         "remaining": len(state.pending_ai),
         "model_requests": 0,
     }
@@ -293,6 +332,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, default=Path("."))
     parser.add_argument("--policy", type=Path)
+    parser.add_argument("--focus-overrides", type=Path)
     args = parser.parse_args(argv)
     try:
         result = promote_evaluation(
@@ -302,6 +342,7 @@ def main(argv: list[str] | None = None) -> int:
             datetime.now(timezone.utc),
             output_dir=args.output_dir,
             policy_path=args.policy,
+            focus_overrides_path=args.focus_overrides,
         )
     except (OSError, ValueError, RuntimeError) as error:
         print(f"offline promotion failed: {error}", file=sys.stderr)

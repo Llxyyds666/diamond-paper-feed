@@ -91,6 +91,7 @@ jobs:
           allowed_outputs=(
             "ai_summary_feed.xml"
             "ai_summary.html"
+            "device_focus_feed.xml"
             "ai_usage.json"
             "state.json"
           )

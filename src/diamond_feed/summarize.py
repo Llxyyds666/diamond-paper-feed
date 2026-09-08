@@ -24,6 +24,11 @@ from diamond_feed.atomic import (
     validate_output_layout,
 )
 from diamond_feed.config import AppConfig, load_config
+from diamond_feed.focus import (
+    FOCUS_RSS_NAME,
+    load_focus_overrides,
+    render_focused_rss,
+)
 from diamond_feed.models import AiDecision, PaperRecord
 from diamond_feed.normalize import group_records
 from diamond_feed.publication import cumulative_records, load_withheld_aliases
@@ -357,7 +362,7 @@ def _apply_decision(state: FeedState, decision: AiDecision) -> None:
     record = state.papers[decision.key]
     record.ai_relevant = decision.relevant
     record.ai_confidence = decision.confidence
-    record.categories = [decision.category]
+    record.categories = [decision.category, *decision.matched_topics]
     record.summary_zh = decision.summary_zh
 
 
@@ -426,21 +431,40 @@ def run_summary(
     *,
     output_dir: Path = Path("."),
     policy_path: Path | None = None,
+    focus_overrides_path: Path | None = None,
 ) -> SummaryStats:
     """Process one bounded oldest-first queue slice and atomically publish its digest."""
     state_path = Path(state_path)
     output_dir = Path(output_dir)
-    state = load_state(state_path)
-    withheld_aliases = load_withheld_aliases(
-        Path(policy_path) if policy_path is not None else state_path.parent / "config/ai_publication.json"
+    focus_overrides_path = (
+        Path(focus_overrides_path)
+        if focus_overrides_path is not None
+        else state_path.parent / "config/device_focus_overrides.json"
     )
+    focus_overrides = load_focus_overrides(focus_overrides_path)
+    state = load_state(state_path)
+    policy_path = (
+        Path(policy_path)
+        if policy_path is not None
+        else state_path.parent / "config/ai_publication.json"
+    )
+    withheld_aliases = load_withheld_aliases(policy_path)
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError("now must include a timezone")
     day = now.astimezone(timezone.utc).date().isoformat()
     rss_path = output_dir / RSS_NAME
     html_path = output_dir / HTML_NAME
+    focus_rss_path = output_dir / FOCUS_RSS_NAME
     usage_path = output_dir / USAGE_NAME
-    destinations = (rss_path, html_path, usage_path, state_path)
+    destinations = (
+        rss_path,
+        html_path,
+        focus_rss_path,
+        usage_path,
+        state_path,
+        policy_path,
+        focus_overrides_path,
+    )
     validate_output_layout(destinations)
     previous_usage = _usage_entries(usage_path)
     today_usage = _usage_for_day(previous_usage, day)
@@ -547,6 +571,12 @@ def run_summary(
         withheld_aliases,
         new_count=len(selected),
     )
+    focus_rss = render_focused_rss(
+        state,
+        config,
+        withheld_aliases,
+        focus_overrides,
+    )
     usage = json.dumps(
         _merged_usage(previous_usage, stats.usage_entry(day)),
         ensure_ascii=False,
@@ -557,6 +587,7 @@ def run_summary(
     try:
         staged.append(stage_text(rss_path, rss))
         staged.append(stage_text(html_path, html))
+        staged.append(stage_text(focus_rss_path, focus_rss))
         staged.append(stage_text(usage_path, usage))
         staged.append(stage_state(state_path, state))
     except Exception as staging_error:
@@ -573,6 +604,7 @@ def main(argv: list[str] | None = None, *, now: datetime | None = None) -> int:
     parser.add_argument("--config", type=Path, default=Path("paper_feed_config.json"))
     parser.add_argument("--state", type=Path, default=Path("state.json"))
     parser.add_argument("--output-dir", type=Path, default=Path("."))
+    parser.add_argument("--focus-overrides", type=Path)
     args = parser.parse_args(argv)
     key = os.environ.get("DEEPSEEK_API_KEY")
     if not key:
@@ -586,6 +618,7 @@ def main(argv: list[str] | None = None, *, now: datetime | None = None) -> int:
         client,
         now or datetime.now(timezone.utc),
         output_dir=args.output_dir,
+        focus_overrides_path=args.focus_overrides,
     )
     print(
         f"processed={stats.processed} selected={stats.selected} "

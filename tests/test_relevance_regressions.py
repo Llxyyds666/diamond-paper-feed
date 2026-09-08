@@ -51,7 +51,7 @@ def test_same_title_distinct_dois_are_not_silently_collapsed(tmp_path, diamond_r
 
 def test_positive_decision_cannot_explicitly_say_it_is_unrelated(ai_config, diamond_records):
     decision = dict(key=record_key(diamond_records[0]), relevant=True, confidence=.95,
-                    category="other-diamond", matched_topics=["diamond"],
+                    category="other-diamond", matched_topics=[],
                     summary_zh="这是一篇数学论文，与金刚石材料无关。", reason="只涉及抽象几何。")
     client = DeepSeekClient("test-api-key", ai_config, transport=lambda *args: {"choices": [{"message": {"content": json.dumps({"decisions": [decision]})}}]})
     with pytest.raises(ValueError, match="invalid model response"):

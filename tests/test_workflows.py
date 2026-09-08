@@ -32,6 +32,7 @@ def test_github_workflows_obey_the_automation_contract():
             "outputs": (
                 "ai_summary_feed.xml",
                 "ai_summary.html",
+                "device_focus_feed.xml",
                 "ai_usage.json",
                 "state.json",
             ),
@@ -101,6 +102,6 @@ def test_empty_summary_queue_can_publish_without_preexisting_output_files():
 """
     assert guarded_add in summarize
     assert (
-        "git add -- ai_summary_feed.xml ai_summary.html ai_usage.json state.json"
+        "git add -- ai_summary_feed.xml ai_summary.html device_focus_feed.xml ai_usage.json state.json"
         not in summarize
     )

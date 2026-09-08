@@ -81,12 +81,24 @@ def _assert_repository_output_contract(root: Path) -> None:
 
     summary_rss = root / "ai_summary_feed.xml"
     summary_html = root / "ai_summary.html"
+    focus_rss = root / "device_focus_feed.xml"
     usage_path = root / "ai_usage.json"
-    assert summary_rss.exists() == summary_html.exists()
+    assert summary_rss.exists() == summary_html.exists() == focus_rss.exists()
     if summary_rss.exists():
         assert usage_path.exists()
-        ElementTree.parse(summary_rss)
+        summary_root = ElementTree.parse(summary_rss).getroot()
         assert "<html" in summary_html.read_text(encoding="utf-8").casefold()
+        focus_root = ElementTree.parse(focus_rss).getroot()
+        assert focus_root.tag == "rss" and focus_root.attrib == {"version": "2.0"}
+        assert focus_root.findtext("./channel/title") == "Diamond Device Focus Feed · 中文摘要"
+        assert focus_root.findtext("./channel/link") == EXPECTED_BASE_URL
+        summary_guids = {
+            item.findtext("guid") for item in summary_root.findall("./channel/item")
+        }
+        focus_guids = {
+            item.findtext("guid") for item in focus_root.findall("./channel/item")
+        }
+        assert None not in focus_guids and focus_guids <= summary_guids
     if usage_path.exists():
         usage = json.loads(usage_path.read_text(encoding="utf-8"))
         assert isinstance(usage, list) and usage
@@ -262,7 +274,7 @@ def test_isolated_collection_continuation_completion_and_summary_lifecycle(
     first_state = load_state(state_path)
     assert first_state.source_continuations["openalex"].cursor == "next-page"
     assert not any((tmp_path / name).exists() for name in (
-        "ai_summary_feed.xml", "ai_summary.html", "ai_usage.json"
+        "ai_summary_feed.xml", "ai_summary.html", "device_focus_feed.xml", "ai_usage.json"
     ))
     _assert_repository_output_contract(tmp_path)
     _assert_failure_report_contract(failures_path, sources_path)
@@ -285,7 +297,7 @@ def test_isolated_collection_continuation_completion_and_summary_lifecycle(
                     "relevant": True,
                     "confidence": 0.9,
                     "category": "films-membranes",
-                    "matched_topics": ["diamond"],
+                    "matched_topics": [],
                     "summary_zh": "金刚石涂层器件研究。",
                     "reason": "研究对象为金刚石涂层。",
                 }
@@ -325,7 +337,12 @@ def test_public_config_readme_and_database_only_table_describe_exact_limits():
     assert config["publication"]["base_url"] == EXPECTED_BASE_URL
     for section in REQUIRED_README_SECTIONS:
         assert f"## {section}" in readme
-    for output in ("filtered_feed.xml", "ai_summary_feed.xml", "ai_summary.html"):
+    for output in (
+        "filtered_feed.xml",
+        "ai_summary_feed.xml",
+        "device_focus_feed.xml",
+        "ai_summary.html",
+    ):
         assert f"{EXPECTED_BASE_URL}/{output}" in readme
     assert "每天最多只向 AI 提交 40 篇候选" in readme
     assert "每批最多 10 篇" in readme
@@ -349,10 +366,12 @@ def test_workflow_crons_and_secret_boundary_are_exact():
     assert "DEEPSEEK_API_KEY" not in collect_workflow
     assert "secrets." not in collect_workflow
     assert "python -m diamond_feed.summarize" not in collect_workflow
+    assert "device_focus_feed.xml" not in collect_workflow
     assert "cron: '0 0 * * *'" in summary_workflow
     assert summary_workflow.count("DEEPSEEK_API_KEY") == 5
     assert "DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}" in summary_workflow
     assert "python -m diamond_feed.collect" not in summary_workflow
+    assert '"device_focus_feed.xml"' in summary_workflow
 
     smoke_step = _workflow_step(summary_workflow, "Run one-request DeepSeek smoke test")
     assert "inputs.smoke_test == true" in smoke_step

@@ -50,7 +50,7 @@ class RecordingClient:
                 "relevant": self.relevant,
                 "confidence": 0.9,
                 "category": "other-diamond",
-                "matched_topics": ["diamond"] if self.relevant else [],
+                "matched_topics": [],
                 "summary_zh": f"{paper['title']} 的中文摘要。",
                 "reason": "金刚石材料研究。" if self.relevant else "不相关。",
             }

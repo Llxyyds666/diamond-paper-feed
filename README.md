@@ -2,7 +2,7 @@
 
 ## Overview
 
-Diamond Paper Feed 是一个面向金刚石研究的高召回文献监测项目。它每 6 小时从期刊 RSS、OpenAlex、Crossref 和 arXiv 收集论文，统一元数据、按 DOI 或题名去重，并先发布不依赖 AI 的 `filtered_feed.xml`。每天北京时间 08:00，独立的摘要工作流使用 DeepSeek 对固定数量的待处理论文做相关性复筛、分类和中文摘要，再发布 AI RSS 与网页。
+Diamond Paper Feed 是一个面向金刚石研究的高召回文献监测项目。它每 6 小时从期刊 RSS、OpenAlex、Crossref 和 arXiv 收集论文，统一元数据、按 DOI 或题名去重，并先发布不依赖 AI 的 `filtered_feed.xml`。每天北京时间 08:00，独立的摘要工作流使用 DeepSeek 对固定数量的待处理论文做相关性复筛、分类和中文摘要，再发布综合 AI RSS、器件方向 RSS 与网页。
 
 采集和 AI 摘要完全解耦。第一次运行会回溯数据库最近 30 天，可能一次抓到很多论文；这些候选会先安全地进入持久队列，而不是全部提交给 API。每天最多只向 AI 提交 40 篇候选，整轮最多发起 5 次请求（失败重试也计入），因此大规模首次抓取不会突破固定调用预算。
 
@@ -10,6 +10,7 @@ Diamond Paper Feed 是一个面向金刚石研究的高召回文献监测项目�
 
 - `filtered_feed.xml`：规则筛选后的高召回 RSS，最多 2000 条，适合立即订阅。
 - `ai_summary_feed.xml`：累计保留、去重的中文精选 RSS，不再被最新一轮覆盖。
+- `device_focus_feed.xml`：从综合精选中进一步筛出的三个金刚石器件方向 RSS，累计保留并去重。
 - `ai_summary.html`：按主题展示的累计中文摘要页面，单独注明本轮概览与累计数量。
 - `state.json`：去重论文、来源水位和待处理 AI 队列。
 - `ai_usage.json`：每日候选数、成功数、请求数和 token 用量，不含提示词或凭据；`token_usage_complete=false` 表示超时请求可能已在服务端计费，应以 DeepSeek 控制台为准。
@@ -98,7 +99,7 @@ python -m diamond_feed.summarize --config paper_feed_config.json --state state.j
 
 ## Configuration
 
-公开配置位于 `paper_feed_config.json`，查询词和排除词位于 `config/queries.json`，RSS 清单位于 `config/rss_sources.tsv`。默认值也是运行时强制的安全边界：
+公开配置位于 `paper_feed_config.json`，查询词和排除词位于 `config/queries.json`，RSS 清单位于 `config/rss_sources.tsv`。`config/device_focus_overrides.json` 只保存经过人工确认的精确论文身份及器件方向标签，不会扩大普通关键词匹配范围。默认值也是运行时强制的安全边界：
 
 - `collection.lookback_days`：数据库首次回溯 30 天。
 - `collection.raw_feed_max_items`：原始 RSS 最多 2000 条。
@@ -124,7 +125,7 @@ python -m diamond_feed.summarize --config paper_feed_config.json --state state.j
 在仓库页面打开 **Actions**：
 
 1. 选择 **Collect diamond literature**，点击 **Run workflow**，分支选 `main`。它会测试、采集并仅提交 `filtered_feed.xml`、`state.json` 和 `fetch_failures.tsv`。
-2. 等采集完成后选择 **Summarize diamond literature**，点击 **Run workflow**，分支选 `main`。它会按硬限制处理队列，并仅提交 `ai_summary_feed.xml`、`ai_summary.html`、`ai_usage.json` 和 `state.json`。
+2. 等采集完成后选择 **Summarize diamond literature**，点击 **Run workflow**，分支选 `main`。它会按硬限制处理队列，并仅提交 `ai_summary_feed.xml`、`ai_summary.html`、`device_focus_feed.xml`、`ai_usage.json` 和 `state.json`。
 3. 在日志和 `ai_usage.json` 中确认 `candidates <= 40`、`requests <= 5`，并确认工作流没有输出凭据。
 
 定时计划为：采集每 6 小时一次；摘要每天 UTC 00:00，即 Asia/Shanghai 08:00。两个工作流共用同一并发组并在推送前 rebase，避免同一分支重叠写状态。
@@ -135,9 +136,10 @@ python -m diamond_feed.summarize --config paper_feed_config.json --state state.j
 
 - 高召回 RSS：<https://llxyyds666.github.io/diamond-paper-feed/filtered_feed.xml>
 - AI 精选 RSS：<https://llxyyds666.github.io/diamond-paper-feed/ai_summary_feed.xml>
+- 三个器件方向精选 RSS：<https://llxyyds666.github.io/diamond-paper-feed/device_focus_feed.xml>
 - 中文摘要页：<https://llxyyds666.github.io/diamond-paper-feed/ai_summary.html>
 
-在 Zotero 中选择 **File → New Library → New Feed → From URL**（中文界面为“文件 → 新建文献库 → 新建订阅 → 从 URL”），粘贴上面的任一 RSS 地址并保存。建议先订阅高召回 RSS；需要更少、带中文摘要的结果时再订阅 AI 精选 RSS。若 Pages 刚启用返回 404，等待本次 Pages 部署完成后刷新。
+在 Zotero 中选择 **File → New Library → New Feed → From URL**（中文界面为“文件 → 新建文献库 → 新建订阅 → 从 URL”），粘贴上面的任一 RSS 地址并保存。刚入门且主要跟踪导师指定方向时，建议优先订阅三个器件方向精选 RSS；需要观察整个金刚石领域时再订阅综合 AI RSS 或高召回 RSS。若 Pages 刚启用返回 404，等待本次 Pages 部署完成后刷新。
 
 ## Cumulative publication and offline promotion
 
@@ -145,13 +147,17 @@ python -m diamond_feed.summarize --config paper_feed_config.json --state state.j
 
 每轮发布从状态中重建全部已接受、未暂缓的论文，按 DOI/arXiv/Figshare 身份去重。历史记录不重复发送给 AI，本轮概览只总结本轮通过的论文；即使当天没有新入选，也不清空历史。AI RSS 和 HTML 保留全部累计入选，原始高召回 RSS 仍最多 2000 条。新的否定判定会同步到同一篇论文的所有别名，避免旧副本继续被发布。
 
+`device_focus_feed.xml` 不会取代或缩小上述综合精选。它只保留三类与课题更直接相关的论文：金刚石功率器件、射频器件与探测/传感器（包括已经实现为器件的 NV/SiV 传感）；金刚石器件散热、热扩散与异质集成；以及明确关联电子级材料、器件制备、集成或性能的单晶金刚石。纯色心物理、尚未实现的理论传感方案、通用单晶表征和没有器件散热场景的本征热学不进入该订阅。首批从现有 15 篇综合精选中保守确定 4 篇，此后有多少符合就累计多少，不设每周凑数目标。
+
+三个方向标签由每天同一次 DeepSeek 筛选响应给出，不再发起第二轮模型请求；因此候选上限和请求次数完全不变。提示词及返回值多了少量标签文本，token 消耗可能有可忽略的小幅变化。历史首批 4 篇通过精确 DOI 覆盖加入，不重新请求 AI。
+
 已有完整评测可以不花额外模型费用直接转为正式发布：
 
 ```powershell
 python -m diamond_feed.promote --report evaluations/34175877785/report.json --state state.json --config paper_feed_config.json --output-dir .
 ```
 
-此命令不需要 API Key，不请求模型；它先校验报告完成状态、记录身份、标题/摘要输入及重复别名的一致性，再同步既有判定并移除已处理队列项。RSS、HTML 和状态作为同一组原子发布，反复导入不产生重复。`ai_usage.json` 不会改写：评测已产生的请求和费用仍保存在原评测目录，不能记成离线同步的新消费。原始评测结果保持不变。
+此命令不需要 API Key，不请求模型；它先校验报告完成状态、记录身份、标题/摘要输入及重复别名的一致性，再同步既有判定并移除已处理队列项。综合 RSS、HTML、器件方向 RSS 和状态作为同一组原子发布，反复导入不产生重复。`ai_usage.json` 不会改写：评测已产生的请求和费用仍保存在原评测目录，不能记成离线同步的新消费。原始评测结果保持不变。
 
 ## AI hard limits
 
@@ -159,6 +165,7 @@ python -m diamond_feed.promote --report evaluations/34175877785/report.json --st
 - 每天最多选择 40 篇候选提交给 AI，按最旧待处理项优先。
 - 每批最多 10 篇，因此筛选阶段最多 4 个成功批次。
 - 每轮最多 5 次 API 请求，所有失败重试也计数；第 5 次后无条件停止。预留的一次用于最终摘要。
+- 三个器件方向标签复用上述筛选请求，不增加请求次数；仅可能因输出标签而增加极少量 token。
 - 每篇发给 AI 的摘要先截断到 1200 个 Unicode 字符。
 - 每个筛选请求的输出上限为 4096 token；最终摘要请求的输出上限为 8192 token。
 - 采集会先持久化候选。首次 30 天回溯形成的大队列会跨天保留并按每天 40 篇逐步处理，不会扩大当天请求预算。
@@ -182,7 +189,7 @@ python -m diamond_feed.promote --report evaluations/34175877785/report.json --st
 - 软失败：`timeout`、临时 `url_error`/`network_error`、HTTP 429/5xx 等瞬时网络问题，以及 `empty_feed`。这些来源保留在清单中，等待下轮恢复。
 - HTTP 403 可能是出版商反爬。没有经真实 GET 验证的官方替代时，期刊改由数据库覆盖。
 
-当全部来源失败时，采集以非零状态退出，不覆盖上一版 `filtered_feed.xml` 或 `state.json`。DeepSeek 认证、余额、限流、超时或 JSON 校验失败时，待处理论文不会丢失，最后一版有效的 `ai_summary_feed.xml` 和 `ai_summary.html` 也不会被覆盖；部分成功只移除已成功处理的队列项。
+当全部来源失败时，采集以非零状态退出，不覆盖上一版 `filtered_feed.xml` 或 `state.json`。DeepSeek 认证、余额、限流、超时或 JSON 校验失败时，待处理论文不会丢失，最后一版有效的 `ai_summary_feed.xml`、`device_focus_feed.xml` 和 `ai_summary.html` 也不会被覆盖；部分成功只移除已成功处理的队列项。
 
 ## Adding sources
 
@@ -210,7 +217,7 @@ python -m pytest tests/test_source_tools.py tests/test_rss_source.py -q
 - 工作流失败但 `state.json` 可解析：保留文件并重新运行失败的工作流。队列和上一版摘要会继续使用。
 - `state.json` 损坏：先在 GitHub 的提交历史中找到最近一个通过测试的版本，下载或 `git restore --source=<good-commit> -- state.json`，运行 `python -m pytest -q`，再手动运行采集。这样保留已有去重键和队列。
 - 必须从空状态重建：先把损坏文件改名保存到仓库外，再删除工作副本中的 `state.json` 并运行采集。系统会重新回溯 30 天，形成新的大队列，仍只按每天 40 篇处理。确认恢复完成前不要提交损坏备份。
-- 摘要文件损坏但状态正常：从最近有效提交恢复 `ai_summary_feed.xml`、`ai_summary.html` 和 `ai_usage.json`，再运行摘要工作流。AI 失败不会主动覆盖最后有效摘要。
+- 摘要文件损坏但状态正常：从最近有效提交恢复 `ai_summary_feed.xml`、`device_focus_feed.xml`、`ai_summary.html` 和 `ai_usage.json`，再运行摘要工作流。AI 失败不会主动覆盖最后有效摘要。
 
 恢复后运行：
 

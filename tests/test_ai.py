@@ -14,7 +14,7 @@ def _decision(key, **changes):
         "relevant": True,
         "confidence": 0.95,
         "category": "films-membranes",
-        "matched_topics": ["diamond membrane"],
+        "matched_topics": [],
         "summary_zh": "研究了金刚石膜。",
         "reason": "研究对象是金刚石材料。",
     }
@@ -24,6 +24,69 @@ def _decision(key, **changes):
 
 def _response(content):
     return {"choices": [{"message": {"content": content}}]}
+
+
+def _single_decision_client(ai_config, decision):
+    return DeepSeekClient(
+        "test-api-key",
+        ai_config,
+        transport=lambda *args: _response(
+            json.dumps({"decisions": [decision]}, ensure_ascii=False)
+        ),
+    )
+
+
+def test_screening_accepts_controlled_multi_focus_labels(ai_config, diamond_records):
+    key = record_key(diamond_records[0])
+    client = _single_decision_client(
+        ai_config,
+        _decision(
+            key,
+            matched_topics=[
+                "diamond-power-rf-detectors",
+                "device-grade-single-crystal",
+            ],
+        ),
+    )
+
+    decision = screen_batch(
+        diamond_records[:1], client, ai_config, RequestBudget(1)
+    )[0]
+
+    assert decision.matched_topics == [
+        "diamond-power-rf-detectors",
+        "device-grade-single-crystal",
+    ]
+
+
+@pytest.mark.parametrize("topics", [["diamond"], ["unknown"], [1]])
+def test_screening_rejects_unknown_focus_labels(
+    ai_config, diamond_records, topics
+):
+    key = record_key(diamond_records[0])
+    client = _single_decision_client(
+        ai_config, _decision(key, matched_topics=topics)
+    )
+
+    with pytest.raises(ValueError, match="invalid model response"):
+        screen_batch(diamond_records[:1], client, ai_config, RequestBudget(1))
+
+
+def test_excluded_decision_cannot_claim_focus_area(ai_config, diamond_records):
+    key = record_key(diamond_records[0])
+    client = _single_decision_client(
+        ai_config,
+        _decision(
+            key,
+            relevant=False,
+            matched_topics=["diamond-power-rf-detectors"],
+            summary_zh="",
+            reason="The actual subject is outside the diamond research scope.",
+        ),
+    )
+
+    with pytest.raises(ValueError, match="invalid model response"):
+        screen_batch(diamond_records[:1], client, ai_config, RequestBudget(1))
 
 
 def test_screening_truncates_abstracts_and_validates_json(ai_config, diamond_records):

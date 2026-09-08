@@ -22,7 +22,7 @@ def _decision(key, *, relevant=True, category="other-diamond", summary="中文�
         "relevant": relevant,
         "confidence": 0.8,
         "category": category,
-        "matched_topics": ["diamond"],
+        "matched_topics": [],
         "summary_zh": summary,
         "reason": "研究金刚石。",
     }
@@ -518,6 +518,7 @@ def test_publication_stages_outputs_then_state_and_cleans_temporaries_on_commit_
     previous = {
         "ai_summary_feed.xml": "old feed",
         "ai_summary.html": "old html",
+        "device_focus_feed.xml": "old focused feed",
         "ai_usage.json": "[]\n",
     }
     for name, contents in previous.items():
@@ -532,7 +533,13 @@ def test_publication_stages_outputs_then_state_and_cleans_temporaries_on_commit_
     with pytest.raises(OSError, match="commit failed"):
         run_summary(app_config, state_path, RecordingClient(), NOW, output_dir=tmp_path)
 
-    assert order == ["ai_summary_feed.xml", "ai_summary.html", "ai_usage.json", "state.json"]
+    assert order == [
+        "ai_summary_feed.xml",
+        "ai_summary.html",
+        "device_focus_feed.xml",
+        "ai_usage.json",
+        "state.json",
+    ]
     assert state_path.read_text(encoding="utf-8") == old_state
     for name, contents in previous.items():
         assert (tmp_path / name).read_text(encoding="utf-8") == contents
@@ -548,6 +555,7 @@ def test_staging_error_preserves_all_destinations_and_cleans_earlier_temporaries
     previous = {
         "ai_summary_feed.xml": "old feed",
         "ai_summary.html": "old html",
+        "device_focus_feed.xml": "old focused feed",
         "ai_usage.json": "[]\n",
     }
     for name, contents in previous.items():
@@ -578,6 +586,7 @@ def test_mid_commit_failure_rolls_back_outputs_and_state_as_one_group(
         state_path: state_path.read_text(encoding="utf-8"),
         tmp_path / "ai_summary_feed.xml": "old feed",
         tmp_path / "ai_summary.html": "old html",
+        tmp_path / "device_focus_feed.xml": "old focused feed",
         tmp_path / "ai_usage.json": "[]\n",
     }
     for path, contents in destinations.items():

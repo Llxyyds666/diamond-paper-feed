@@ -8,6 +8,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from diamond_feed.config import AiConfig
+from diamond_feed.focus import FOCUS_LABELS
 from diamond_feed.models import AiDecision, PaperRecord
 from diamond_feed.normalize import record_key
 
@@ -273,6 +274,22 @@ def _screening_messages(records: Sequence[PaperRecord], config: AiConfig) -> lis
                 "are also studied. Diamond-based tools/coatings are relevant when their own "
                 "properties, wear or performance are studied. Include diamond-like carbon only "
                 "as adjacent-dlc, not crystalline diamond.\n"
+                "Use matched_topics only for this optional three-direction focus classification; "
+                "return zero or more exact values from: diamond-power-rf-detectors, "
+                "diamond-thermal-management, device-grade-single-crystal. The first label covers "
+                "diamond power-semiconductor and RF devices, radiation/particle/X-ray/UV "
+                "detectors, and implemented NV/SiV sensor devices, including contacts, "
+                "dielectrics, interfaces, fabrication and reliability explicitly tied to those "
+                "devices. It excludes pure color-center physics and unimplemented theoretical "
+                "protocols. The second covers thermal management of diamond devices and diamond "
+                "heat spreaders, substrates, coatings, composites, thermal interfaces or "
+                "heterogeneous integration for other devices such as GaN and SiC; intrinsic "
+                "thermal-property studies without device heat-management context do not qualify. "
+                "The third covers single-crystal growth, doping, defects, surfaces, contacts or "
+                "processing only when explicitly connected to electronic-grade material, device "
+                "fabrication, integration or performance. Natural-diamond geology, gemology and "
+                "generic single-crystal characterization do not qualify. A relevant paper may "
+                "receive multiple labels; an excluded paper must return matched_topics as [].\n"
                 "EXCLUDE geometric diamond shapes/lattices made of OTHER materials (e.g. ceramic "
                 "or metal scaffolds); mathematical diamonds/isometries/causal domains; DIAMOND "
                 "bioinformatics software or other algorithms/benchmarks; furniture, decorative "
@@ -332,6 +349,12 @@ def _validated_decision(value: object) -> AiDecision:
     if type(category) is not str or category not in CATEGORIES:
         raise _ModelResponseError
     if not _is_string_list(matched_topics) or type(summary_zh) is not str or type(reason) is not str:
+        raise _ModelResponseError
+    if (
+        len(matched_topics) != len(set(matched_topics))
+        or not set(matched_topics) <= FOCUS_LABELS
+        or (not relevant and matched_topics)
+    ):
         raise _ModelResponseError
     if relevant and any(phrase in reason + " " + summary_zh for phrase in (
         "与金刚石材料无关", "不涉及金刚石材料", "非金刚石材料研究",

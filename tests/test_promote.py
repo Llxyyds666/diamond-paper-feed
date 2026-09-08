@@ -45,9 +45,77 @@ def setup_case(tmp_path, diamond_records):
     return state_path, report_path, old, new, spare
 
 
-def promote(config, state_path, report_path, output_dir):
+def promote(config, state_path, report_path, output_dir, *, focus_overrides_path=None):
     module = importlib.import_module("diamond_feed.promote")
-    return module.promote_evaluation(config, state_path, report_path, NOW, output_dir=output_dir)
+    return module.promote_evaluation(
+        config,
+        state_path,
+        report_path,
+        NOW,
+        output_dir=output_dir,
+        focus_overrides_path=focus_overrides_path,
+    )
+
+
+def test_offline_promotion_renders_focused_rss_without_model_request(
+    tmp_path, diamond_records, app_config, monkeypatch
+):
+    state_path, report_path, _, new, _ = setup_case(tmp_path, diamond_records)
+    override_path = tmp_path / "focus.json"
+    override_path.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "papers": {
+                    record_key(new): ["diamond-power-rf-detectors"],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        "diamond_feed.ai.DeepSeekClient.complete_json",
+        lambda *a, **k: pytest.fail("unexpected model request"),
+    )
+
+    result = promote(
+        app_config,
+        state_path,
+        report_path,
+        tmp_path,
+        focus_overrides_path=override_path,
+    )
+
+    items = ElementTree.parse(tmp_path / "device_focus_feed.xml").findall(
+        "./channel/item"
+    )
+    assert [item.findtext("guid") for item in items] == [record_key(new)]
+    assert result["focused"] == 1
+    assert result["model_requests"] == 0
+
+
+def test_offline_promotion_persists_focus_labels_from_evaluation_report(
+    tmp_path, diamond_records, app_config
+):
+    state_path, report_path, _, new, _ = setup_case(tmp_path, diamond_records)
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["papers"][0]["categories"] = [
+        "electronics-optoelectronics",
+        "device-grade-single-crystal",
+    ]
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+
+    result = promote(app_config, state_path, report_path, tmp_path)
+
+    assert load_state(state_path).papers[record_key(new)].categories == [
+        "electronics-optoelectronics",
+        "device-grade-single-crystal",
+    ]
+    items = ElementTree.parse(tmp_path / "device_focus_feed.xml").findall(
+        "./channel/item"
+    )
+    assert [item.findtext("guid") for item in items] == [record_key(new)]
+    assert result["focused"] == 1
 
 
 def test_offline_promotion_withholds_legacy_preserves_usage_and_is_idempotent(tmp_path, diamond_records, app_config, monkeypatch):
@@ -67,7 +135,15 @@ def test_offline_promotion_withholds_legacy_preserves_usage_and_is_idempotent(tm
     assert [item.findtext("guid") for item in items] == [record_key(new)]
     assert (tmp_path / "ai_usage.json").read_bytes() == original_usage
     assert report_path.read_bytes() == original_report
-    before = {name: (tmp_path / name).read_bytes() for name in ["state.json", "ai_summary.html", "ai_summary_feed.xml"]}
+    before = {
+        name: (tmp_path / name).read_bytes()
+        for name in [
+            "state.json",
+            "ai_summary.html",
+            "ai_summary_feed.xml",
+            "device_focus_feed.xml",
+        ]
+    }
     promote(app_config, state_path, report_path, tmp_path)
     assert all((tmp_path / name).read_bytes() == contents for name, contents in before.items())
 
@@ -75,7 +151,7 @@ def test_offline_promotion_withholds_legacy_preserves_usage_and_is_idempotent(tm
 @pytest.mark.parametrize("mutation", ["failed", "partial", "duplicate", "missing", "boolean", "confidence", "category", "stale_title", "stale_abstract", "summary"])
 def test_invalid_report_preserves_every_output(tmp_path, diamond_records, app_config, mutation):
     state_path, report_path, _, _, _ = setup_case(tmp_path, diamond_records)
-    for name in ["ai_summary.html", "ai_summary_feed.xml"]:
+    for name in ["ai_summary.html", "ai_summary_feed.xml", "device_focus_feed.xml"]:
         (tmp_path / name).write_text("old output", encoding="utf-8")
     report = json.loads(report_path.read_text(encoding="utf-8"))
     item = report["papers"][0]
@@ -90,7 +166,16 @@ def test_invalid_report_preserves_every_output(tmp_path, diamond_records, app_co
     if mutation == "stale_abstract": item["input_abstract"] += " changed"
     if mutation == "summary": item["summary_zh"] = ""
     report_path.write_text(json.dumps(report), encoding="utf-8")
-    before = {name: (tmp_path / name).read_bytes() for name in ["state.json", "ai_usage.json", "ai_summary.html", "ai_summary_feed.xml"]}
+    before = {
+        name: (tmp_path / name).read_bytes()
+        for name in [
+            "state.json",
+            "ai_usage.json",
+            "ai_summary.html",
+            "ai_summary_feed.xml",
+            "device_focus_feed.xml",
+        ]
+    }
     with pytest.raises(ValueError): promote(app_config, state_path, report_path, tmp_path)
     assert all((tmp_path / name).read_bytes() == contents for name, contents in before.items())
 
@@ -113,15 +198,24 @@ def test_conflicting_aliases_are_rejected_without_state_write(tmp_path, diamond_
 def test_mid_publication_failure_rolls_back_state_and_both_views(tmp_path, diamond_records, app_config, monkeypatch):
     from diamond_feed import atomic
     state_path, report_path, _, _, _ = setup_case(tmp_path, diamond_records)
-    for name in ["ai_summary.html", "ai_summary_feed.xml"]:
+    for name in ["ai_summary.html", "ai_summary_feed.xml", "device_focus_feed.xml"]:
         (tmp_path / name).write_text("previous", encoding="utf-8")
-    before = {name: (tmp_path / name).read_bytes() for name in ["state.json", "ai_usage.json", "ai_summary.html", "ai_summary_feed.xml"]}
+    before = {
+        name: (tmp_path / name).read_bytes()
+        for name in [
+            "state.json",
+            "ai_usage.json",
+            "ai_summary.html",
+            "ai_summary_feed.xml",
+            "device_focus_feed.xml",
+        ]
+    }
     original_replace = atomic.os.replace
-    def fail_html(source, destination):
-        if Path(source).name == "ai_summary.html.tmp" and Path(destination) == (tmp_path / "ai_summary.html").resolve():
+    def fail_focus(source, destination):
+        if Path(source).name == "device_focus_feed.xml.tmp" and Path(destination) == (tmp_path / "device_focus_feed.xml").resolve():
             raise OSError("simulated publication failure")
         return original_replace(source, destination)
-    monkeypatch.setattr(atomic.os, "replace", fail_html)
+    monkeypatch.setattr(atomic.os, "replace", fail_focus)
     with pytest.raises(OSError): promote(app_config, state_path, report_path, tmp_path)
     assert all((tmp_path / name).read_bytes() == contents for name, contents in before.items())
     assert not list(tmp_path.glob("*.tmp")) and not list(tmp_path.glob("*.bak"))
@@ -133,6 +227,26 @@ def test_report_cannot_be_a_publication_destination(tmp_path, diamond_records, a
     collision.write_bytes(report_path.read_bytes())
     original = state_path.read_bytes()
     with pytest.raises(ValueError): promote(app_config, state_path, collision, tmp_path)
+    assert state_path.read_bytes() == original
+
+
+def test_focus_override_cannot_be_a_publication_destination(
+    tmp_path, diamond_records, app_config
+):
+    state_path, report_path, _, _, _ = setup_case(tmp_path, diamond_records)
+    collision = tmp_path / "device_focus_feed.xml"
+    collision.write_text('{"version":1,"papers":{}}', encoding="utf-8")
+    original = state_path.read_bytes()
+
+    with pytest.raises(ValueError, match="unique"):
+        promote(
+            app_config,
+            state_path,
+            report_path,
+            tmp_path,
+            focus_overrides_path=collision,
+        )
+
     assert state_path.read_bytes() == original
 
 
