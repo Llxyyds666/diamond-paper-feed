@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>金刚石文献 · 修复前后对照</title>
+<style>body{font-family:system-ui,sans-serif;max-width:1120px;margin:auto;padding:24px;line-height:1.7;color:#222}h1{font-size:1.8rem}h2{font-size:1.25rem;margin-top:2rem}a{color:#174ea6}table{border-collapse:collapse;width:100%;margin:1rem 0}td,th{padding:10px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top}.result{background:#edf7f0;border-left:4px solid #338255;padding:14px 18px}.note{background:#fff5df;padding:12px 16px}.muted,small{color:#555}nav{display:flex;gap:18px;flex-wrap:wrap}.scroll{overflow-x:auto}.detail td:nth-child(2){min-width:240px}.detail td:last-child{min-width:230px}</style>
+</head><body>
+<h1>同一批 40 条记录，修复前后对照</h1>
+<p class="muted">2026-09-08 09:12（北京时间） · deepseek-v4-flash-vision-exp · 真实 API 测试</p>
+<p class="result">去重后 <strong>36 个候选全部完成，保留 15 篇、排除 21 篇</strong>。之前 6 条明显误收全部排除，4 组重复记录判断一致。共 5 次请求、23,143 tokens，本轮高峰价估算 <strong>¥0.096695，约 9.7 分钱</strong>。</p>
+<nav><a href="ai_summary.html">看修复后的 15 篇中文摘要</a><a href="ai_summary_feed.xml">本轮 RSS</a><a href="report.json">原始逐条结果与用量</a><a href="../34174147048/">看旧版评测</a><a href="https://github.com/Llxyyds666/diamond-paper-feed/actions/runs/34175877785">运行日志</a></nav>
+<h2>对比结果</h2>
+<table><tr><th>指标</th><th>修复前</th><th>修复后</th></tr>
+<tr><td>原始输入记录</td><td>40</td><td>同样的 40 条</td></tr>
+<tr><td>实际送审候选</td><td>40（未合并跨来源版本）</td><td>36（合并 4 条重复记录）</td></tr>
+<tr><td>保留判定，按原始记录映射</td><td>25 / 40</td><td>16 / 40</td></tr>
+<tr><td>发布条目数</td><td>25</td><td>15 篇唯一论文</td></tr>
+<tr><td>那 6 条明显误收</td><td>6 条均被保留</td><td>6 条全部排除</td></tr>
+<tr><td>预先复核标签一致情况</td><td>29 / 39 条</td><td>39 / 39 条</td></tr>
+<tr><td>输入 / 输出 tokens</td><td>18,344 / 5,157</td><td>17,980 / 5,163</td></tr>
+<tr><td>总 tokens / 模型请求</td><td>23,501 / 5 次</td><td>23,143 / 5 次，无重试</td></tr>
+<tr><td>模型用时</td><td>43.2 秒</td><td>44.2 秒</td></tr></table>
+<p class="note">标签来自本次修复前对保存标题及截断摘要的逐条复核，不是独立专家或全文金标准。39 条可判定原始记录含重复映射，相当于 35 个唯一条目；第 12 条宽禁带探针卡综述证据不足，不计分。本次是针对已发现问题的回归测试，<strong>不能外推为全库 100% 准确率</strong>。</p>
+<h2>现在排除了什么、保留了什么</h2>
+<ul><li>排除 HA480 陶瓷的菱形几何支架、数学 Diamond 域、藤椅装饰、DIAMOND 生信软件；也排除只把金刚石压砧当工具的其他材料研究。</li>
+<li>保留真实金刚石的生长、器件、磨具性能、纳米金刚石复合材料、天然金刚石缺陷，以及实际计算碳金刚石电子密度的论文。</li>
+<li>第 22 / 31 条电子密度研究不再一边保留、一边排除：统一保留并仅推送一次。其他重复组为 23 / 32、24 / 33、29 / 30。</li>
+<li>第 26 条涉及 NV 色心的“意识与退相干”内容保留为相关研究方案；新摘要明确注明“提案，尚无实验结果”，不代表其主张得到证实。</li></ul>
+<h2>摘要效果与剩余边界</h2>
+<p>例如减反射微结构摘要保留了“8–22 μm、透射率 70.9% → 81.4%”；纳米金刚石水门汀摘要同时保留“2 wt.% 时摩擦系数 0.444”和“微硬度、耐磨性下降约 50%”，不再只概括为材料性能研究。</p>
+<p>摘要仍仅基于标题和最多 1200 字符的摘要，未读取全文。第 18、19 条没有摘要，新模型概述基本是标题复述但未主动标注缺摘要；第 10 条对“准确检测”的表述、第 35 条 SiV 发射细节也超出了截断摘要可完整核验的范围，读到这些结果时仍应打开原文核对。相关性过关不等于每句摘要都已通过事实核验。</p>
+<h2>费用：这轮为什么接近一毛钱</h2>
+<p>09:12 属于工作日高峰时段。按 <a href="https://api-docs.deepseek.com/zh-cn/quick_start/pricing">DeepSeek 官方定价</a>（2026-09-08 核对）：未命中输入 ¥3 / 百万、命中输入 ¥0.10 / 百万、输出 ¥9 / 百万。</p>
+<p>本轮计算：16,700 × 3 / 百万 + 1,280 × 0.10 / 百万 + 5,163 × 9 / 百万 = <strong>¥0.096695</strong>。同等用量在早上 08:00 的空闲价约 ¥0.0483475；每日同等用量、30 天约 ¥1.45（全部高峰约 ¥2.90）。这只是用量投影，论文数量、摘要长度和缓存命中会改变费用。</p>
+<div class="scroll"><table><tr><th>步骤</th><th>输入 tokens</th><th>其中缓存命中</th><th>输出 tokens</th><th>高峰价估算 / 元</th></tr><tr><td>筛选第 1 批</td><td>3,899</td><td>0</td><td>1,314</td><td>0.023523</td></tr>
+<tr><td>筛选第 2 批</td><td>3,936</td><td>0</td><td>1,256</td><td>0.023112</td></tr>
+<tr><td>筛选第 3 批</td><td>4,059</td><td>640</td><td>992</td><td>0.019249</td></tr>
+<tr><td>筛选第 4 批</td><td>2,702</td><td>640</td><td>701</td><td>0.012559</td></tr>
+<tr><td>中文汇总</td><td>3,384</td><td>0</td><td>900</td><td>0.018252</td></tr></table></div>
+<p>余额接口前后差额仍为 0.00，无法确认即时实际扣费；上面是按返回用量与官方单价估算，不代表免费。旧版评测在 08:41 使用空闲价约 ¥0.0507；本轮 token 总量略降，估算费用较高主要是跨入高峰时段。</p>
+<h2>全部 40 条逐项对照</h2>
+<div class="scroll"><table class="detail"><thead><tr><th>原编号</th><th>标题 / 原文</th><th>旧判定</th><th>新判定</th><th>复核及新理由</th></tr></thead><tbody><tr><td>1</td><td><a href="https://ietresearch.onlinelibrary.wiley.com/doi/10.1049/ell2.70574?af=R">Low‐Resistivity Au‐Free Ohmic Contacts for Diamond</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>标题明确涉及金刚石的低电阻无金欧姆接触，属于金刚石电子器件研究，尽管摘要缺失，但标题足以表明相关性。</small></td></tr>
+<tr><td>2</td><td><a href="https://www.mdpi.com/2673-3269/7/2/24">Optics, Vol. 7, Pages 24: Broadband Antireflective Microstructures on Diamond Fabricated by Femtosecond Laser and Selective Wet Etching</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>研究对象为金刚石材料，涉及金刚石表面微结构加工和光学性能，属于金刚石光学应用。</small></td></tr>
+<tr><td>3</td><td><a href="https://www.mdpi.com/2673-3269/7/2/25">Optics, Vol. 7, Pages 25: Compact Monolithic Star Tracker System</a></td><td>排除</td><td>排除</td><td>符合预先标签<br><small>金刚石仅用于透镜加工（单点金刚石车削），不是研究主体，属于其他材料的光学系统。</small></td></tr>
+<tr><td>4</td><td><a href="https://www.tandfonline.com/doi/full/10.1080/08957959.2026.2651875?af=R">Development of wide-field magnetic imaging at high pressure and low temperature with diamond quantum sensor</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>标题明确涉及金刚石量子传感器，属于金刚石色心量子传感领域，尽管摘要缺失，但标题足以表明相关性。</small></td></tr>
+<tr><td>5</td><td><a href="https://www.mdpi.com/2673-4605/31/1/4">Materials Proceedings, Vol. 31, Pages 4: Lithography-Based Ceramic Manufacturing of Diamond Lattice Structure for Bone Regeneration Scaffolds</a></td><td>保留</td><td>排除</td><td>符合预先标签<br><small>diamond lattice structure 指几何形状，材料为羟基磷灰石，不是金刚石材料。</small></td></tr>
+<tr><td>6</td><td><a href="https://www.mdpi.com/2571-6131/9/5/43">Ceramics, Vol. 9, Pages 43: Additive Manufacturing of Ceramics and Ceramic-Based Composites: Processing, Properties, and Engineering Applications</a></td><td>排除</td><td>排除</td><td>符合预先标签<br><small>金刚石仅作为加工工具提及，研究主体是陶瓷增材制造，与金刚石材料无关。</small></td></tr>
+<tr><td>7</td><td><a href="https://www.tandfonline.com/doi/full/10.1080/08957959.2026.2661257?af=R">High-pressure magnetic transition in iron observed via diamond quantum sensing</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>标题明确涉及金刚石量子传感，属于金刚石色心量子传感领域，尽管摘要缺失，但标题足以表明相关性。</small></td></tr>
+<tr><td>8</td><td><a href="https://www.tandfonline.com/doi/full/10.1080/08957959.2026.2645383?af=R">Radio-frequency gasket for studies of superconductivity in diamond anvil cells</a></td><td>排除</td><td>排除</td><td>符合预先标签<br><small>金刚石对顶砧是高压实验装置，研究主体是射频垫圈和超导材料，与金刚石材料本身无关。</small></td></tr>
+<tr><td>9</td><td><a href="https://www.tandfonline.com/doi/full/10.1080/08957959.2026.2682353?af=R">Machinable semi-sintered boron-doped diamond as a heater for high pressure experiments</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>标题明确涉及硼掺杂金刚石，属于金刚石材料研究，尽管摘要缺失，但标题足以表明相关性。</small></td></tr>
+<tr><td>10</td><td><a href="http://ieeexplore.ieee.org/document/11561065">VRFST: Voiceprint-Based Robust Wear Detection for Diamond Abrasive Tools via Fuzzy-Enhanced Spatiotemporal Features</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>研究对象为金刚石磨具，研究其磨损检测，属于金刚石工具的性能研究。</small></td></tr>
+<tr><td>11</td><td><a href="https://www.tandfonline.com/doi/full/10.1080/08957959.2026.2675615?af=R">Improving pressure and temperature metrology in laser-heated diamond anvil cell experiments: a new perspective on KCl as a pressure marker</a></td><td>保留</td><td>排除</td><td>符合预先标签<br><small>金刚石仅作为压砧工具出现，研究主题是KCl压力标记，与金刚石材料本身无关。</small></td></tr>
+<tr><td>12</td><td><a href="https://www.mdpi.com/2674-0729/5/3/18">Chips, Vol. 5, Pages 18: Probe Card Technologies in Advanced Semiconductor Testing for Wide Band Gap Devices</a></td><td>保留</td><td>排除</td><td>证据不足，未计分<br><small>金刚石仅作为宽禁带半导体材料之一被提及，研究重点是探针卡技术，而非金刚石本身。</small></td></tr>
+<tr><td>13</td><td><a href="https://www.mdpi.com/2079-4983/17/8/382">JFB, Vol. 17, Pages 382: Effect of Nanodiamond Incorporation on the Surface, Mechanical, and Tribological Properties of Glass Ionomer Cement</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>研究对象为纳米金刚石增强的牙科材料，属于纳米金刚石生物医学应用。</small></td></tr>
+<tr><td>14</td><td><a href="https://www.mdpi.com/2079-4983/17/8/383">JFB, Vol. 17, Pages 383: Proximal Post-Curing Improves Microhardness of Class-II Resin Composite Restorations</a></td><td>排除</td><td>排除</td><td>符合预先标签<br><small>Venus Diamond是商品名，实际材料为树脂复合材料，与金刚石无关。</small></td></tr>
+<tr><td>15</td><td><a href="http://link.aps.org/doi/10.1103/phh6-zjwm">Nanometer-spaced inversion domain boundaries as the weakening origin in wurtzite boron nitride</a></td><td>保留</td><td>排除</td><td>符合预先标签<br><small>研究对象是氮化硼，金刚石仅作为对比提及，不是金刚石材料研究。</small></td></tr>
+<tr><td>16</td><td><a href="https://doi.org/10.1007/978-3-032-33877-8_25">Thermosolutal Convection in a Differentially Heated and Salted Diamond-Shaped Cavity with Dominant Heat Generation</a></td><td>排除</td><td>排除</td><td>符合预先标签<br><small>diamond指菱形几何结构，不是金刚石材料。</small></td></tr>
+<tr><td>17</td><td><a href="https://doi.org/10.1016/j.diamond.2026.114060">Localized nitrogen and hydrogen defect heterogeneities at mineral inclusion interfaces in eclogitic diamonds</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>研究对象为天然金刚石中的杂质缺陷分布，属于天然金刚石地质学和缺陷研究。</small></td></tr>
+<tr><td>18</td><td><a href="https://doi.org/10.1016/j.diamond.2026.114061">Enhancing alkaline oxygen reduction activity of Fe-N-C single-atom catalysts anchored on a diamond substrate</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>金刚石作为催化剂基底，研究其电化学性能，属于金刚石电极/催化领域。</small></td></tr>
+<tr><td>19</td><td><a href="https://doi.org/10.1016/j.jmapro.2026.07.054">Mechanism of iron-catalyzed chemical-mechanical coupled polishing of diamond crystals</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>研究对象为金刚石晶体的抛光机理，属于金刚石加工。</small></td></tr>
+<tr><td>20</td><td><a href="https://doi.org/10.1038/s41598-026-66027-w">Polarization imaging for gemstone identification and metrology</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>研究对象包括天然和合成金刚石，属于金刚石的光学表征，但主要涉及宝石鉴定，故归为other-diamond，但匹配主题为natural-diamond-geoscience。</small></td></tr>
+<tr><td>21</td><td><a href="https://doi.org/10.3390/jfb17080392">JFB, Vol. 17, Pages 392: Effect of Polishing Systems and Accelerated Artificial Aging on the Optical Properties (Color and Translucency) and Surface Roughness of Single-Shade Resin Composites</a></td><td>排除</td><td>排除</td><td>符合预先标签<br><small>研究对象是树脂复合材料，&#39;Diamond&#39;仅为产品名称，与金刚石材料无关。</small></td></tr>
+<tr><td>22</td><td><a href="https://arxiv.org/abs/2608.08152">Denoising Diffusion Monte Carlo Electron Densities with Physically Informed Variance Stabilization: From Fourier Filters to 3D UNETs</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>计算了碳金刚石的电子密度，属于金刚石性质的计算研究。</small></td></tr>
+<tr><td>23</td><td><a href="https://arxiv.org/abs/2608.08351">Pressure-Induced Stacking Disorder and Suppression of Long-Range Sm-type Order in Medium-Entropy Rare-Earth Alloys</a></td><td>保留</td><td>排除</td><td>符合预先标签<br><small>金刚石仅作为高压实验装置，研究对象为稀土合金。</small></td></tr>
+<tr><td>24</td><td><a href="https://arxiv.org/abs/2608.08364">Isometries of the Diamond</a></td><td>保留</td><td>排除</td><td>符合预先标签<br><small>diamond指数学中的菱形域，不是金刚石材料。</small></td></tr>
+<tr><td>25</td><td><a href="https://doi.org/10.5281/zenodo.21849298">Jean-Louis Verdier — Des catégories dérivées des catégories abéliennes: separate French and English working editions</a></td><td>排除</td><td>排除</td><td>符合预先标签<br><small>diamond指数学中的交换图，不是金刚石材料。</small></td></tr>
+<tr><td>26</td><td><a href="https://doi.org/10.5281/zenodo.21850613">The Silence Experiment: A Multi-State Protocol for Detecting Consciousness-Dependent Decoherence in Shielded Environments</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>使用金刚石NV色心作为量子传感器，属于金刚石量子应用，但为提案性质。</small></td></tr>
+<tr><td>27</td><td><a href="https://doi.org/10.5281/zenodo.21851489">Rattan chair &quot;Belse-8&quot; Schulting, densely woven with diamond decoration</a></td><td>保留</td><td>排除</td><td>符合预先标签<br><small>diamond指装饰图案，不是金刚石材料。</small></td></tr>
+<tr><td>28</td><td><a href="https://doi.org/10.5281/zenodo.21851490">Rattan chair &quot;Belse-8&quot; Schulting, densely woven with diamond decoration</a></td><td>保留</td><td>排除</td><td>符合预先标签<br><small>diamond指装饰图案，不是金刚石材料。</small></td></tr>
+<tr><td>29</td><td><a href="https://doi.org/10.6084/m9.figshare.33070367">De novo transcriptome of the sandmason Lanice conchilega using Nanopore long-read sequencing</a></td><td>保留</td><td>排除</td><td>符合预先标签<br><small>DIAMOND是生物信息学软件，不是金刚石材料。</small></td></tr>
+<tr><td>30</td><td><a href="https://doi.org/10.6084/m9.figshare.33070367.v1">De novo transcriptome of the sandmason Lanice conchilega using Nanopore long-read sequencing</a><br><small>与第 29 条共享判定，不重复推送</small></td><td>保留</td><td>排除</td><td>符合预先标签<br><small>DIAMOND是生物信息学软件，不是金刚石材料。</small></td></tr>
+<tr><td>31</td><td><a href="https://arxiv.org/abs/2608.08152">Denoising Diffusion Monte Carlo Electron Densities with Physically Informed Variance Stabilization: From Fourier Filters to 3D UNETs</a><br><small>与第 22 条共享判定，不重复推送</small></td><td>排除</td><td>保留</td><td>符合预先标签<br><small>计算了碳金刚石的电子密度，属于金刚石性质的计算研究。</small></td></tr>
+<tr><td>32</td><td><a href="https://arxiv.org/abs/2608.08351">Pressure-Induced Stacking Disorder and Suppression of Long-Range Sm-type Order in Medium-Entropy Rare-Earth Alloys</a><br><small>与第 23 条共享判定，不重复推送</small></td><td>排除</td><td>排除</td><td>符合预先标签<br><small>金刚石仅作为高压实验装置，研究对象为稀土合金。</small></td></tr>
+<tr><td>33</td><td><a href="https://arxiv.org/abs/2608.08364">Isometries of the Diamond</a><br><small>与第 24 条共享判定，不重复推送</small></td><td>排除</td><td>排除</td><td>符合预先标签<br><small>diamond指数学中的菱形域，不是金刚石材料。</small></td></tr>
+<tr><td>34</td><td><a href="https://doi.org/10.1007/s40747-026-02423-z">IHFD: an improved heartbeat-based failure detector of $$\Diamond \,P$$ class for partially synchronous hierarchical distributed systems</a></td><td>排除</td><td>排除</td><td>符合预先标签<br><small>Diamond指故障检测器的类别，不是金刚石材料。</small></td></tr>
+<tr><td>35</td><td><a href="https://doi.org/10.1007/s42823-026-01123-5">Effect of methane concentration on the growth kinetics, microstructure, and crystalline quality of thick MPCVD-grown polycrystalline diamond</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>实际材料为多晶金刚石，研究其生长工艺和性能，属于金刚石合成与加工领域。</small></td></tr>
+<tr><td>36</td><td><a href="https://doi.org/10.1007/s44288-026-00663-7">Geochemical studies and economic perspective of light rare earth element (LREE) enriched carbonatite from Khaderpet, Eastern Dharwar Craton</a></td><td>排除</td><td>排除</td><td>符合预先标签<br><small>论文研究的是碳酸岩的地球化学特征，与金刚石材料无关。</small></td></tr>
+<tr><td>37</td><td><a href="https://doi.org/10.1016/j.diamond.2026.114067">Diamond boron-doped channel MOSFET with ohmic contacts on CH diamond surface</a></td><td>保留</td><td>保留</td><td>符合预先标签<br><small>标题明确涉及金刚石硼掺杂沟道MOSFET，属于金刚石电子学领域。</small></td></tr>
+<tr><td>38</td><td><a href="https://doi.org/10.1021/acsami.6c13720">Ultra Broad Range Pressure Tunable CaZrO3:Ce3+ Luminescence for Multiparametric Manometry</a></td><td>排除</td><td>排除</td><td>符合预先标签<br><small>论文研究的是CaZrO3:Ce3+的压致发光性能，金刚石仅作为对顶砧使用，不属于金刚石材料研究。</small></td></tr>
+<tr><td>39</td><td><a href="https://doi.org/10.1145/3815598.3815719">Odd Diamond: How Deadlines Shape Game Design</a></td><td>排除</td><td>排除</td><td>符合预先标签<br><small>标题中的Diamond指游戏设计中的概念，不是金刚石材料。</small></td></tr>
+<tr><td>40</td><td><a href="https://doi.org/10.32614/cran.package.bscm">bscm: Bayesian Synthetic Control Models</a></td><td>排除</td><td>排除</td><td>符合预先标签<br><small>Diamond是作者姓氏，论文内容为统计方法，与金刚石材料无关。</small></td></tr></tbody></table></div>
+<h2>可复现性与正式订阅</h2>
+<p>原输入报告保留不变。历史报告未存作者字段，本轮运行时生产 state 与原始运行 commit 86117e0 的 state.json 完全相同；随后从该固定历史恢复并逐条核对作者，与本轮实际记录的作者完全一致。以后请用 <a href="../34174147048/replay-inputs.json">冻结的 40 条完整输入</a> 重放，不再从当前生产库补元数据。<a href="../34174147048/review_labels.json">预先复核标签</a>也已保留。</p>
+<p>本次是历史积压样本的隔离评估，<strong>没有消耗或修改正式队列、日常账本，也没有替换正式订阅内容</strong>。筛选和去重修复已部署，后续正常任务会使用新逻辑。此页“剩余 0”只指评估样本处理完成，不表示正式队列已清空。</p>
+</body></html>

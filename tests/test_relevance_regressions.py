@@ -61,6 +61,7 @@ def test_positive_decision_cannot_explicitly_say_it_is_unrelated(ai_config, diam
 def test_baseline_replay_uses_saved_inputs_not_current_queue(tmp_path, configured_state_with_100_pending, app_config, fake_deepseek_client, diamond_records):
     baseline = tmp_path / "baseline.json"
     papers = [dict(key=record_key(p), title=p.title, doi=p.doi, url=p.url,
+                   authors=["Frozen baseline author"],
                    published_at=p.published_at.isoformat(), journal=p.journal,
                    input_abstract="Original abstract.", ai_relevant=False) for p in copies(diamond_records[0])]
     baseline.write_text(json.dumps({"papers": papers}), encoding="utf-8")
@@ -69,6 +70,7 @@ def test_baseline_replay_uses_saved_inputs_not_current_queue(tmp_path, configure
                             datetime.now(timezone.utc), output_dir=tmp_path / "replay", baseline_path=baseline)
     assert [p["key"] for p in report["papers"]] == [p["key"] for p in papers]
     assert all(p["input_abstract"] == "Original abstract." for p in report["papers"])
+    assert all(p["authors"] == ["Frozen baseline author"] for p in report["papers"])
     assert report["stats"]["processed"] == 1
     assert report["input_records"] == 2
     assert report["duplicates_removed"] == 1
@@ -123,3 +125,15 @@ def test_failure_keeps_all_aliases_pending(tmp_path, diamond_records, app_config
     stats = run_summary(app_config, path, failing_deepseek_client, datetime.now(timezone.utc), output_dir=tmp_path)
     assert stats.failed and stats.requests == 1
     assert path.read_bytes() == original
+
+
+def test_legacy_baseline_without_complete_input_snapshot_fails_before_model_call(tmp_path, configured_state_with_100_pending, app_config, fake_deepseek_client, diamond_records):
+    p = diamond_records[0]
+    baseline = tmp_path / "legacy.json"
+    baseline.write_text(json.dumps({"papers": [dict(key=record_key(p), title=p.title,
+        doi=p.doi, url=p.url, published_at=p.published_at.isoformat(), journal=p.journal,
+        input_abstract=p.abstract, ai_relevant=True)]}), encoding="utf-8")
+    with pytest.raises(ValueError, match="authors"):
+        run_evaluation(app_config, configured_state_with_100_pending, fake_deepseek_client,
+            datetime.now(timezone.utc), output_dir=tmp_path / "replay", baseline_path=baseline)
+    assert fake_deepseek_client.requests == 0

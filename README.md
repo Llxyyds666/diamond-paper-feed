@@ -156,7 +156,7 @@ python -m diamond_feed.summarize --config paper_feed_config.json --state state.j
 
 采集及 AI 待处理队列按 DOI、arXiv DOI/URL/版本标识、Figshare 版本标识合并；不同 DOI 的同名论文不会仅按标题合并。AI 每个唯一候选只判一次，所有原始别名共享结论。矛盾输出会保留队列等待复核，不盲目重试。
 
-手动 `Evaluate full daily digest` 可填写 `baseline=evaluations/34174147048/report.json`，重放原始 40 条记录。评估使用独立临时状态与费用记录，不消费或修改正式队列；去重后候选数、原始记录数分别统计。仍最多 5 次模型请求，不会因回归测试扩大日常预算。评估额外费用独立产生。
+手动 `Evaluate full daily digest` 可填写 `baseline=evaluations/34174147048/replay-inputs.json`，重放原始 40 条记录。旧报告未保存作者；该输入快照从原运行的固定 Git 历史恢复作者，并保留原报告不变。新报告已包含作者，后续可直接作 baseline；不完整的旧报告会在模型请求前报错，绝不从当前生产库回填字段。评估使用独立临时状态与费用记录，不消费或修改正式队列；去重后候选数、原始记录数分别统计。仍最多 5 次模型请求，不会因回归测试扩大日常预算。评估额外费用独立产生。
 
 `evaluations/34174147048/review_labels.json` 是实测前按保存的标题/摘要整理的复核标签；存在证据不足项，不把程序测试通过或单批样本一致率宣传为全库准确率。
 

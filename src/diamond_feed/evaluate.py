@@ -115,7 +115,7 @@ def run_evaluation(config, state_path, client, now, *, output_dir, baseline_path
     """Run the same daily pipeline against an isolated oldest-first sample."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=False)
-    state = load_state(Path(state_path))
+    state = FeedState() if baseline_path is not None else load_state(Path(state_path))
     keys = sorted(state.pending_ai, key=lambda k: state.papers[k].published_at)[:config.ai.daily_candidates]
     baseline = None
     if baseline_path is not None:
@@ -123,13 +123,14 @@ def run_evaluation(config, state_path, client, now, *, output_dir, baseline_path
         inputs = baseline["papers"]
         if not 0 < len(inputs) <= config.ai.daily_candidates:
             raise ValueError("baseline must fit the bounded daily candidate limit")
-        originals = state.papers
         state = FeedState()
         for item in inputs:
             key = item["key"]
+            if type(item.get("authors")) is not list or not all(type(a) is str for a in item["authors"]):
+                raise ValueError("baseline must snapshot authors; use replay-inputs.json for legacy evaluation 34174147048")
             record = PaperRecord(
                 title=item["title"], abstract=item["input_abstract"],
-                authors=item.get("authors", originals[key].authors if key in originals else []),
+                authors=item["authors"],
                 journal=item["journal"], published_at=datetime.fromisoformat(item["published_at"]),
                 doi=item["doi"], url=item["url"], sources=["baseline"], source_ids=[key],
             )
