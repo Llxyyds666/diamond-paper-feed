@@ -1,0 +1,13 @@
+[
+  {
+    "date": "2026-09-08",
+    "candidates": 36,
+    "processed": 36,
+    "selected": 15,
+    "requests": 5,
+    "prompt_tokens": 17980,
+    "completion_tokens": 5163,
+    "total_tokens": 23143,
+    "token_usage_complete": true
+  }
+]
