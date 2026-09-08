@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>金刚石文献 · 2026-09-08 完整评测</title>
+  <style>
+    body{font-family:system-ui,sans-serif;max-width:960px;margin:auto;padding:24px;line-height:1.7;color:#222}
+    h1{font-size:1.7rem}h2{font-size:1.25rem;margin-top:2rem}a{color:#174ea6}
+    table{border-collapse:collapse;width:100%;margin:1rem 0}td,th{border-bottom:1px solid #ddd;padding:10px;text-align:left}
+    .result{background:#fff4de;border-left:4px solid #b07114;padding:12px 18px}.muted{color:#555}
+    code{background:#f1f3f5;padding:2px 4px}nav{display:flex;gap:20px;flex-wrap:wrap}
+  </style>
+</head>
+<body>
+<h1>金刚石文献 · 完整评测</h1>
+<p class="muted">2026-09-08 08:41（北京时间） · deepseek-v4-flash-vision-exp</p>
+<p class="result"><strong>流程已跑通，筛选质量仍需改进。</strong>40条候选全部完成，模型保留25条、排除15条；四批筛选和一次汇总全部通过格式校验。人工抽查发现至少6条明显误收，不能将25条入选数视为25篇有效金刚石论文。</p>
+<nav>
+  <a href="ai_summary.html">查看模型生成的25条中文摘要</a>
+  <a href="ai_summary_feed.xml">本轮评测 RSS</a>
+  <a href="report.json">逐篇判定、输入摘要与用量</a>
+  <a href="https://github.com/Llxyyds666/diamond-paper-feed/actions/runs/34174147048">运行日志</a>
+</nav>
+<h2>运行与成本</h2>
+<table>
+  <tr><th>指标</th><th>本轮结果</th></tr>
+  <tr><td>候选 / 成功处理 / 入选 / 排除</td><td>40 / 40 / 25 / 15</td></tr>
+  <tr><td>模型请求</td><td>5次：4批筛选＋1次中文汇总；无重试</td></tr>
+  <tr><td>输入 / 输出 / 合计 tokens</td><td>18,344 / 5,157 / 23,501</td></tr>
+  <tr><td>缓存命中</td><td>0 tokens</td></tr>
+  <tr><td>模型处理耗时</td><td>43.2秒（整个工作流约1分钟）</td></tr>
+  <tr><td>本轮估算成本</td><td>¥0.0507225，约5分钱</td></tr>
+  <tr><td>同等用量，每日一轮、30天</td><td>约¥1.52；高峰时段同等用量约¥3.04</td></tr>
+</table>
+<p>费用计算：18,344 × ¥1.5 / 百万 ＋ 5,157 × ¥4.5 / 百万 ＝ ¥0.0507225。本次08:41为官方空闲时段；工作日09:00–12:00及14:00–18:00为高峰时段。依据<a href="https://api-docs.deepseek.com/zh-cn/quick_start/pricing">DeepSeek官方定价</a>（2026-09-08核对）。这是token计价估算；调用前后的余额接口均显示差额0.00，未能确认即时实际扣费。</p>
+<p>北京时间今天本项目已知9次模型请求合计34,271 tokens：本轮5次、此前正式处理2次、两次冒烟各1次。若其他请求输入全部按未命中缓存计价，合计约¥0.0765（约8分钱）。不包含其他应用用量及9月7日晚的5次超时请求。</p>
+<h2>逐步用量</h2>
+<table>
+  <tr><th>步骤</th><th>输入tokens</th><th>输出tokens</th><th>估算费用（元）</th></tr>
+  <tr><td>筛选第1批</td><td>3,328</td><td>1,165</td><td>0.0102345</td></tr>
+  <tr><td>筛选第2批</td><td>3,365</td><td>1,157</td><td>0.0102540</td></tr>
+  <tr><td>筛选第3批</td><td>3,462</td><td>1,028</td><td>0.0098190</td></tr>
+  <tr><td>筛选第4批</td><td>3,404</td><td>1,034</td><td>0.0097590</td></tr>
+  <tr><td>中文汇总</td><td>4,785</td><td>773</td><td>0.0106560</td></tr>
+</table>
+<h2>效果抽查</h2>
+<p>低电阻无金欧姆接触、MPCVD多晶金刚石生长、硼掺杂金刚石MOSFET、纳米金刚石水门汀等相关内容已入选并生成中文概述。摘要大多是一句话，适合快速扫读，通常没有提取关键数值、方法对照与局限；本轮只基于标题和截断摘要，未读取全文。</p>
+<table>
+  <tr><th>已确认问题</th><th>证据（对应report.json中的顺序）</th></tr>
+  <tr><td>把几何结构当成金刚石材料</td><td>第5条HA480陶瓷骨支架中的diamond lattice是结构形状，却入选“纳米金刚石与生物医学”；第24条Isometries of the Diamond为数学论文却被入选。</td></tr>
+  <tr><td>非论文、非材料研究混入</td><td>第27、28条是带菱形纹饰的藤椅条目，均以0.95置信度入选。</td></tr>
+  <tr><td>判定与摘要自相矛盾</td><td>第29、30条使用DIAMOND生物信息软件。摘要明确写“与金刚石材料无关”，relevant却为true，置信度0.95。</td></tr>
+  <tr><td>跨来源重复及判定不一致</td><td>第22/31条电子密度计算、第23/32条稀土合金高压实验、第24/33条数学论文，各组同名记录分别被保留和排除；24/33还指向同一arXiv地址。</td></tr>
+</table>
+<p>上述6条明显误收占入选25条的至少24%；这是抽查发现的下限，不是完整标注后的准确率。氮化硼和仅使用金刚石压砧的研究还存在范围边界问题，没有计入上述6条。</p>
+<h2>本次评测范围</h2>
+<p>样本来自当前待处理队列中最早的40条，书目日期为2026-03-26至2026-08-09，其中5条没有摘要。因此这是“一天规模的处理评测”，不是“今天新发表论文的汇总”。本轮独立保存，正式队列和每日用量文件保持原记录，正常订阅页仍是此前发布的10条。</p>
+<p>后续改进重点：明确金刚石材料相关性标准与排除样例；统一跨来源记录去重；检查relevant与理由的矛盾；验证改进时复用这40条样本做前后对照。</p>
+</body>
+</html>
