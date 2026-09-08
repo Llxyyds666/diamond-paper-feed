@@ -1,0 +1,50 @@
+name: Evaluate full daily digest
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: diamond-paper-feed-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install and test
+        run: |
+          python -m pip install ".[dev]"
+          python -m pytest -q
+      - name: Evaluate 40 candidates and one overview
+        id: evaluation
+        continue-on-error: true
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: python -m diamond_feed.evaluate --output-dir "evaluations/${GITHUB_RUN_ID}"
+      - name: Publish evaluation results
+        if: ${{ always() && (steps.evaluation.outcome == 'success' || steps.evaluation.outcome == 'failure') }}
+        shell: bash
+        run: |
+          output="evaluations/${GITHUB_RUN_ID}"
+          if [[ ! -d "$output" ]]; then exit 1; fi
+          git add -- "$output"
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: publish full daily evaluation ${GITHUB_RUN_ID}"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+      - name: Propagate evaluation failure
+        if: ${{ always() && steps.evaluation.outcome == 'failure' }}
+        run: exit 1
