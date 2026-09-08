@@ -335,7 +335,7 @@ git commit -m "feat: publish cumulative diamond device focus RSS"
 - Consumes: `load_focus_overrides`, `render_focused_rss`, and the updated offline-promotion CLI.
 - Produces: public `https://llxyyds666.github.io/diamond-paper-feed/device_focus_feed.xml`.
 
-- [ ] **Step 1: Add the exact four-paper seed with a failing fixture test**
+- [x] **Step 1: Add the exact four-paper seed with a failing fixture test**
 
 Write a repository-level test asserting the override file is exact and contains these four DOI identities, each mapped only to `diamond-power-rf-detectors`:
 
@@ -353,13 +353,13 @@ Write a repository-level test asserting the override file is exact and contains 
 
 Run the test before creating the file and verify it fails because the file is absent. Then create the file with `apply_patch` and rerun to PASS.
 
-- [ ] **Step 2: Synchronize against current remote data without losing scheduled collection**
+- [x] **Step 2: Synchronize against current remote data without losing scheduled collection**
 
 Read the latest remote `main` SHA and changed paths. Bring the latest `state.json`, `filtered_feed.xml`, and `fetch_failures.tsv` into the release base through a normal fetch/rebase when available. If Git HTTPS remains unavailable, retain the verified remote parent SHA and publish the final full tree through the GitHub Git Data API with a non-force compare-and-swap update; never replace scheduled collection outputs with older local copies.
 
 Before seeding, assert the remote state still contains all 15 accepted non-withheld identities and all 10 withheld legacy identities with their decisions intact.
 
-- [ ] **Step 3: Generate the four-item focused feed with zero AI requests**
+- [x] **Step 3: Generate the four-item focused feed with zero AI requests**
 
 Snapshot SHA-256 hashes of `ai_usage.json`, `filtered_feed.xml`, `ai_summary_feed.xml`, `ai_summary.html`, and the evaluation report. Run:
 
@@ -369,11 +369,11 @@ python -m diamond_feed.promote --report evaluations/34175877785/report.json --st
 
 Assert `model_requests=0`; parse `device_focus_feed.xml`; require four unique GUIDs matching the override identities; and require all snapshotted unrelated files to remain byte-identical except comprehensive outputs that are expected to render identically. Run promotion a second time and require byte-for-byte identical state and all three publication files.
 
-- [ ] **Step 4: Document the focused feed**
+- [x] **Step 4: Document the focused feed**
 
 Update README output, manual-workflow, URL, scope, and cost sections. State plainly that the general AI feed remains broad, the new feed is an AI-approved subset, current seed count is four, no second request is made, and adding label tokens may cause a negligible token-count difference.
 
-- [ ] **Step 5: Run final verification**
+- [x] **Step 5: Run final verification**
 
 Run:
 
@@ -385,7 +385,7 @@ git diff --check
 
 Parse all three RSS files with ElementTree. Verify the comprehensive feed still has at least its pre-change identities, the focused feed has exactly four initial identities, the old 10 remain withheld, request limits remain 40/5, and `ai_usage.json` plus evaluation artifacts are unchanged. Scan staged files for API-key patterns and ensure only declared paths are staged.
 
-- [ ] **Step 6: Commit and deploy**
+- [x] **Step 6: Commit and deploy**
 
 Commit configuration, generated focused RSS, README, tests, and any release-state changes with:
 
@@ -396,6 +396,6 @@ git commit -m "data: seed diamond device focus feed"
 
 Publish to `main` only after confirming its SHA still equals the reviewed release parent. Wait for the Pages build to complete.
 
-- [ ] **Step 7: Verify the live subscription**
+- [x] **Step 7: Verify the live subscription**
 
 Fetch both `device_focus_feed.xml` and `ai_summary_feed.xml` with cache-busting query parameters. Require HTTP 200, valid RSS 2.0, four focused items, comprehensive items retained, and remote hashes matching the release tree. Open the focused URL for the user and report the request count and boundaries in Simplified Chinese.
