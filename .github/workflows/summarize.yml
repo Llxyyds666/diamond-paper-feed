@@ -49,29 +49,28 @@ jobs:
           import os
           from pathlib import Path
 
-          from diamond_feed.ai import DeepSeekClient, RequestBudget
+          from diamond_feed.ai import DeepSeekClient, RequestBudget, screen_batch
           from diamond_feed.config import load_config
+          from diamond_feed.state import load_state
 
           config = load_config(Path("paper_feed_config.json"))
+          state = load_state(Path("state.json"))
+          if not state.pending_ai:
+              raise SystemExit("No pending paper is available for the DeepSeek smoke test")
+          key = min(
+              state.pending_ai,
+              key=lambda pending_key: state.papers[pending_key].published_at,
+          )
           client = DeepSeekClient(os.environ["DEEPSEEK_API_KEY"], config.ai)
           budget = RequestBudget(1)
-          result = client.complete_json(
-              messages=[
-                  {
-                      "role": "system",
-                      "content": "Return only one JSON object with exactly an ok field set to true.",
-                  },
-                  {"role": "user", "content": "Connection check."},
-              ],
-              max_tokens=32,
-              budget=budget,
-          )
-          if result != {"ok": True}:
-              raise SystemExit("DeepSeek smoke response did not match the required JSON")
+          decisions = screen_batch([state.papers[key]], client, config.ai, budget)
+          if len(decisions) != 1 or decisions[0].key != key:
+              raise SystemExit("DeepSeek smoke response did not match the requested paper")
           if not client.token_usage_complete:
               raise SystemExit("DeepSeek smoke response did not include complete token usage")
           print(
               f"smoke=ok requests={budget.used} "
+              f"relevant={decisions[0].relevant} category={decisions[0].category} "
               f"prompt_tokens={client.prompt_tokens} "
               f"completion_tokens={client.completion_tokens}"
           )

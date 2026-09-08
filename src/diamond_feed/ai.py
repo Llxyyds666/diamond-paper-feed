@@ -202,6 +202,7 @@ class DeepSeekClient:
             "messages": list(messages),
             "stream": False,
             "thinking": {"type": "disabled"},
+            "response_format": {"type": "json_object"},
             "temperature": 0.1,
             "max_tokens": max_tokens,
         }
@@ -257,7 +258,15 @@ def _screening_messages(records: Sequence[PaperRecord], config: AiConfig) -> lis
     return [
         {
             "role": "system",
-            "content": "Return only a JSON array with one strict decision for each requested paper.",
+            "content": (
+                'Return only one json object with exactly a "decisions" field containing '
+                "one strict decision for each requested paper. Copy every input key exactly, "
+                "use every required field exactly once, and add no other fields. "
+                'Example json output: {"decisions": [{"key": "<input key>", '
+                '"relevant": true, "confidence": 0.95, "category": "films-membranes", '
+                '"matched_topics": ["diamond membrane"], "summary_zh": "中文摘要", '
+                '"reason": "判定理由"}]}'
+            ),
         },
         {"role": "user", "content": json.dumps(instructions, ensure_ascii=False)},
     ]
@@ -308,6 +317,10 @@ def screen_batch(
     if len(set(requested_keys)) != len(requested_keys):
         raise ValueError("invalid screening batch")
     raw = client.complete_json(_screening_messages(records, config), config.screening_max_tokens, budget)
+    if type(raw) is dict:
+        if set(raw) != {"decisions"} or type(raw["decisions"]) is not list:
+            raise ValueError("invalid model response")
+        raw = raw["decisions"]
     if type(raw) is not list:
         raise ValueError("invalid model response")
     try:

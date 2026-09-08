@@ -272,7 +272,8 @@ def _digest_messages(records: list[PaperRecord]) -> list[dict[str, object]]:
             "content": (
                 "Return one JSON object with exactly an html field containing a concise "
                 "Chinese overview. Use only section, h2, h3, p, ul, ol, li, strong, em, and br "
-                "tags without attributes."
+                'tags without attributes. Example json output: {"html": '
+                '"<section><h2>今日概览</h2><p>摘要</p></section>"}'
             ),
         },
         {"role": "user", "content": json.dumps({"selected": selected}, ensure_ascii=False)},

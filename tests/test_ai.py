@@ -44,6 +44,25 @@ def test_screening_truncates_abstracts_and_validates_json(ai_config, diamond_rec
     request_content = json.loads(seen[0][2]["messages"][1]["content"])
     assert len(request_content["papers"][0]["abstract"]) == 1200
     assert request_content["papers"][0]["abstract"] == record.abstract[:1200]
+    assert 'json object with exactly a "decisions" field' in seen[0][2]["messages"][0]["content"]
+    assert '"decisions": [' in seen[0][2]["messages"][0]["content"]
+
+
+def test_screening_accepts_the_json_object_decisions_wrapper(ai_config, diamond_records):
+    key = record_key(diamond_records[0])
+    client = DeepSeekClient(
+        "test-api-key",
+        ai_config,
+        transport=lambda *args: _response(
+            json.dumps({"decisions": [_decision(key)]}, ensure_ascii=False)
+        ),
+    )
+
+    decisions = screen_batch(
+        diamond_records[:1], client, ai_config, RequestBudget(1)
+    )
+
+    assert [decision.key for decision in decisions] == [key]
 
 
 def test_ambiguous_timeout_is_not_retried_or_reported_as_zero_usage(ai_config, diamond_records):
@@ -209,6 +228,7 @@ def test_default_transport_uses_required_endpoint_payload_and_headers(ai_config,
         "messages": [{"role": "user", "content": "hello"}],
         "stream": False,
         "thinking": {"type": "disabled"},
+        "response_format": {"type": "json_object"},
         "temperature": 0.1,
         "max_tokens": 77,
     }

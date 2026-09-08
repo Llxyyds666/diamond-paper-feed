@@ -33,9 +33,11 @@ class RecordingClient:
         self.relevant = relevant
         self.digest = {"html": "<section><h2>模型概览</h2></section>"} if digest is None else digest
         self.payloads = []
+        self.messages = []
 
     def complete_json(self, messages, max_tokens, budget):
         budget.consume()
+        self.messages.append(messages)
         payload = json.loads(messages[-1]["content"])
         self.payloads.append(payload)
         if "papers" not in payload:
@@ -469,6 +471,8 @@ def test_digest_request_contains_only_selected_metadata_and_chinese_summaries(
     run_summary(app_config, state_path, client, NOW, output_dir=tmp_path)
 
     assert len(client.payloads) == 2
+    assert "Example json output:" in client.messages[1][0]["content"]
+    assert '{"html":' in client.messages[1][0]["content"]
     assert set(client.payloads[1]) == {"selected"}
     assert set(client.payloads[1]["selected"][0]) == {
         "title",
