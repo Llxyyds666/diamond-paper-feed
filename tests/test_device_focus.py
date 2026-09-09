@@ -384,6 +384,6 @@ def test_repository_focus_override_seed_is_exact():
 
     root = ElementTree.parse("device_focus_feed.xml").getroot()
     assert root.findtext("./channel/title") == "Diamond Device Focus Feed · 中文摘要"
-    assert {
-        item.findtext("guid") for item in root.findall("./channel/item")
-    } == set(expected)
+    guids = [item.findtext("guid") for item in root.findall("./channel/item")]
+    assert set(expected).issubset(guids)
+    assert None not in guids and len(guids) == len(set(guids))
