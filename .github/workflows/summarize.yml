@@ -82,12 +82,20 @@ jobs:
         continue-on-error: true
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-        run: python -m diamond_feed.summarize --config paper_feed_config.json --state state.json
+          SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
+          BARK_ENABLED: ${{ secrets.BARK_TOKEN != '' }}
+        run: >-
+          python -m diamond_feed.summarize
+          --config paper_feed_config.json
+          --state state.json
+          --notification-plan "${{ runner.temp }}/diamond-notification.json"
 
       - name: Commit and push summary outputs
+        id: publish
         if: ${{ always() && (steps.summarize.outcome == 'success' || steps.summarize.outcome == 'failure') }}
         shell: bash
         run: |
+          echo "pushed=false" >> "$GITHUB_OUTPUT"
           allowed_outputs=(
             "ai_summary_feed.xml"
             "ai_summary.html"
@@ -113,6 +121,16 @@ jobs:
           git commit -m "data: update DeepSeek diamond digest"
           git pull --rebase origin "${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Send Bark notifications
+        if: ${{ inputs.smoke_test != true && steps.summarize.outcome == 'success' && steps.publish.outputs.pushed == 'true' }}
+        continue-on-error: true
+        env:
+          BARK_TOKEN: ${{ secrets.BARK_TOKEN }}
+        run: >-
+          python -m diamond_feed.notify
+          --plan "${{ runner.temp }}/diamond-notification.json"
 
       - name: Propagate summary failure
         if: ${{ always() && steps.summarize.outcome == 'failure' }}

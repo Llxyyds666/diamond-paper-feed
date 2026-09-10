@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
@@ -6,7 +7,9 @@ from xml.etree import ElementTree
 import pytest
 
 from diamond_feed.ai import DeepSeekClient
+from diamond_feed.enrich import EnrichmentStats
 from diamond_feed.models import PaperRecord
+from diamond_feed.notification import load_notification_plan
 from diamond_feed.normalize import record_key
 from diamond_feed.state import FeedState, load_state, save_state
 from diamond_feed import summarize
@@ -52,10 +55,182 @@ class RecordingClient:
         ]
 
 
+class NotificationClient:
+    def __init__(self, *, focus=True, recommendation=None, screening_failure=False):
+        self.focus = focus
+        self.recommendation = recommendation
+        self.screening_failure = screening_failure
+        self.payloads = []
+        self.prompt_tokens = 0
+        self.completion_tokens = 0
+
+    def complete_json(self, messages, max_tokens, budget):
+        budget.consume()
+        payload = json.loads(messages[-1]["content"])
+        self.payloads.append(payload)
+        self.prompt_tokens += 10
+        self.completion_tokens += 3
+        if "papers" in payload:
+            if self.screening_failure:
+                raise RuntimeError("screening unavailable")
+            return [
+                _decision(
+                    paper["key"],
+                    category="electronics-optoelectronics",
+                    summary=f"{paper['title']} 的有效中文摘要。",
+                )
+                | {
+                    "matched_topics": (
+                        ["diamond-power-rf-detectors"] if self.focus else []
+                    )
+                }
+                for paper in payload["papers"]
+            ]
+        if "selected" in payload:
+            return {"html": "<section><h2>模型概览</h2></section>"}
+        if "candidates" in payload:
+            if self.recommendation is not None:
+                return self.recommendation
+            return {"key": payload["candidates"][0]["key"], "reason": "证据完整，适合入门。"}
+        raise AssertionError(f"unexpected payload keys: {set(payload)}")
+
+
+class FakeEnricher:
+    def __init__(self, replacement: str):
+        self.replacement = replacement
+        self.calls = []
+
+    def enrich(self, state, candidate_keys):
+        self.calls.append(list(candidate_keys))
+        key = candidate_keys[0]
+        state.papers[key].abstract = self.replacement
+        if "semantic-scholar" not in state.papers[key].sources:
+            state.papers[key].sources.append("semantic-scholar")
+        return EnrichmentStats(1, 0, 1)
+
+
 def _save_records(path: Path, records: list[PaperRecord]) -> list[str]:
     keys = [record_key(record) for record in records]
     save_state(path, FeedState(dict(zip(keys, records)), keys, {}))
     return keys
+
+
+def test_enrichment_runs_before_screening_and_is_published(
+    tmp_path, diamond_records, app_config
+):
+    state_path = tmp_path / "state.json"
+    record = diamond_records[0]
+    record.abstract = ""
+    _save_records(state_path, [record])
+    enricher = FakeEnricher("Complete original abstract from Semantic Scholar.")
+    client = RecordingClient()
+
+    run_summary(
+        app_config,
+        state_path,
+        client,
+        NOW,
+        output_dir=tmp_path,
+        enricher=enricher,
+    )
+
+    assert client.payloads[0]["papers"][0]["abstract"] == (
+        "Complete original abstract from Semantic Scholar."
+    )
+    assert load_state(state_path).papers[record_key(record)].abstract.startswith("Complete")
+    assert enricher.calls == [[record_key(record)]]
+
+
+def test_existing_callers_do_not_enrich_without_explicit_service(
+    tmp_path, diamond_records, app_config, monkeypatch
+):
+    state_path = tmp_path / "state.json"
+    _save_records(state_path, diamond_records[:1])
+    monkeypatch.setattr(
+        summarize,
+        "AbstractEnricher",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("network service created")
+        ),
+    )
+
+    run_summary(app_config, state_path, RecordingClient(), NOW, output_dir=tmp_path)
+
+
+def test_enrichment_requeues_historical_paper_before_candidates_are_finalized(
+    tmp_path, diamond_records, app_config
+):
+    state_path = tmp_path / "state.json"
+    current, historical = diamond_records
+    historical.published_at = current.published_at - timedelta(days=30)
+    keys = [record_key(current), record_key(historical)]
+    save_state(
+        state_path,
+        FeedState(papers=dict(zip(keys, [current, historical])), pending_ai=[keys[0]]),
+    )
+
+    class RequeueEnricher:
+        def enrich(self, state, candidate_keys):
+            assert list(candidate_keys) == [keys[0]]
+            state.papers[keys[1]].abstract = "Recovered historical abstract."
+            state.pending_ai.append(keys[1])
+            return EnrichmentStats(0, 1, 1)
+
+    client = RecordingClient()
+    stats = run_summary(
+        app_config,
+        state_path,
+        client,
+        NOW,
+        output_dir=tmp_path,
+        enricher=RequeueEnricher(),
+    )
+
+    assert stats.candidates == 2
+    assert [paper["key"] for paper in client.payloads[0]["papers"]] == [
+        keys[1],
+        keys[0],
+    ]
+
+
+def test_zero_same_day_budget_skips_explicit_enricher(
+    tmp_path, diamond_records, app_config
+):
+    state_path = tmp_path / "state.json"
+    _save_records(state_path, diamond_records[:1])
+    (tmp_path / "ai_usage.json").write_text(
+        json.dumps(
+            [
+                {
+                    "date": NOW.date().isoformat(),
+                    "candidates": app_config.ai.daily_candidates,
+                    "processed": 0,
+                    "selected": 0,
+                    "requests": 0,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    enricher = FakeEnricher("must not be used")
+    plan_path = tmp_path / "notification.json"
+
+    run_summary(
+        app_config,
+        state_path,
+        RecordingClient(),
+        NOW,
+        output_dir=tmp_path,
+        enricher=enricher,
+        bark_enabled=True,
+        notification_plan_path=plan_path,
+    )
+
+    assert enricher.calls == []
+    assert not plan_path.exists()
 
 
 def test_first_run_processes_at_most_40_and_uses_at_most_5_requests(
@@ -205,9 +380,9 @@ def test_same_day_prior_usage_leaves_only_remaining_request_attempts(
     )
     usage = json.loads((tmp_path / "ai_usage.json").read_text(encoding="utf-8"))[-1]
 
-    assert (stats.candidates, stats.processed, stats.requests, stats.failed) == (30, 10, 1, True)
-    assert len(client.payloads) == 1
-    assert (usage["candidates"], usage["processed"], usage["requests"]) == (40, 20, 5)
+    assert (stats.candidates, stats.processed, stats.requests, stats.failed) == (30, 20, 2, True)
+    assert len(client.payloads) == 2
+    assert (usage["candidates"], usage["processed"], usage["requests"]) == (40, 30, 6)
 
 
 def test_candidate_limit_selects_the_oldest_40_even_if_queue_order_is_stale(
@@ -317,6 +492,42 @@ def test_later_batch_failure_publishes_successful_batch_and_leaves_rest_queued(
     assert all(state.papers[key].ai_relevant is None for key in before_keys[10:])
     assert [set(payload) for payload in client.payloads] == [{"papers", "categories", "required_fields"}] * 2
     assert "今日概览" in (tmp_path / "ai_summary.html").read_text(encoding="utf-8")
+
+
+def test_partial_screening_failure_suppresses_recommendation_and_notification_plan(
+    tmp_path, configured_state_with_100_pending, app_config
+):
+    class FailSecondFocusBatch(NotificationClient):
+        def complete_json(self, messages, max_tokens, budget):
+            payload = json.loads(messages[-1]["content"])
+            paper_batches = sum("papers" in item for item in self.payloads)
+            if "papers" in payload and paper_batches == 1:
+                budget.consume()
+                self.payloads.append(payload)
+                raise RuntimeError("second batch failed")
+            return super().complete_json(messages, max_tokens, budget)
+
+    client = FailSecondFocusBatch()
+    plan_path = tmp_path / "notification.json"
+
+    stats = run_summary(
+        app_config,
+        configured_state_with_100_pending,
+        client,
+        NOW,
+        output_dir=tmp_path,
+        bark_enabled=True,
+        notification_plan_path=plan_path,
+    )
+
+    assert (stats.processed, stats.requests, stats.failed) == (10, 2, True)
+    assert [set(payload) for payload in client.payloads] == [
+        {"papers", "categories", "required_fields"},
+        {"papers", "categories", "required_fields"},
+    ]
+    assert (tmp_path / "ai_summary_feed.xml").exists()
+    assert (tmp_path / "device_focus_feed.xml").exists()
+    assert not plan_path.exists()
 
 
 def test_screening_retry_that_consumes_reserve_uses_fallback_and_keeps_unfinished_batches(
@@ -509,6 +720,216 @@ def test_invalid_digest_html_falls_back_without_losing_valid_summary_or_allowing
     assert "&lt;script&gt;" in html
 
 
+def test_bark_enabled_recommends_after_digest_and_writes_plan_after_publication(
+    tmp_path, diamond_records, app_config, monkeypatch
+):
+    state_path = tmp_path / "state.json"
+    record = diamond_records[0]
+    record.abstract = "A" * 1301
+    _save_records(state_path, [record])
+    client = NotificationClient()
+    plan_path = tmp_path / "notification.json"
+    order = []
+    real_commit = summarize.commit_staged
+    real_write_plan = summarize.write_notification_plan
+
+    def recording_commit(staged):
+        result = real_commit(staged)
+        order.append("publication")
+        return result
+
+    def recording_write_plan(path, plan):
+        order.append("plan")
+        return real_write_plan(path, plan)
+
+    monkeypatch.setattr(summarize, "commit_staged", recording_commit)
+    monkeypatch.setattr(summarize, "write_notification_plan", recording_write_plan)
+
+    stats = run_summary(
+        app_config,
+        state_path,
+        client,
+        NOW,
+        output_dir=tmp_path,
+        bark_enabled=True,
+        notification_plan_path=plan_path,
+    )
+    plan = load_notification_plan(plan_path)
+    usage = json.loads((tmp_path / "ai_usage.json").read_text(encoding="utf-8"))[0]
+
+    assert stats.requests == 3
+    assert [set(payload) for payload in client.payloads] == [
+        {"papers", "categories", "required_fields"},
+        {"selected"},
+        {"candidates"},
+    ]
+    assert client.payloads[2]["candidates"][0]["abstract"] == "A" * 1301
+    assert (stats.prompt_tokens, stats.completion_tokens, stats.total_tokens) == (30, 9, 39)
+    assert (usage["prompt_tokens"], usage["completion_tokens"], usage["total_tokens"]) == (
+        30,
+        9,
+        39,
+    )
+    assert len(plan.messages) == 2
+    assert order == ["publication", "plan"]
+
+
+def test_broad_only_selection_writes_empty_focus_plan_without_recommendation(
+    tmp_path, diamond_records, app_config
+):
+    state_path = tmp_path / "state.json"
+    _save_records(state_path, diamond_records[:1])
+    client = NotificationClient(focus=False)
+    plan_path = tmp_path / "notification.json"
+
+    stats = run_summary(
+        app_config,
+        state_path,
+        client,
+        NOW,
+        output_dir=tmp_path,
+        bark_enabled=True,
+        notification_plan_path=plan_path,
+    )
+
+    assert stats.requests == 2
+    assert [set(payload) for payload in client.payloads] == [
+        {"papers", "categories", "required_fields"},
+        {"selected"},
+    ]
+    assert load_notification_plan(plan_path).messages[1].body == "今日无器件方向推荐"
+
+
+def test_invalid_recommendation_writes_failure_plan_without_rolling_back_feeds(
+    tmp_path, diamond_records, app_config, capsys
+):
+    state_path = tmp_path / "state.json"
+    _save_records(state_path, diamond_records[:1])
+    secret = "must-not-appear"
+    client = NotificationClient(recommendation={"key": secret, "reason": "理由。"})
+    plan_path = tmp_path / "notification.json"
+
+    stats = run_summary(
+        app_config,
+        state_path,
+        client,
+        NOW,
+        output_dir=tmp_path,
+        bark_enabled=True,
+        notification_plan_path=plan_path,
+    )
+
+    assert stats.failed is False
+    assert stats.requests == 3
+    assert (tmp_path / "ai_summary_feed.xml").exists()
+    assert (tmp_path / "device_focus_feed.xml").exists()
+    assert load_notification_plan(plan_path).messages[1].body == (
+        "今日推荐生成失败，器件方向 RSS 已正常更新"
+    )
+    captured = capsys.readouterr()
+    assert captured.err == "AI recommendation failed safely: ValueError\n"
+    assert secret not in captured.err
+
+
+def test_exhausted_shared_budget_writes_failure_plan_without_extra_request(
+    tmp_path, diamond_records, app_config
+):
+    state_path = tmp_path / "state.json"
+    _save_records(state_path, diamond_records[:1])
+    constrained = replace(app_config, ai=replace(app_config.ai, max_requests=2))
+    client = NotificationClient()
+    plan_path = tmp_path / "notification.json"
+
+    stats = run_summary(
+        constrained,
+        state_path,
+        client,
+        NOW,
+        output_dir=tmp_path,
+        bark_enabled=True,
+        notification_plan_path=plan_path,
+    )
+
+    assert stats.requests == 2
+    assert len(client.payloads) == 2
+    assert load_notification_plan(plan_path).messages[1].body == (
+        "今日推荐生成失败，器件方向 RSS 已正常更新"
+    )
+
+
+def test_bark_disabled_makes_no_recommendation_request_or_plan(
+    tmp_path, diamond_records, app_config
+):
+    state_path = tmp_path / "state.json"
+    _save_records(state_path, diamond_records[:1])
+    client = NotificationClient()
+    plan_path = tmp_path / "notification.json"
+
+    stats = run_summary(
+        app_config,
+        state_path,
+        client,
+        NOW,
+        output_dir=tmp_path,
+        bark_enabled=False,
+        notification_plan_path=plan_path,
+    )
+
+    assert stats.requests == 2
+    assert len(client.payloads) == 2
+    assert not plan_path.exists()
+
+
+def test_zero_processed_papers_writes_no_notification_plan(
+    tmp_path, diamond_records, app_config
+):
+    state_path = tmp_path / "state.json"
+    _save_records(state_path, diamond_records[:1])
+    client = NotificationClient(screening_failure=True)
+    plan_path = tmp_path / "notification.json"
+
+    stats = run_summary(
+        app_config,
+        state_path,
+        client,
+        NOW,
+        output_dir=tmp_path,
+        bark_enabled=True,
+        notification_plan_path=plan_path,
+    )
+
+    assert stats.processed == 0
+    assert not plan_path.exists()
+
+
+def test_notification_plan_write_failure_is_sanitized_and_nonfatal(
+    tmp_path, diamond_records, app_config, monkeypatch, capsys
+):
+    state_path = tmp_path / "state.json"
+    _save_records(state_path, diamond_records[:1])
+    secret = "must-not-appear"
+
+    def fail_plan_write(path, plan):
+        raise RuntimeError(secret)
+
+    monkeypatch.setattr(summarize, "write_notification_plan", fail_plan_write)
+    stats = run_summary(
+        app_config,
+        state_path,
+        NotificationClient(),
+        NOW,
+        output_dir=tmp_path,
+        bark_enabled=True,
+        notification_plan_path=tmp_path / "notification.json",
+    )
+    captured = capsys.readouterr()
+
+    assert stats.failed is False
+    assert (tmp_path / "ai_summary_feed.xml").exists()
+    assert captured.err == "Notification plan failed safely: RuntimeError\n"
+    assert secret not in captured.err
+
+
 def test_publication_stages_outputs_then_state_and_cleans_temporaries_on_commit_error(
     tmp_path, diamond_records, app_config, monkeypatch
 ):
@@ -530,8 +951,17 @@ def test_publication_stages_outputs_then_state_and_cleans_temporaries_on_commit_
         raise OSError("commit failed")
 
     monkeypatch.setattr(summarize, "commit_staged", fail_commit)
+    plan_path = tmp_path / "notification.json"
     with pytest.raises(OSError, match="commit failed"):
-        run_summary(app_config, state_path, RecordingClient(), NOW, output_dir=tmp_path)
+        run_summary(
+            app_config,
+            state_path,
+            RecordingClient(),
+            NOW,
+            output_dir=tmp_path,
+            bark_enabled=True,
+            notification_plan_path=plan_path,
+        )
 
     assert order == [
         "ai_summary_feed.xml",
@@ -543,6 +973,7 @@ def test_publication_stages_outputs_then_state_and_cleans_temporaries_on_commit_
     assert state_path.read_text(encoding="utf-8") == old_state
     for name, contents in previous.items():
         assert (tmp_path / name).read_text(encoding="utf-8") == contents
+    assert not plan_path.exists()
     assert not list(tmp_path.glob("*.tmp"))
 
 
@@ -622,6 +1053,38 @@ def test_output_topology_collision_is_rejected_before_any_ai_call(
     assert client.payloads == []
 
 
+@pytest.mark.parametrize("collision_kind", ["direct", "lexical_alias"])
+def test_notification_plan_output_collision_is_rejected_before_side_effects(
+    tmp_path, diamond_records, app_config, collision_kind
+):
+    state_path = tmp_path / "state.json"
+    _save_records(state_path, diamond_records[:1])
+    state_before = state_path.read_text(encoding="utf-8")
+    html_path = tmp_path / "ai_summary.html"
+    html_path.write_text("preserve html", encoding="utf-8")
+    if collision_kind == "direct":
+        plan_path = html_path
+    else:
+        (tmp_path / "nested").mkdir()
+        plan_path = tmp_path / "nested" / ".." / "ai_summary.html"
+    client = NotificationClient()
+
+    with pytest.raises(ValueError, match="destinations must be unique"):
+        run_summary(
+            app_config,
+            state_path,
+            client,
+            NOW,
+            output_dir=tmp_path,
+            bark_enabled=True,
+            notification_plan_path=plan_path,
+        )
+
+    assert client.payloads == []
+    assert state_path.read_text(encoding="utf-8") == state_before
+    assert html_path.read_text(encoding="utf-8") == "preserve html"
+
+
 def test_cli_without_api_key_fails_safely(capsys, monkeypatch):
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
 
@@ -629,3 +1092,40 @@ def test_cli_without_api_key_fails_safely(capsys, monkeypatch):
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == "DEEPSEEK_API_KEY is required\n"
+
+
+def test_cli_constructs_production_enricher_with_semantic_scholar_key(
+    tmp_path, app_config, monkeypatch
+):
+    created = []
+    passed = []
+    run_kwargs = []
+
+    def recording_factory(key, *, timeout_seconds):
+        service = object()
+        created.append((key, timeout_seconds, service))
+        return service
+
+    def recording_run_summary(*args, **kwargs):
+        passed.append(kwargs["enricher"])
+        run_kwargs.append(kwargs)
+        return summarize.SummaryStats(0, 0, 0, 0, 0, False)
+
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "deepseek-secret")
+    monkeypatch.setenv("SEMANTIC_SCHOLAR_API_KEY", "semantic-secret")
+    monkeypatch.setenv("BARK_ENABLED", "TrUe")
+    monkeypatch.setenv("BARK_TOKEN", "must-not-be-forwarded")
+    monkeypatch.setattr(summarize, "load_config", lambda path: app_config)
+    monkeypatch.setattr(summarize, "DeepSeekClient", lambda key, config: object())
+    monkeypatch.setattr(summarize, "AbstractEnricher", recording_factory)
+    monkeypatch.setattr(summarize, "run_summary", recording_run_summary)
+
+    plan_path = tmp_path / "notification.json"
+    assert summarize.main(["--notification-plan", str(plan_path)], now=NOW) == 0
+    assert [(key, timeout) for key, timeout, _ in created] == [
+        ("semantic-secret", app_config.collection.http_timeout_seconds)
+    ]
+    assert passed == [created[0][2]]
+    assert run_kwargs[0]["bark_enabled"] is True
+    assert run_kwargs[0]["notification_plan_path"] == plan_path
+    assert "must-not-be-forwarded" not in repr(run_kwargs)

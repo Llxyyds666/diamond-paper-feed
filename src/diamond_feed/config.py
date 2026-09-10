@@ -9,10 +9,11 @@ AI_MODEL = "deepseek-v4-flash-vision-exp"
 AI_LIMITS = {
     "daily_candidates": 40,
     "batch_size": 10,
-    "max_requests": 5,
+    "max_requests": 6,
     "max_abstract_chars": 1200,
     "screening_max_tokens": 4096,
     "digest_max_tokens": 8192,
+    "recommendation_max_tokens": 512,
 }
 
 ROOT_KEYS = {"collection", "ai", "publication"}
@@ -44,6 +45,7 @@ class AiConfig:
     max_abstract_chars: int
     screening_max_tokens: int
     digest_max_tokens: int
+    recommendation_max_tokens: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -105,6 +107,9 @@ def load_config(path: Path) -> AppConfig:
         max_abstract_chars=_bounded_positive("max_abstract_chars", ai_raw["max_abstract_chars"]),
         screening_max_tokens=_bounded_positive("screening_max_tokens", ai_raw["screening_max_tokens"]),
         digest_max_tokens=_bounded_positive("digest_max_tokens", ai_raw["digest_max_tokens"]),
+        recommendation_max_tokens=_bounded_positive(
+            "recommendation_max_tokens", ai_raw["recommendation_max_tokens"]
+        ),
     )
     if ai.base_url != AI_BASE_URL:
         raise ValueError(f"AI base_url must match {AI_BASE_URL}")

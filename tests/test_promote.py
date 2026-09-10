@@ -7,6 +7,7 @@ from xml.etree import ElementTree
 
 import pytest
 
+from diamond_feed import summarize
 from diamond_feed.normalize import group_records, identity_aliases, record_key
 from diamond_feed.state import FeedState, load_state, save_state
 
@@ -76,6 +77,13 @@ def test_offline_promotion_renders_focused_rss_without_model_request(
     monkeypatch.setattr(
         "diamond_feed.ai.DeepSeekClient.complete_json",
         lambda *a, **k: pytest.fail("unexpected model request"),
+    )
+    monkeypatch.setattr(
+        summarize,
+        "AbstractEnricher",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("promotion created enrichment service")
+        ),
     )
 
     result = promote(

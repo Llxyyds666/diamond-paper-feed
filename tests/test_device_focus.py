@@ -8,6 +8,7 @@ import pytest
 
 from diamond_feed import focus
 from diamond_feed.models import AiDecision, PaperRecord
+from diamond_feed.notification import load_notification_plan
 from diamond_feed.normalize import record_key
 from diamond_feed.state import FeedState, load_state, save_state
 from diamond_feed.summarize import _apply_decision, run_summary
@@ -45,8 +46,13 @@ class FocusClient:
         budget.consume()
         payload = json.loads(messages[-1]["content"])
         self.payloads.append(payload)
-        if "papers" not in payload:
+        if "selected" in payload:
             return {"html": "<section><h2>新增概览</h2></section>"}
+        if "candidates" in payload:
+            return {
+                "key": payload["candidates"][0]["key"],
+                "reason": "方向清晰，实验完整。",
+            }
         return [
             {
                 "key": paper["key"],
@@ -276,6 +282,33 @@ def test_general_only_paper_stays_in_broad_feed_not_focus_feed(tmp_path, app_con
     assert stats.requests == 2
     assert _feed_titles(tmp_path / "ai_summary_feed.xml") == [paper.title]
     assert _feed_titles(tmp_path / "device_focus_feed.xml") == []
+
+
+def test_multi_label_recommendation_renders_each_controlled_direction_once(
+    tmp_path, app_config
+):
+    state_path = tmp_path / "state.json"
+    paper = _paper(1)
+    key = record_key(paper)
+    save_state(state_path, FeedState(papers={key: paper}, pending_ai=[key]))
+    plan_path = tmp_path / "notification.json"
+
+    stats = run_summary(
+        app_config,
+        state_path,
+        FocusClient(
+            ["diamond-power-rf-detectors", "device-grade-single-crystal"]
+        ),
+        NOW,
+        output_dir=tmp_path,
+        bark_enabled=True,
+        notification_plan_path=plan_path,
+    )
+    body = load_notification_plan(plan_path).messages[1].body
+
+    assert stats.requests == 3
+    assert body.count("金刚石功率/射频/探测器件") == 1
+    assert body.count("金刚石单晶器件") == 1
 
 
 def test_focus_output_failure_rolls_back_all_summary_outputs(

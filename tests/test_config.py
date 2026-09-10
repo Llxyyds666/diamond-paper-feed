@@ -22,6 +22,7 @@ VALID_CONFIG = {
         "max_abstract_chars": 1200,
         "screening_max_tokens": 4096,
         "digest_max_tokens": 8192,
+        "recommendation_max_tokens": 512,
     },
     "publication": {"title": "Diamond Paper Feed", "base_url": ""},
 }
@@ -38,8 +39,9 @@ def test_repository_config_has_locked_safety_limits():
     assert config.ai.model == "deepseek-v4-flash-vision-exp"
     assert config.ai.daily_candidates == 40
     assert config.ai.batch_size == 10
-    assert config.ai.max_requests == 5
+    assert config.ai.max_requests == 6
     assert config.ai.max_abstract_chars == 1200
+    assert config.ai.recommendation_max_tokens == 512
 
 
 def test_invalid_batch_budget_is_rejected(tmp_path):
@@ -49,7 +51,8 @@ def test_invalid_batch_budget_is_rejected(tmp_path):
         '"http_timeout_seconds":30,"http_attempts":3},'
         '"ai":{"base_url":"https://api.deepseek.com","model":"deepseek-v4-flash-vision-exp",'
         '"daily_candidates":40,"batch_size":10,"max_requests":4,"max_abstract_chars":1200,'
-        '"screening_max_tokens":4096,"digest_max_tokens":8192},'
+        '"screening_max_tokens":4096,"digest_max_tokens":8192,'
+        '"recommendation_max_tokens":512},'
         '"publication":{"title":"Diamond Paper Feed","base_url":""}}',
         encoding="utf-8",
     )
@@ -74,10 +77,11 @@ def test_unknown_configuration_key_is_rejected(tmp_path, section):
     [
         ("daily_candidates", 41),
         ("batch_size", 11),
-        ("max_requests", 6),
+        ("max_requests", 7),
         ("max_abstract_chars", 1201),
         ("screening_max_tokens", 4097),
         ("digest_max_tokens", 8193),
+        ("recommendation_max_tokens", 513),
     ],
 )
 def test_ai_limit_above_public_cap_is_rejected(tmp_path, field, excessive):
@@ -99,6 +103,7 @@ def test_ai_limits_below_public_caps_are_accepted(tmp_path):
         max_abstract_chars=600,
         screening_max_tokens=2048,
         digest_max_tokens=4096,
+        recommendation_max_tokens=256,
     )
     path = tmp_path / "config.json"
     write_config(path, config)

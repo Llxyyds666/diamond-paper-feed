@@ -4,12 +4,21 @@ import json
 
 import pytest
 
+from diamond_feed import summarize
 from diamond_feed.evaluate import balance_change, run_evaluation
 
 
 def test_full_evaluation_preserves_production_queue_and_usage(
-    tmp_path, configured_state_with_100_pending, app_config, fake_deepseek_client
+    tmp_path, configured_state_with_100_pending, app_config, fake_deepseek_client,
+    monkeypatch,
 ):
+    monkeypatch.setattr(
+        summarize,
+        "AbstractEnricher",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("evaluation created enrichment service")
+        ),
+    )
     state_before = configured_state_with_100_pending.read_bytes()
     production_usage = tmp_path / "ai_usage.json"
     production_usage.write_text('[{"existing":"ledger"}]', encoding="utf-8")

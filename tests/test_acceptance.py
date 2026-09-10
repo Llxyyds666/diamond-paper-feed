@@ -3,6 +3,7 @@ from datetime import date, datetime, timezone
 import json
 from pathlib import Path
 import re
+import struct
 import subprocess
 from urllib.parse import urlsplit
 from xml.etree import ElementTree
@@ -346,10 +347,20 @@ def test_public_config_readme_and_database_only_table_describe_exact_limits():
         assert f"{EXPECTED_BASE_URL}/{output}" in readme
     assert "每天最多只向 AI 提交 40 篇候选" in readme
     assert "每批最多 10 篇" in readme
-    assert "每轮最多 5 次 API 请求，所有失败重试也计数" in readme
+    assert "筛选固定为四批" in readme
     assert "1200 个 Unicode 字符" in readme
     assert "筛选请求的输出上限为 4096 token" in readme
     assert "最终摘要请求的输出上限为 8192 token" in readme
+    assert "每天最多 6 次 DeepSeek 请求" in readme
+    assert "完整原始摘要，不截断" in readme
+    assert "SEMANTIC_SCHOLAR_API_KEY" in readme
+    assert "BARK_TOKEN" in readme
+    assert "Semantic Scholar" in readme and "OpenAIRE" in readme
+    assert "今日无器件方向推荐" in readme
+    assert "https://api.day.app/push" in readme
+    assert "assets/diamond-bark-icon.png" in readme
+    assert "iOS 15" in readme
+    assert "GitHub 推送成功后" in readme
     assert "`filtered_feed.xml`：规则筛选后的高召回 RSS，最多 2000 条" in readme
     assert "第一次运行会回溯数据库最近 30 天" in readme
     assert "数据库游标" in readme and "不推进该来源水位" in readme
@@ -361,17 +372,31 @@ def test_public_config_readme_and_database_only_table_describe_exact_limits():
 def test_workflow_crons_and_secret_boundary_are_exact():
     collect_workflow = Path(".github/workflows/collect.yml").read_text(encoding="utf-8")
     summary_workflow = Path(".github/workflows/summarize.yml").read_text(encoding="utf-8")
+    evaluate_workflow = Path(".github/workflows/evaluate.yml").read_text(encoding="utf-8")
 
     assert "cron: '0 */6 * * *'" in collect_workflow
     assert "DEEPSEEK_API_KEY" not in collect_workflow
+    assert "SEMANTIC_SCHOLAR_API_KEY" not in collect_workflow
+    assert "BARK_TOKEN" not in collect_workflow
     assert "secrets." not in collect_workflow
     assert "python -m diamond_feed.summarize" not in collect_workflow
+    assert "python -m diamond_feed.enrich" not in collect_workflow
+    assert "python -m diamond_feed.recommend" not in collect_workflow
+    assert "python -m diamond_feed.notify" not in collect_workflow
     assert "device_focus_feed.xml" not in collect_workflow
     assert "cron: '0 0 * * *'" in summary_workflow
-    assert summary_workflow.count("DEEPSEEK_API_KEY") == 5
-    assert "DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}" in summary_workflow
     assert "python -m diamond_feed.collect" not in summary_workflow
     assert '"device_focus_feed.xml"' in summary_workflow
+
+    for command_or_secret in (
+        "SEMANTIC_SCHOLAR_API_KEY",
+        "BARK_TOKEN",
+        "python -m diamond_feed.enrich",
+        "python -m diamond_feed.recommend",
+        "python -m diamond_feed.notify",
+        "python -m diamond_feed.promote",
+    ):
+        assert command_or_secret not in evaluate_workflow
 
     smoke_step = _workflow_step(summary_workflow, "Run one-request DeepSeek smoke test")
     assert "inputs.smoke_test == true" in smoke_step
@@ -379,38 +404,108 @@ def test_workflow_crons_and_secret_boundary_are_exact():
     assert 'load_state(Path("state.json"))' in smoke_step
     assert "RequestBudget(1)" in smoke_step
     assert "screen_batch(" in smoke_step
+    assert "SEMANTIC_SCHOLAR_API_KEY" not in smoke_step
+    assert "BARK_TOKEN" not in smoke_step
 
     summary_step = _workflow_step(summary_workflow, "Generate bounded DeepSeek digest")
     assert "id: summarize" in summary_step
     assert "inputs.smoke_test != true" in summary_step
     assert "continue-on-error: true" in summary_step
+    assert "SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}" in summary_step
+    assert "BARK_ENABLED: ${{ secrets.BARK_TOKEN != '' }}" in summary_step
+    assert "\n          BARK_TOKEN:" not in summary_step
+    assert '--notification-plan "${{ runner.temp }}/diamond-notification.json"' in summary_step
 
     publish_step = _workflow_step(summary_workflow, "Commit and push summary outputs")
+    assert "id: publish" in publish_step
     assert "if: ${{ always()" in publish_step
     assert "steps.summarize.outcome == 'success'" in publish_step
     assert "steps.summarize.outcome == 'failure'" in publish_step
     assert "git ls-files --error-unmatch" in publish_step
     assert 'git add -- "${existing_outputs[@]}"' in publish_step
+    assert 'echo "pushed=false" >> "$GITHUB_OUTPUT"' in publish_step
+    assert 'git push origin "HEAD:${GITHUB_REF_NAME}"' in publish_step
+    assert 'echo "pushed=true" >> "$GITHUB_OUTPUT"' in publish_step
+    assert publish_step.index('echo "pushed=false" >> "$GITHUB_OUTPUT"') < publish_step.index(
+        "if git diff --cached --quiet; then"
+    )
+    assert publish_step.index('git push origin "HEAD:${GITHUB_REF_NAME}"') < publish_step.index(
+        'echo "pushed=true" >> "$GITHUB_OUTPUT"'
+    )
+    assert "diamond-notification.json" not in publish_step
+    assert "runner.temp" not in publish_step
+    assert "git add -- ." not in publish_step
+    assert "git add -A" not in publish_step
+
+    notify_step = _workflow_step(summary_workflow, "Send Bark notifications")
+    assert "steps.summarize.outcome == 'success'" in notify_step
+    assert "steps.publish.outputs.pushed == 'true'" in notify_step
+    assert "steps.publish.outcome" not in notify_step
+    assert "continue-on-error: true" in notify_step
+    assert "BARK_TOKEN: ${{ secrets.BARK_TOKEN }}" in notify_step
+    assert "SEMANTIC_SCHOLAR_API_KEY" not in notify_step
+    assert "python -m diamond_feed.notify" in notify_step
+    assert summary_workflow.index("git push origin") < summary_workflow.index(
+        "python -m diamond_feed.notify"
+    )
 
     failure_step = _workflow_step(summary_workflow, "Propagate summary failure")
     assert "if: ${{ always() && steps.summarize.outcome == 'failure' }}" in failure_step
     assert "exit 1" in failure_step
 
 
+def test_bark_icon_is_a_512_pixel_png():
+    icon = Path("assets/diamond-bark-icon.png").read_bytes()
+
+    assert icon[:8] == b"\x89PNG\r\n\x1a\n"
+    assert icon[12:16] == b"IHDR"
+    width, height = struct.unpack(">II", icon[16:24])
+    assert (width, height) == (512, 512)
+
+
 def test_all_tracked_text_is_free_of_credentials_and_local_machine_paths():
-    text = "\n".join(
-        path.read_text(encoding="utf-8", errors="ignore") for path in _tracked_text_files()
-    )
+    tracked_text = [
+        (path, path.read_text(encoding="utf-8", errors="ignore"))
+        for path in _tracked_text_files()
+    ]
+    text = "\n".join(contents for _, contents in tracked_text)
     secret_prefix = "s" + "k-"
-    key_name = "DEEPSEEK" + "_API_KEY"
+    key_names = (
+        "DEEPSEEK" + "_API_KEY",
+        "BARK" + "_TOKEN",
+        "SEMANTIC_SCHOLAR" + "_API_KEY",
+    )
     credential_patterns = (
         re.compile(re.escape(secret_prefix) + r"[A-Za-z0-9_-]{10,}"),
         re.compile(r"(?i)authorization\s*:\s*bearer\s+[A-Za-z0-9._-]{10,}"),
+    )
+    assignment_patterns = tuple(
         re.compile(
-            rf"(?i){key_name}\s*[=:]\s*[\"']?[A-Za-z0-9_-]{{10,}}"
-        ),
+            rf"(?i){re.escape(key_name)}\s*[=:]\s*[\"']?[A-Za-z0-9_-]{{10,}}"
+        )
+        for key_name in key_names
+    )
+    synthetic_assignments = (
+        key_names[1] + "=" + "bark" + "-token-value",
+        key_names[2] + ": '" + "semantic" + "-scholar-value'",
+    )
+    allowed_references = (
+        key_names[1],
+        key_names[2],
+        "${{ secrets." + key_names[1] + " }}",
+        "${{ secrets." + key_names[2] + " }}",
     )
 
+    assert all(
+        any(pattern.search(value) for pattern in assignment_patterns)
+        for value in synthetic_assignments
+    )
+    assert not any(
+        pattern.search(value)
+        for value in allowed_references
+        for pattern in assignment_patterns
+    )
     assert not any(pattern.search(text) for pattern in credential_patterns)
+    assert not any(pattern.search(text) for pattern in assignment_patterns)
     assert not re.search(r"(?i)[A-Z]:\\Users\\[^\\\s]+", text)
     assert "deepseek-v4-flash-vision-exp" in text

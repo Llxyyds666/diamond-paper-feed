@@ -24,14 +24,18 @@ from diamond_feed.atomic import (
     validate_output_layout,
 )
 from diamond_feed.config import AppConfig, load_config
+from diamond_feed.enrich import AbstractEnricher
 from diamond_feed.focus import (
+    FOCUS_LABELS,
     FOCUS_RSS_NAME,
     load_focus_overrides,
     render_focused_rss,
 )
 from diamond_feed.models import AiDecision, PaperRecord
-from diamond_feed.normalize import group_records
+from diamond_feed.normalize import group_records, record_key
+from diamond_feed.notification import build_notification_plan, write_notification_plan
 from diamond_feed.publication import cumulative_records, load_withheld_aliases
+from diamond_feed.recommend import Recommendation, recommend_one
 from diamond_feed.render import render_rss
 from diamond_feed.state import FeedState, load_state, stage_state
 
@@ -423,6 +427,29 @@ def _summary_stats(
     )
 
 
+def _pending_groups_and_candidates(
+    state: FeedState, limit: int
+) -> tuple[dict[str, tuple[PaperRecord, list[str]]], list[str]]:
+    groups = group_records(list(state.papers.values()))
+    pending = set(state.pending_ai)
+    pending_groups = {
+        key: group for key, group in groups.items() if pending.intersection(group[1])
+    }
+    queue_position = {key: index for index, key in enumerate(state.pending_ai)}
+    keys = sorted(
+        pending_groups,
+        key=lambda key: (
+            pending_groups[key][0].published_at,
+            min(
+                queue_position[alias]
+                for alias in pending_groups[key][1]
+                if alias in pending
+            ),
+        ),
+    )[:limit]
+    return pending_groups, keys
+
+
 def run_summary(
     config: AppConfig,
     state_path: Path,
@@ -432,10 +459,16 @@ def run_summary(
     output_dir: Path = Path("."),
     policy_path: Path | None = None,
     focus_overrides_path: Path | None = None,
+    enricher: AbstractEnricher | None = None,
+    bark_enabled: bool = False,
+    notification_plan_path: Path | None = None,
 ) -> SummaryStats:
     """Process one bounded oldest-first queue slice and atomically publish its digest."""
     state_path = Path(state_path)
     output_dir = Path(output_dir)
+    notification_plan_path = (
+        Path(notification_plan_path) if notification_plan_path is not None else None
+    )
     focus_overrides_path = (
         Path(focus_overrides_path)
         if focus_overrides_path is not None
@@ -465,6 +498,8 @@ def run_summary(
         policy_path,
         focus_overrides_path,
     )
+    if bark_enabled and notification_plan_path is not None:
+        destinations = (*destinations, notification_plan_path)
     validate_output_layout(destinations)
     previous_usage = _usage_entries(usage_path)
     today_usage = _usage_for_day(previous_usage, day)
@@ -476,19 +511,15 @@ def run_summary(
     if candidate_limit == 0 or request_limit == 0:
         return SummaryStats(0, 0, 0, 0, len(state.pending_ai), False)
 
-    groups = group_records(list(state.papers.values()))
-    pending = set(state.pending_ai)
-    pending_groups = {
-        key: group for key, group in groups.items() if pending.intersection(group[1])
-    }
-    queue_position = {key: index for index, key in enumerate(state.pending_ai)}
-    candidate_keys = sorted(
-        pending_groups,
-        key=lambda key: (
-            pending_groups[key][0].published_at,
-            min(queue_position[alias] for alias in pending_groups[key][1] if alias in pending),
-        ),
-    )[:candidate_limit]
+    pending_groups, candidate_keys = _pending_groups_and_candidates(
+        state, candidate_limit
+    )
+    if enricher is not None:
+        enrichment = enricher.enrich(state, candidate_keys)
+        print(f"enriched={enrichment.enriched}")
+        pending_groups, candidate_keys = _pending_groups_and_candidates(
+            state, candidate_limit
+        )
     if not candidate_keys:
         return SummaryStats(0, 0, 0, 0, len(state.pending_ai), False)
 
@@ -552,6 +583,32 @@ def run_summary(
             raw_digest = None
         overview = _safe_fragment(raw_digest)
 
+    focus_pool = [
+        record for record in selected if set(record.categories).intersection(FOCUS_LABELS)
+    ]
+    recommendation: Recommendation | None = None
+    recommendation_record: PaperRecord | None = None
+    recommendation_failed = False
+    if bark_enabled and focus_pool and screening_complete:
+        if budget.remaining >= 1:
+            try:
+                recommendation = recommend_one(focus_pool, client, config.ai, budget)
+                recommendation_record = next(
+                    record
+                    for record in focus_pool
+                    if record_key(record) == recommendation.key
+                )
+            except (RuntimeError, ValueError) as error:
+                print(
+                    f"AI recommendation failed safely: {type(error).__name__}",
+                    file=sys.stderr,
+                )
+                recommendation = None
+                recommendation_record = None
+                recommendation_failed = True
+        else:
+            recommendation_failed = True
+
     token_after = _client_token_totals(client)
     stats = _summary_stats(
         candidates=len(candidate_keys),
@@ -596,6 +653,29 @@ def run_summary(
         commit_staged(staged)
     except Exception as commit_error:
         raise_with_cleanup(commit_error, "publish AI summary outputs", discard_staged(staged))
+    if (
+        bark_enabled
+        and stats.processed > 0
+        and not stats.failed
+        and notification_plan_path is not None
+    ):
+        try:
+            plan = build_notification_plan(
+                candidates=stats.candidates,
+                processed=stats.processed,
+                selected=stats.selected,
+                focus_selected=len(focus_pool),
+                base_url=config.publication.base_url,
+                recommendation=recommendation,
+                recommendation_record=recommendation_record,
+                recommendation_failed=recommendation_failed,
+            )
+            write_notification_plan(notification_plan_path, plan)
+        except Exception as error:
+            print(
+                f"Notification plan failed safely: {type(error).__name__}",
+                file=sys.stderr,
+            )
     return stats
 
 
@@ -605,6 +685,7 @@ def main(argv: list[str] | None = None, *, now: datetime | None = None) -> int:
     parser.add_argument("--state", type=Path, default=Path("state.json"))
     parser.add_argument("--output-dir", type=Path, default=Path("."))
     parser.add_argument("--focus-overrides", type=Path)
+    parser.add_argument("--notification-plan", type=Path)
     args = parser.parse_args(argv)
     key = os.environ.get("DEEPSEEK_API_KEY")
     if not key:
@@ -612,6 +693,11 @@ def main(argv: list[str] | None = None, *, now: datetime | None = None) -> int:
         return 2
     config = load_config(args.config)
     client = DeepSeekClient(key, config.ai)
+    enricher = AbstractEnricher(
+        os.environ.get("SEMANTIC_SCHOLAR_API_KEY"),
+        timeout_seconds=config.collection.http_timeout_seconds,
+    )
+    bark_enabled = os.environ.get("BARK_ENABLED", "").casefold() == "true"
     stats = run_summary(
         config,
         args.state,
@@ -619,6 +705,9 @@ def main(argv: list[str] | None = None, *, now: datetime | None = None) -> int:
         now or datetime.now(timezone.utc),
         output_dir=args.output_dir,
         focus_overrides_path=args.focus_overrides,
+        enricher=enricher,
+        bark_enabled=bark_enabled,
+        notification_plan_path=args.notification_plan,
     )
     print(
         f"processed={stats.processed} selected={stats.selected} "
