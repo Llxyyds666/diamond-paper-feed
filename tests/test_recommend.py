@@ -60,6 +60,7 @@ def test_recommendation_sends_complete_abstract_and_returns_exact_candidate(
     assert payload["candidates"][0]["abstract_missing"] is False
     assert payload["candidates"][0]["summary_zh"] == record.summary_zh
     assert result.key == "doi:10.1000/diamond.1"
+    assert "JSON object" in client.messages[0]["content"]
     assert budget.used == 1
     assert client.max_tokens == 512
     assert focus_names(record) == (
