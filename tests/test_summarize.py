@@ -233,7 +233,7 @@ def test_zero_same_day_budget_skips_explicit_enricher(
     assert not plan_path.exists()
 
 
-def test_first_run_processes_at_most_40_and_uses_at_most_5_requests(
+def test_first_run_processes_one_hundred_candidates_without_request_ceiling(
     tmp_path, configured_state_with_100_pending, fake_deepseek_client, app_config
 ):
     original_keys = list(load_state(configured_state_with_100_pending).pending_ai)
@@ -244,20 +244,20 @@ def test_first_run_processes_at_most_40_and_uses_at_most_5_requests(
         datetime(2026, 9, 6, tzinfo=timezone.utc),
         output_dir=tmp_path,
     )
-    assert stats.candidates == 40
-    assert stats.requests == 5
-    assert fake_deepseek_client.requests == 5
-    assert stats.processed == 40
-    assert stats.selected == 40
-    assert stats.remaining == 60
+    assert stats.candidates == 100
+    assert stats.requests == 11
+    assert fake_deepseek_client.requests == 11
+    assert stats.processed == 100
+    assert stats.selected == 100
+    assert stats.remaining == 0
     state = load_state(configured_state_with_100_pending)
-    assert state.pending_ai == original_keys[40:]
+    assert state.pending_ai == []
     assert (tmp_path / "ai_summary_feed.xml").exists()
     assert (tmp_path / "ai_summary.html").exists()
     assert (tmp_path / "ai_usage.json").exists()
 
 
-def test_same_utc_day_reuses_persisted_candidate_and_request_limits(
+def test_same_utc_day_reuses_persisted_candidate_limit(
     tmp_path, configured_state_with_100_pending, app_config
 ):
     first_client = RecordingClient()
@@ -278,15 +278,15 @@ def test_same_utc_day_reuses_persisted_candidate_and_request_limits(
     )
     usage = json.loads((tmp_path / "ai_usage.json").read_text(encoding="utf-8"))
 
-    assert (first.candidates, first.requests) == (40, 5)
+    assert (first.candidates, first.requests) == (100, 11)
     assert (second.candidates, second.requests, second.processed) == (0, 0, 0)
     assert second_client.payloads == []
     assert usage[-1]["date"] == "2026-09-07"
-    assert usage[-1]["candidates"] == 40
-    assert usage[-1]["requests"] == 5
+    assert usage[-1]["candidates"] == 100
+    assert usage[-1]["requests"] == 11
 
 
-def test_failed_attempt_is_persisted_and_reduces_same_day_request_budget(
+def test_failed_attempt_is_persisted_and_reduces_same_day_candidate_allowance(
     tmp_path, configured_state_with_100_pending, failing_deepseek_client, app_config
 ):
     previous_feed = "<rss>previous feed</rss>"
@@ -304,7 +304,7 @@ def test_failed_attempt_is_persisted_and_reduces_same_day_request_budget(
     )
     assert (first.failed, first.candidates, first.requests, first.processed) == (
         True,
-        40,
+        100,
         1,
         0,
     )
@@ -324,15 +324,16 @@ def test_failed_attempt_is_persisted_and_reduces_same_day_request_budget(
     usage = json.loads((tmp_path / "ai_usage.json").read_text(encoding="utf-8"))[-1]
     assert (second.candidates, second.requests) == (0, 0)
     assert second_client.payloads == []
-    assert (usage["candidates"], usage["requests"]) == (40, 1)
+    assert (usage["candidates"], usage["requests"]) == (100, 1)
 
 
-def test_next_utc_day_restores_candidate_and_request_limits(
+def test_next_utc_day_restores_candidate_limit(
     tmp_path, configured_state_with_100_pending, app_config
 ):
     shanghai = timezone(timedelta(hours=8))
+    constrained = replace(app_config, ai=replace(app_config.ai, daily_candidates=40))
     run_summary(
-        app_config,
+        constrained,
         configured_state_with_100_pending,
         RecordingClient(),
         datetime(2026, 9, 8, 7, 59, tzinfo=shanghai),
@@ -340,7 +341,7 @@ def test_next_utc_day_restores_candidate_and_request_limits(
     )
     client = RecordingClient()
     stats = run_summary(
-        app_config,
+        constrained,
         configured_state_with_100_pending,
         client,
         datetime(2026, 9, 8, 8, 0, tzinfo=shanghai),
@@ -355,7 +356,7 @@ def test_next_utc_day_restores_candidate_and_request_limits(
     ]
 
 
-def test_same_day_prior_usage_leaves_only_remaining_request_attempts(
+def test_same_day_prior_requests_never_reduce_candidate_processing(
     tmp_path, configured_state_with_100_pending, app_config
 ):
     prior = [{
@@ -380,12 +381,12 @@ def test_same_day_prior_usage_leaves_only_remaining_request_attempts(
     )
     usage = json.loads((tmp_path / "ai_usage.json").read_text(encoding="utf-8"))[-1]
 
-    assert (stats.candidates, stats.processed, stats.requests, stats.failed) == (30, 20, 2, True)
-    assert len(client.payloads) == 2
-    assert (usage["candidates"], usage["processed"], usage["requests"]) == (40, 30, 6)
+    assert (stats.candidates, stats.processed, stats.requests, stats.failed) == (90, 90, 10, False)
+    assert len(client.payloads) == 10
+    assert (usage["candidates"], usage["processed"], usage["requests"]) == (100, 100, 14)
 
 
-def test_candidate_limit_selects_the_oldest_40_even_if_queue_order_is_stale(
+def test_candidate_limit_processes_all_one_hundred_even_if_queue_order_is_stale(
     tmp_path, configured_state_with_100_pending, fake_deepseek_client, app_config
 ):
     state = load_state(configured_state_with_100_pending)
@@ -402,8 +403,8 @@ def test_candidate_limit_selects_the_oldest_40_even_if_queue_order_is_stale(
         output_dir=tmp_path,
     )
 
-    assert stats.candidates == 40
-    assert load_state(configured_state_with_100_pending).pending_ai == original_keys[:60]
+    assert stats.candidates == 100
+    assert load_state(configured_state_with_100_pending).pending_ai == []
 
 
 def test_ai_failure_preserves_previous_outputs_and_queue(
@@ -428,7 +429,7 @@ def test_ai_failure_preserves_previous_outputs_and_queue(
     for name, contents in previous.items():
         assert (tmp_path / name).read_text(encoding="utf-8") == contents
     usage = json.loads((tmp_path / "ai_usage.json").read_text(encoding="utf-8"))
-    assert (usage[0]["candidates"], usage[0]["requests"]) == (40, 1)
+    assert (usage[0]["candidates"], usage[0]["requests"]) == (100, 1)
     assert configured_state_with_100_pending.read_text(encoding="utf-8") == before
     assert not list(tmp_path.glob("*.tmp"))
 
@@ -444,7 +445,9 @@ def test_timeout_failure_is_logged_safely_and_marks_token_usage_incomplete(
         calls += 1
         raise TimeoutError(f"provider may still be billing {secret}")
 
-    client = DeepSeekClient(secret, app_config.ai, transport=timeout_transport)
+    client = DeepSeekClient(
+        secret, app_config.ai, transport=timeout_transport, wait=lambda _: None
+    )
     stats = run_summary(
         app_config,
         configured_state_with_100_pending,
@@ -455,10 +458,10 @@ def test_timeout_failure_is_logged_safely_and_marks_token_usage_incomplete(
     usage = json.loads((tmp_path / "ai_usage.json").read_text(encoding="utf-8"))[0]
     captured = capsys.readouterr()
 
-    assert (calls, stats.requests, stats.processed) == (1, 1, 0)
+    assert (calls, stats.requests, stats.processed) == (3, 3, 0)
     assert stats.token_usage_complete is False
     assert usage["token_usage_complete"] is False
-    assert "TimeoutError status=none attempt=1" in captured.err
+    assert "TimeoutError status=none attempt=3" in captured.err
     assert secret not in captured.err
 
 
@@ -480,7 +483,7 @@ def test_later_batch_failure_publishes_successful_batch_and_leaves_rest_queued(
         app_config, configured_state_with_100_pending, client, NOW, output_dir=tmp_path
     )
 
-    assert stats.candidates == 40
+    assert stats.candidates == 100
     assert stats.processed == 10
     assert stats.selected == 10
     assert stats.requests == 2
@@ -530,7 +533,7 @@ def test_partial_screening_failure_suppresses_recommendation_and_notification_pl
     assert not plan_path.exists()
 
 
-def test_screening_retry_that_consumes_reserve_uses_fallback_and_keeps_unfinished_batches(
+def test_screening_extra_attempt_is_counted_without_a_global_request_ceiling(
     tmp_path, configured_state_with_100_pending, app_config
 ):
     class RetryConsumesReserve(RecordingClient):
@@ -720,7 +723,7 @@ def test_invalid_digest_html_falls_back_without_losing_valid_summary_or_allowing
     assert "&lt;script&gt;" in html
 
 
-def test_bark_enabled_recommends_after_digest_and_writes_plan_after_publication(
+def test_bark_enabled_recommends_before_digest_and_writes_plan_after_publication(
     tmp_path, diamond_records, app_config, monkeypatch
 ):
     state_path = tmp_path / "state.json"
@@ -760,10 +763,10 @@ def test_bark_enabled_recommends_after_digest_and_writes_plan_after_publication(
     assert stats.requests == 3
     assert [set(payload) for payload in client.payloads] == [
         {"papers", "categories", "required_fields"},
-        {"selected"},
         {"candidates"},
+        {"selected"},
     ]
-    assert client.payloads[2]["candidates"][0]["abstract"] == "A" * 1301
+    assert client.payloads[1]["candidates"][0]["abstract"] == "A" * 1301
     assert (stats.prompt_tokens, stats.completion_tokens, stats.total_tokens) == (30, 9, 39)
     assert (usage["prompt_tokens"], usage["completion_tokens"], usage["total_tokens"]) == (
         30,
@@ -829,32 +832,6 @@ def test_invalid_recommendation_writes_failure_plan_without_rolling_back_feeds(
     captured = capsys.readouterr()
     assert captured.err == "AI recommendation failed safely: ValueError\n"
     assert secret not in captured.err
-
-
-def test_exhausted_shared_budget_writes_failure_plan_without_extra_request(
-    tmp_path, diamond_records, app_config
-):
-    state_path = tmp_path / "state.json"
-    _save_records(state_path, diamond_records[:1])
-    constrained = replace(app_config, ai=replace(app_config.ai, max_requests=2))
-    client = NotificationClient()
-    plan_path = tmp_path / "notification.json"
-
-    stats = run_summary(
-        constrained,
-        state_path,
-        client,
-        NOW,
-        output_dir=tmp_path,
-        bark_enabled=True,
-        notification_plan_path=plan_path,
-    )
-
-    assert stats.requests == 2
-    assert len(client.payloads) == 2
-    assert load_notification_plan(plan_path).messages[1].body == (
-        "今日推荐生成失败，器件方向 RSS 已正常更新"
-    )
 
 
 def test_bark_disabled_makes_no_recommendation_request_or_plan(

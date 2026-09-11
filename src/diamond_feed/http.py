@@ -6,6 +6,8 @@ from urllib.request import Request, urlopen
 
 from curl_cffi import requests as curl_requests
 
+from diamond_feed.retry import RetryPolicy, call_with_retry, retryable_http_status
+
 
 USER_AGENT = "diamond-paper-feed/0.1 (resilient RSS collector)"
 
@@ -18,15 +20,19 @@ class HttpResult:
 
 
 class FetchError(Exception):
-    def __init__(self, *, status: int | None, category: str, detail: str):
+    def __init__(
+        self,
+        *,
+        status: int | None,
+        category: str,
+        detail: str,
+        retryable: bool = False,
+    ):
         super().__init__(detail)
         self.status = status
         self.category = category
         self.detail = detail
-
-
-def _retryable_status(status: int) -> bool:
-    return status == 429 or 500 <= status <= 599
+        self.retryable = retryable
 
 
 def _transport_failure(error: Exception) -> tuple[str, bool]:
@@ -75,40 +81,42 @@ def fetch_bytes(url: str, timeout: float, attempts: int) -> HttpResult:
     if attempts < 1:
         raise ValueError("attempts must be at least 1")
 
+    policy = RetryPolicy(
+        attempts=attempts,
+        delays=tuple(float(2**index) for index in range(attempts - 1)),
+    )
     fetch_once = _fetch_with_mdpi if "www.mdpi.com" in url else _fetch_with_urllib
-    for attempt in range(attempts):
+
+    def operation() -> HttpResult:
         try:
             result = fetch_once(url, timeout)
-            if _retryable_status(result.status):
-                raise FetchError(
-                    status=result.status,
-                    category=f"http_{result.status}",
-                    detail=f"HTTP {result.status}",
-                )
-            if result.status >= 400:
-                raise FetchError(
-                    status=result.status,
-                    category=f"http_{result.status}",
-                    detail=f"HTTP {result.status}",
-                )
-            return result
         except HTTPError as error:
-            failure = FetchError(
+            raise FetchError(
                 status=error.code,
                 category=f"http_{error.code}",
                 detail=f"HTTP {error.code}",
-            )
-        except FetchError as error:
-            failure = error
+                retryable=retryable_http_status(error.code),
+            ) from error
         except Exception as error:
             category, retryable = _transport_failure(error)
-            failure = FetchError(status=None, category=category, detail=category)
-            if not retryable:
-                raise failure from error
+            raise FetchError(
+                status=None,
+                category=category,
+                detail=category,
+                retryable=retryable,
+            ) from error
+        if result.status >= 400:
+            raise FetchError(
+                status=result.status,
+                category=f"http_{result.status}",
+                detail=f"HTTP {result.status}",
+                retryable=retryable_http_status(result.status),
+            )
+        return result
 
-        retryable = failure.status is None or _retryable_status(failure.status)
-        if not retryable or attempt == attempts - 1:
-            raise failure
-        time.sleep(2**attempt)
-
-    raise AssertionError("unreachable")
+    return call_with_retry(
+        operation,
+        lambda error: isinstance(error, FetchError) and error.retryable,
+        policy=policy,
+        wait=time.sleep,
+    )

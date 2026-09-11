@@ -1,11 +1,13 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 import json
+from urllib.error import HTTPError
 
 import pytest
 
 from diamond_feed import summarize
-from diamond_feed.evaluate import balance_change, run_evaluation
+from diamond_feed import evaluate
+from diamond_feed.evaluate import balance_change, read_balance, run_evaluation
 
 
 def test_full_evaluation_preserves_production_queue_and_usage(
@@ -69,3 +71,52 @@ def test_balance_report_discloses_only_change_not_private_balances():
     assert delta == {"CNY": "0.059998"}
     assert balance_change(None, {"CNY": Decimal("15.94")}) is None
     assert balance_change({"CNY": Decimal("15.94")}, {"CNY": Decimal("16.00")}) is None
+
+
+def test_balance_request_retries_transient_failures(monkeypatch):
+    calls = []
+    waits = []
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self):
+            return b'{"balance_infos":[{"currency":"CNY","total_balance":"8.50"}]}'
+
+    outcomes = iter([TimeoutError("temporary"), TimeoutError("temporary"), Response()])
+
+    def fake_urlopen(request, timeout):
+        calls.append((request, timeout))
+        outcome = next(outcomes)
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
+    monkeypatch.setattr(evaluate, "urlopen", fake_urlopen)
+
+    assert read_balance(
+        "private-key", "https://api.deepseek.com", wait=waits.append
+    ) == {"CNY": Decimal("8.50")}
+    assert len(calls) == 3
+    assert waits == [1.0, 2.0]
+
+
+def test_balance_request_does_not_retry_permanent_401(monkeypatch):
+    calls = []
+    waits = []
+
+    def fake_urlopen(request, timeout):
+        calls.append((request, timeout))
+        raise HTTPError(request.full_url, 401, "private body", None, None)
+
+    monkeypatch.setattr(evaluate, "urlopen", fake_urlopen)
+
+    assert read_balance(
+        "private-key", "https://api.deepseek.com", wait=waits.append
+    ) is None
+    assert len(calls) == 1
+    assert waits == []

@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from diamond_feed.ai import RequestBudget
+from diamond_feed.ai import RequestBudget, RequestCounter
 from diamond_feed.normalize import record_key
 from diamond_feed.recommend import focus_names, recommend_one
 
@@ -23,8 +23,10 @@ class RecommendationClient:
 class RetryingRecommendationClient:
     def __init__(self):
         self.attempts = 0
+        self.counter = None
 
     def complete_json(self, messages, max_tokens, budget):
+        self.counter = budget
         budget.consume()
         self.attempts += 1
         budget.consume()
@@ -85,19 +87,20 @@ def test_missing_abstract_includes_complete_chinese_summary_fallback(
     assert candidate["summary_zh"] == record.summary_zh
 
 
-def test_recommendation_allows_only_one_attempt_from_shared_budget(
+def test_recommendation_allows_one_retry_from_shared_budget(
     diamond_records, ai_config
 ):
     record = diamond_records[0]
     record.categories = ["diamond-power-rf-detectors"]
     client = RetryingRecommendationClient()
-    budget = RequestBudget(3)
+    counter = RequestCounter()
 
-    with pytest.raises(RuntimeError, match="request budget exhausted"):
-        recommend_one([record], client, ai_config, budget)
+    result = recommend_one([record], client, ai_config, counter)
 
-    assert client.attempts == 1
-    assert budget.used == 1
+    assert result.key == "doi:10.1000/diamond.1"
+    assert client.attempts == 2
+    assert client.counter is counter
+    assert counter.used == 2
 
 
 @pytest.mark.parametrize(

@@ -4,7 +4,9 @@
 
 Diamond Paper Feed 是一个面向金刚石研究的高召回文献监测项目。它每 6 小时从期刊 RSS、OpenAlex、Crossref 和 arXiv 收集论文，统一元数据、按 DOI 或题名去重，并先发布不依赖 AI 的 `filtered_feed.xml`。每天北京时间 08:00，独立的摘要工作流先通过 Semantic Scholar 和 OpenAIRE 补全缺失摘要，再使用 DeepSeek 对固定数量的待处理论文做相关性复筛、分类、中文摘要和器件论文推荐，最后发布综合 AI RSS、器件方向 RSS 与网页。
 
-采集和 AI 摘要完全解耦。第一次运行会回溯数据库最近 30 天，可能一次抓到很多论文；这些候选会先安全地进入持久队列，而不是全部提交给 API。每天最多只向 AI 提交 40 篇候选，筛选固定为四批、每日概览一次、器件论文推荐一次，因此每天最多 6 次 DeepSeek 请求，所有失败尝试也计数。大规模首次抓取不会突破固定调用预算。
+采集和 AI 摘要完全解耦。第一次运行会回溯数据库最近 30 天，可能一次抓到很多论文；这些候选会先安全地进入持久队列，而不是全部提交给 API。正式日报每天最多向 AI 提交 100 篇候选，每批最多 10 篇。不设置每日 DeepSeek 请求次数上限，但每个逻辑请求最多尝试 3 次，因此重试不会无限进行。当前约 1082 篇历史积压需约 11 天消化；积压清空后通常每天约新增 5–20 篇宽口径候选，通常只需一到两批筛选。
+
+所有应用层外部 HTTP 请求统一处理瞬时故障：连接错误、超时、HTTP 408、425、429 和 5xx 会在 1 秒、2 秒间隔后重试，每个逻辑请求最多尝试 3 次；认证失败、余额不足、资源不存在、参数错误等永久 4xx 只请求一次。实际请求次数和 DeepSeek token 仍写入 `ai_usage.json`。
 
 项目生成：
 
@@ -109,7 +111,7 @@ python -m diamond_feed.summarize --config paper_feed_config.json --state state.j
 - `ai.model`：`deepseek-v4-flash-vision-exp`。
 - `publication.base_url`：`https://llxyyds666.github.io/diamond-paper-feed`。
 
-修改配置后先运行 `python -m pytest -q`。代码会拒绝非正数、非 HTTPS AI 地址、未知模型，以及不能为最终摘要预留一次请求的预算组合。
+修改配置后先运行 `python -m pytest -q`。代码会拒绝非正数、非 HTTPS AI 地址、未知模型、未知配置项，以及高于公开安全上限的候选数或 token 限制。
 
 ## DeepSeek Secret setup
 
@@ -126,8 +128,8 @@ python -m diamond_feed.summarize --config paper_feed_config.json --state state.j
 在仓库页面打开 **Actions**：
 
 1. 选择 **Collect diamond literature**，点击 **Run workflow**，分支选 `main`。它会测试、采集并仅提交 `filtered_feed.xml`、`state.json` 和 `fetch_failures.tsv`。
-2. 等采集完成后选择 **Summarize diamond literature**，点击 **Run workflow**，分支选 `main`。它会按硬限制处理队列，并仅提交 `ai_summary_feed.xml`、`ai_summary.html`、`device_focus_feed.xml`、`ai_usage.json` 和 `state.json`。
-3. 在日志和 `ai_usage.json` 中确认 `candidates <= 40`、`requests <= 6`，并确认工作流没有输出凭据。
+2. 等采集完成后选择 **Summarize diamond literature**，点击 **Run workflow**，分支选 `main`。它会按每日 100 篇候选上限处理队列，并仅提交 `ai_summary_feed.xml`、`ai_summary.html`、`device_focus_feed.xml`、`ai_usage.json` 和 `state.json`。
+3. 在日志和 `ai_usage.json` 中确认 `candidates <= 100`，检查实际 `requests` 和 token 用量，并确认工作流没有输出凭据。`requests` 是实际尝试次数，不再作为停止任务的每日配额。
 
 定时计划为：采集每 6 小时一次；摘要每天 UTC 00:00，即 Asia/Shanghai 08:00。两个工作流共用同一并发组并在推送前 rebase，避免同一分支重叠写状态。
 
@@ -137,7 +139,7 @@ python -m diamond_feed.summarize --config paper_feed_config.json --state state.j
 
 补全成功的原始摘要会完整保存到 `state.json`，不会按筛选输入的 1200 字符上限截断。即使论文此前只有题名并已作出 AI 判定，后来补到摘要也会重新加入 `pending_ai`，以便基于新证据复筛。Semantic Scholar 和 OpenAIRE 都是元数据流量，不调用 DeepSeek，因此不产生 DeepSeek token 成本。
 
-筛选仍最多处理 40 篇，分为四批、每批最多 10 篇；筛选结束后每日概览使用一次请求，存在器件方向候选并启用 Bark 时，论文推荐再使用一次请求。推荐请求对每个候选始终同时保留已存的 `summary_zh`，并包含完整原始摘要，不截断；如果原始摘要仍缺失，则明确标记缺失，并以中文摘要作为选择依据的回退信息。
+正式筛选每天最多处理 100 篇，每批最多 10 篇；筛选结束后每日概览使用一个逻辑请求，存在器件方向候选并启用 Bark 时，论文推荐再使用一个逻辑请求，而且推荐先于概览执行。DeepSeek 没有每日请求次数总闸门；单个筛选、推荐或概览请求遇到瞬时故障或无效 JSON 时最多尝试三次。推荐请求对每个候选始终同时保留已存的 `summary_zh`，并包含完整原始摘要，不截断；如果原始摘要仍缺失，则明确标记缺失，并以中文摘要作为选择依据的回退信息。
 
 ## Bark alerts
 
@@ -146,7 +148,7 @@ Bark 通过官方 JSON 端点 `https://api.day.app/push` 发送固定两条消�
 1. “金刚石文献日报”列出今日候选、完成筛选、综合入选和器件方向篇数；点击打开 `ai_summary.html`。
 2. “今日论文推荐”给出论文标题、方向和推荐理由；点击打开原论文。若当日没有器件方向入选，正文为 `今日无器件方向推荐`；若器件方向 RSS 已发布但推荐请求失败，正文为 `今日推荐生成失败，器件方向 RSS 已正常更新`。
 
-通知步骤只在正常摘要成功且 GitHub 推送成功后运行；推送没有发生时不会发送。两条消息各自只尝试一次，Bark 失败不会回滚已发布的 feed，也不会让发布工作流失败。同日配额已用尽或没有候选的 no-op、独立评估、离线 promotion、单请求 smoke-test 和 collection 都不发送通知。
+通知步骤只在正常摘要成功且 GitHub 推送成功后运行；推送没有发生时不会发送。两条消息分别独立重试：每条遇到超时、连接错误、HTTP 408/425/429/5xx 或损坏的成功响应时，最多尝试三次；第一条最终失败也不阻止第二条。Bark 失败不会回滚已发布的 feed，也不会让发布工作流失败。同日候选额度已用尽或没有候选的 no-op、独立评估、离线 promotion、单次逻辑 smoke-test 和 collection 都不发送通知。
 
 两条 Bark 消息共用仓库自托管的金刚石器件图标 `assets/diamond-bark-icon.png`，公开地址为 <https://llxyyds666.github.io/diamond-paper-feed/assets/diamond-bark-icon.png>。自定义通知图标需要 iOS 15 或更高版本；图标 URL 作为 JSON `icon` 字段发送，不会拼接到包含设备密钥的请求地址。
 
@@ -160,6 +162,8 @@ Bark 通过官方 JSON 端点 `https://api.day.app/push` 发送固定两条消�
 - 中文摘要页：<https://llxyyds666.github.io/diamond-paper-feed/ai_summary.html>
 
 在 Zotero 中选择 **File → New Library → New Feed → From URL**（中文界面为“文件 → 新建文献库 → 新建订阅 → 从 URL”），粘贴上面的任一 RSS 地址并保存。刚入门且主要跟踪导师指定方向时，建议优先订阅三个器件方向精选 RSS；需要观察整个金刚石领域时再订阅综合 AI RSS 或高召回 RSS。若 Pages 刚启用返回 404，等待本次 Pages 部署完成后刷新。
+
+若线上 XML 已经增加而 Zotero 数量长时间不变，先重启 Zotero，再右键订阅选择刷新。本次排查中，线上器件 RSS 已从 18 篇更新到 23 篇，但 Zotero 的本地刷新时间仍停在前一天；重启 Zotero 后原订阅立即恢复到 23 篇，因此无需删除订阅，也无需修改 RSS URL 或 GUID。
 
 ## Cumulative publication and offline promotion
 
@@ -182,14 +186,14 @@ python -m diamond_feed.promote --report evaluations/34175877785/report.json --st
 ## AI hard limits
 
 - 模型固定为 `deepseek-v4-flash-vision-exp`，Base URL 固定为 `https://api.deepseek.com`。
-- 每天最多选择 40 篇候选提交给 AI，按最旧待处理项优先。
-- 每批最多 10 篇，因此筛选阶段最多 4 个成功批次。
-- 筛选使用四批，每批最多 10 篇；每日概览使用一次请求，器件论文推荐使用一次请求。每天最多 6 次 DeepSeek 请求，所有失败尝试也计数；第 6 次后无条件停止。
+- 正式日报每天最多选择 100 篇候选提交给 AI，按最旧待处理项优先。
+- 每批最多 10 篇，因此满额运行最多包含 10 个筛选批次；推荐和概览各是一个可选逻辑请求。
+- 不设置每日 DeepSeek 请求次数上限。每个逻辑请求只对瞬时错误最多尝试 3 次，永久 4xx 只尝试一次，所有实际尝试都计入 `ai_usage.json`。
 - 三个器件方向标签复用上述筛选请求，不增加请求次数；仅可能因输出标签而增加极少量 token。
 - 只有筛选请求会把每篇摘要截断到 1200 个 Unicode 字符；推荐请求使用完整原始摘要，不截断，并同时保留已存的中文摘要作为原始摘要缺失时的明确回退。
 - 每个筛选请求的输出上限为 4096 token；最终摘要请求的输出上限为 8192 token。
-- 采集会先持久化候选。首次 30 天回溯形成的大队列会跨天保留并按每天 40 篇逐步处理，不会扩大当天请求预算。
-- `ai_usage.json` 只保存日期、候选数、成功数、请求数、token 统计及其完整性标记。超时不会自动重试；`token_usage_complete=false` 时，文件中的 token 只是已收到响应的部分，应以 DeepSeek 控制台为准。
+- 采集会先持久化候选。首次 30 天回溯形成的大队列会跨天保留并按每天 100 篇逐步处理，不会突破当天候选上限。
+- `ai_usage.json` 只保存日期、候选数、成功数、实际请求尝试数、token 统计及其完整性标记。`token_usage_complete=false` 时，文件中的 token 只是已收到响应的部分，应以 DeepSeek 控制台为准。
 
 ## Relevance policy and reproducible evaluation
 
@@ -197,7 +201,7 @@ python -m diamond_feed.promote --report evaluations/34175877785/report.json --st
 
 采集及 AI 待处理队列按 DOI、arXiv DOI/URL/版本标识、Figshare 版本标识合并；不同 DOI 的同名论文不会仅按标题合并。AI 每个唯一候选只判一次，所有原始别名共享结论。矛盾输出会保留队列等待复核，不盲目重试。
 
-手动 `Evaluate full daily digest` 可填写 `baseline=evaluations/34174147048/replay-inputs.json`，重放原始 40 条记录。旧报告未保存作者；该输入快照从原运行的固定 Git 历史恢复作者，并保留原报告不变。新报告已包含作者，后续可直接作 baseline；不完整的旧报告会在模型请求前报错，绝不从当前生产库回填字段。评估使用独立临时状态与费用记录，不消费或修改正式队列；去重后候选数、原始记录数分别统计。仍最多 5 次模型请求，不会因回归测试扩大日常预算。评估额外费用独立产生。
+手动 `Evaluate full daily digest` 可填写 `baseline=evaluations/34174147048/replay-inputs.json`，重放原始 40 条记录。旧报告未保存作者；该输入快照从原运行的固定 Git 历史恢复作者，并保留原报告不变。新报告已包含作者，后续可直接作 baseline；不完整的旧报告会在模型请求前报错，绝不从当前生产库回填字段。评估使用独立临时状态与费用记录，不消费或修改正式队列；去重后候选数、原始记录数分别统计。隔离评测仍固定最多 40 篇、最多 5 个逻辑模型请求，每个逻辑请求适用相同的三次瞬时故障重试，不会因正式日报上调到 100 篇而扩大评测样本。评估额外费用独立产生。
 
 `evaluations/34174147048/review_labels.json` 是实测前按保存的标题/摘要整理的复核标签；存在证据不足项，不把程序测试通过或单批样本一致率宣传为全库准确率。
 
@@ -206,7 +210,7 @@ python -m diamond_feed.promote --report evaluations/34175877785/report.json --st
 `fetch_failures.tsv` 的列为 `timestamp`、`category`、`url`、`detail`。每次采集会重新生成本轮报告，单个来源失败不阻断其他来源。
 
 - 硬失败：稳定 `http_404`、`http_410`、稳定 `parse_error` 和已确认停用的端点。RSS 清单验证时连续确认后才移除，并优先寻找官方替代地址。
-- 软失败：`timeout`、临时 `url_error`/`network_error`、HTTP 429/5xx 等瞬时网络问题，以及 `empty_feed`。这些来源保留在清单中，等待下轮恢复。
+- 软失败：`timeout`、临时 `url_error`/`network_error`、HTTP 408/425/429/5xx 等瞬时网络问题，以及 `empty_feed`。这些来源保留在清单中，等待下轮恢复。
 - HTTP 403 可能是出版商反爬。没有经真实 GET 验证的官方替代时，期刊改由数据库覆盖。
 
 当全部来源失败时，采集以非零状态退出，不覆盖上一版 `filtered_feed.xml` 或 `state.json`。DeepSeek 认证、余额、限流、超时或 JSON 校验失败时，待处理论文不会丢失，最后一版有效的 `ai_summary_feed.xml`、`device_focus_feed.xml` 和 `ai_summary.html` 也不会被覆盖；部分成功只移除已成功处理的队列项。
@@ -236,7 +240,7 @@ python -m pytest tests/test_source_tools.py tests/test_rss_source.py -q
 
 - 工作流失败但 `state.json` 可解析：保留文件并重新运行失败的工作流。队列和上一版摘要会继续使用。
 - `state.json` 损坏：先在 GitHub 的提交历史中找到最近一个通过测试的版本，下载或 `git restore --source=<good-commit> -- state.json`，运行 `python -m pytest -q`，再手动运行采集。这样保留已有去重键和队列。
-- 必须从空状态重建：先把损坏文件改名保存到仓库外，再删除工作副本中的 `state.json` 并运行采集。系统会重新回溯 30 天，形成新的大队列，仍只按每天 40 篇处理。确认恢复完成前不要提交损坏备份。
+- 必须从空状态重建：先把损坏文件改名保存到仓库外，再删除工作副本中的 `state.json` 并运行采集。系统会重新回溯 30 天，形成新的大队列，仍只按每天 100 篇处理。确认恢复完成前不要提交损坏备份。
 - 摘要文件损坏但状态正常：从最近有效提交恢复 `ai_summary_feed.xml`、`device_focus_feed.xml`、`ai_summary.html` 和 `ai_usage.json`，再运行摘要工作流。AI 失败不会主动覆盖最后有效摘要。
 
 恢复后运行：

@@ -14,7 +14,7 @@ import sys
 from typing import Protocol, Sequence
 from urllib.parse import urlsplit
 
-from diamond_feed.ai import CATEGORIES, DeepSeekClient, RequestBudget, screen_batch
+from diamond_feed.ai import CATEGORIES, DeepSeekClient, RequestCounter, screen_batch
 from diamond_feed.atomic import (
     StagedFile,
     commit_staged,
@@ -76,7 +76,7 @@ class JsonClient(Protocol):
         self,
         messages: Sequence[dict[str, object]],
         max_tokens: int,
-        budget: RequestBudget,
+        counter: RequestCounter,
     ) -> object: ...
 
 
@@ -504,11 +504,9 @@ def run_summary(
     previous_usage = _usage_entries(usage_path)
     today_usage = _usage_for_day(previous_usage, day)
     used_candidates = int(today_usage["candidates"]) if today_usage is not None else 0
-    used_requests = int(today_usage["requests"]) if today_usage is not None else 0
     candidate_limit = max(0, config.ai.daily_candidates - used_candidates)
-    request_limit = max(0, config.ai.max_requests - used_requests)
 
-    if candidate_limit == 0 or request_limit == 0:
+    if candidate_limit == 0:
         return SummaryStats(0, 0, 0, 0, len(state.pending_ai), False)
 
     pending_groups, candidate_keys = _pending_groups_and_candidates(
@@ -523,17 +521,19 @@ def run_summary(
     if not candidate_keys:
         return SummaryStats(0, 0, 0, 0, len(state.pending_ai), False)
 
-    budget = RequestBudget(request_limit)
+    counter = RequestCounter()
     token_before = _client_token_totals(client)
     decisions: list[AiDecision] = []
     screening_failed = False
     for offset in range(0, len(candidate_keys), config.ai.batch_size):
-        if budget.remaining == 0:
-            screening_failed = True
-            break
         keys = candidate_keys[offset : offset + config.ai.batch_size]
         try:
-            batch = screen_batch([pending_groups[key][0] for key in keys], client, config.ai, budget)
+            batch = screen_batch(
+                [pending_groups[key][0] for key in keys],
+                client,
+                config.ai,
+                counter,
+            )
         except (RuntimeError, ValueError) as error:
             print(f"AI screening failed safely: {error}", file=sys.stderr)
             screening_failed = True
@@ -547,7 +547,7 @@ def run_summary(
             candidates=len(candidate_keys),
             processed=0,
             selected=0,
-            requests=budget.used,
+            requests=counter.used,
             remaining=len(state.pending_ai),
             failed=True,
             token_before=token_before,
@@ -571,18 +571,7 @@ def run_summary(
         group_state = FeedState(papers={key: state.papers[key] for key in member_keys})
         selected.extend(cumulative_records(group_state, withheld_aliases))
 
-    overview = None
     screening_complete = not screening_failed and len(decisions) == len(candidate_keys)
-    if selected and screening_complete and budget.remaining >= 1:
-        try:
-            raw_digest = client.complete_json(
-                _digest_messages(selected), config.ai.digest_max_tokens, budget
-            )
-        except (RuntimeError, ValueError) as error:
-            print(f"AI digest failed safely: {error}", file=sys.stderr)
-            raw_digest = None
-        overview = _safe_fragment(raw_digest)
-
     focus_pool = [
         record for record in selected if set(record.categories).intersection(FOCUS_LABELS)
     ]
@@ -590,31 +579,39 @@ def run_summary(
     recommendation_record: PaperRecord | None = None
     recommendation_failed = False
     if bark_enabled and focus_pool and screening_complete:
-        if budget.remaining >= 1:
-            try:
-                recommendation = recommend_one(focus_pool, client, config.ai, budget)
-                recommendation_record = next(
-                    record
-                    for record in focus_pool
-                    if record_key(record) == recommendation.key
-                )
-            except (RuntimeError, ValueError) as error:
-                print(
-                    f"AI recommendation failed safely: {type(error).__name__}",
-                    file=sys.stderr,
-                )
-                recommendation = None
-                recommendation_record = None
-                recommendation_failed = True
-        else:
+        try:
+            recommendation = recommend_one(focus_pool, client, config.ai, counter)
+            recommendation_record = next(
+                record
+                for record in focus_pool
+                if record_key(record) == recommendation.key
+            )
+        except (RuntimeError, ValueError) as error:
+            print(
+                f"AI recommendation failed safely: {type(error).__name__}",
+                file=sys.stderr,
+            )
+            recommendation = None
+            recommendation_record = None
             recommendation_failed = True
+
+    overview = None
+    if selected and screening_complete:
+        try:
+            raw_digest = client.complete_json(
+                _digest_messages(selected), config.ai.digest_max_tokens, counter
+            )
+        except (RuntimeError, ValueError) as error:
+            print(f"AI digest failed safely: {error}", file=sys.stderr)
+            raw_digest = None
+        overview = _safe_fragment(raw_digest)
 
     token_after = _client_token_totals(client)
     stats = _summary_stats(
         candidates=len(candidate_keys),
         processed=len(decisions),
         selected=len(selected),
-        requests=budget.used,
+        requests=counter.used,
         remaining=len(state.pending_ai),
         failed=screening_failed or len(decisions) < len(candidate_keys),
         token_before=token_before,

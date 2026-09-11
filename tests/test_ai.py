@@ -4,7 +4,7 @@ from urllib.error import HTTPError
 
 import pytest
 
-from diamond_feed.ai import DeepSeekClient, RequestBudget, screen_batch
+from diamond_feed.ai import DeepSeekClient, RequestBudget, RequestCounter, screen_batch
 from diamond_feed.normalize import record_key
 
 
@@ -128,23 +128,36 @@ def test_screening_accepts_the_json_object_decisions_wrapper(ai_config, diamond_
     assert [decision.key for decision in decisions] == [key]
 
 
-def test_ambiguous_timeout_is_not_retried_or_reported_as_zero_usage(ai_config, diamond_records):
+def test_timeout_retries_three_times_and_reports_incomplete_usage(ai_config, diamond_records):
     calls = 0
+    waits = []
 
     def failing_transport(url, headers, payload, timeout):
         nonlocal calls
         calls += 1
         raise TimeoutError("timeout")
 
-    budget = RequestBudget(5)
-    client = DeepSeekClient("test-api-key", ai_config, transport=failing_transport)
+    counter = RequestCounter()
+    client = DeepSeekClient(
+        "test-api-key", ai_config, transport=failing_transport, wait=waits.append
+    )
 
-    with pytest.raises(RuntimeError, match="TimeoutError status=none attempt=1"):
-        screen_batch(diamond_records[:1], client, ai_config, budget)
+    with pytest.raises(RuntimeError, match="TimeoutError status=none attempt=3"):
+        screen_batch(diamond_records[:1], client, ai_config, counter)
 
-    assert calls == 1
-    assert budget.used == 1
+    assert calls == 3
+    assert waits == [1.0, 2.0]
+    assert counter.used == 3
     assert client.token_usage_complete is False
+
+
+def test_request_counter_never_exhausts():
+    counter = RequestCounter()
+
+    for _ in range(1000):
+        counter.consume()
+
+    assert counter.used == 1000
 
 
 @pytest.mark.parametrize("maximum", [0, -1, True, 1.5, "2"])
@@ -185,7 +198,7 @@ def test_exhausted_budget_does_not_call_transport(ai_config):
     assert calls == 1
 
 
-@pytest.mark.parametrize("status", [429, 500, 503])
+@pytest.mark.parametrize("status", [408, 425, 429, 500, 503])
 def test_retries_only_explicit_retryable_http_statuses(ai_config, status):
     calls = 0
 
@@ -196,13 +209,15 @@ def test_retries_only_explicit_retryable_http_statuses(ai_config, status):
             raise HTTPError(url, status, "hidden response", None, None)
         return _response("[]")
 
-    budget = RequestBudget(3)
-    client = DeepSeekClient("test-api-key", ai_config, transport=transport)
-    assert client.complete_json([], 1, budget) == []
-    assert (calls, budget.used, budget.remaining) == (2, 2, 1)
+    counter = RequestCounter()
+    client = DeepSeekClient(
+        "test-api-key", ai_config, transport=transport, wait=lambda _: None
+    )
+    assert client.complete_json([], 1, counter) == []
+    assert (calls, counter.used) == (2, 2)
 
 
-def test_timeout_cannot_turn_one_call_into_multiple_billable_requests(ai_config):
+def test_timeout_retries_and_can_succeed(ai_config):
     calls = 0
 
     def transport(url, headers, payload, timeout):
@@ -212,13 +227,32 @@ def test_timeout_cannot_turn_one_call_into_multiple_billable_requests(ai_config)
             raise TimeoutError("do not expose this")
         return _response("[]")
 
-    budget = RequestBudget(2)
-    client = DeepSeekClient("test-api-key", ai_config, transport=transport)
-    with pytest.raises(RuntimeError, match="TimeoutError status=none attempt=1"):
-        client.complete_json([], 1, budget)
+    counter = RequestCounter()
+    waits = []
+    client = DeepSeekClient(
+        "test-api-key", ai_config, transport=transport, wait=waits.append
+    )
+    assert client.complete_json([], 1, counter) == []
 
-    assert (calls, budget.used, budget.remaining) == (1, 1, 1)
+    assert (calls, counter.used) == (2, 2)
+    assert waits == [1.0]
     assert client.token_usage_complete is False
+
+
+def test_invalid_model_json_retries_then_succeeds(ai_config):
+    responses = iter([_response("not-json"), _response("still-not-json"), _response("[]")])
+    waits = []
+    counter = RequestCounter()
+    client = DeepSeekClient(
+        "test-api-key",
+        ai_config,
+        transport=lambda *args: next(responses),
+        wait=waits.append,
+    )
+
+    assert client.complete_json([], 512, counter) == []
+    assert counter.used == 3
+    assert waits == [1.0, 2.0]
 
 
 @pytest.mark.parametrize("status", [401, 403, 402])

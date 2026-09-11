@@ -8,9 +8,8 @@
   "ai": {
     "base_url": "https://api.deepseek.com",
     "model": "deepseek-v4-flash-vision-exp",
-    "daily_candidates": 40,
+    "daily_candidates": 100,
     "batch_size": 10,
-    "max_requests": 6,
     "max_abstract_chars": 1200,
     "screening_max_tokens": 4096,
     "digest_max_tokens": 8192,

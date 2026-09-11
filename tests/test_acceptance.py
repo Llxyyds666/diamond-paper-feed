@@ -104,7 +104,7 @@ def _assert_repository_output_contract(root: Path) -> None:
         usage = json.loads(usage_path.read_text(encoding="utf-8"))
         assert isinstance(usage, list) and usage
         assert all(entry["candidates"] <= config["ai"]["daily_candidates"] for entry in usage)
-        assert all(entry["requests"] <= config["ai"]["max_requests"] for entry in usage)
+        assert all(type(entry["requests"]) is int and entry["requests"] >= 0 for entry in usage)
         assert all(type(entry["token_usage_complete"]) is bool for entry in usage)
 
 
@@ -345,13 +345,17 @@ def test_public_config_readme_and_database_only_table_describe_exact_limits():
         "ai_summary.html",
     ):
         assert f"{EXPECTED_BASE_URL}/{output}" in readme
-    assert "每天最多只向 AI 提交 40 篇候选" in readme
+    assert config["ai"]["daily_candidates"] == 100
+    assert "max_requests" not in config["ai"]
+    assert "每天最多向 AI 提交 100 篇候选" in readme
     assert "每批最多 10 篇" in readme
-    assert "筛选固定为四批" in readme
+    assert "不设置每日 DeepSeek 请求次数上限" in readme
+    assert "每个逻辑请求最多尝试 3 次" in readme
+    assert "HTTP 408、425、429 和 5xx" in readme
+    assert "积压清空后通常每天约新增 5–20 篇" in readme
     assert "1200 个 Unicode 字符" in readme
     assert "筛选请求的输出上限为 4096 token" in readme
     assert "最终摘要请求的输出上限为 8192 token" in readme
-    assert "每天最多 6 次 DeepSeek 请求" in readme
     assert "完整原始摘要，不截断" in readme
     assert "SEMANTIC_SCHOLAR_API_KEY" in readme
     assert "BARK_TOKEN" in readme
@@ -361,6 +365,9 @@ def test_public_config_readme_and_database_only_table_describe_exact_limits():
     assert "assets/diamond-bark-icon.png" in readme
     assert "iOS 15" in readme
     assert "GitHub 推送成功后" in readme
+    assert "两条消息分别独立重试" in readme
+    assert "重启 Zotero" in readme
+    assert "18 篇更新到 23 篇" in readme
     assert "`filtered_feed.xml`：规则筛选后的高召回 RSS，最多 2000 条" in readme
     assert "第一次运行会回溯数据库最近 30 天" in readme
     assert "数据库游标" in readme and "不推进该来源水位" in readme
@@ -398,11 +405,12 @@ def test_workflow_crons_and_secret_boundary_are_exact():
     ):
         assert command_or_secret not in evaluate_workflow
 
-    smoke_step = _workflow_step(summary_workflow, "Run one-request DeepSeek smoke test")
+    smoke_step = _workflow_step(summary_workflow, "Run one logical DeepSeek smoke test")
     assert "inputs.smoke_test == true" in smoke_step
     assert 'load_config(Path("paper_feed_config.json"))' in smoke_step
     assert 'load_state(Path("state.json"))' in smoke_step
-    assert "RequestBudget(1)" in smoke_step
+    assert "RequestCounter()" in smoke_step
+    assert "RequestBudget" not in smoke_step
     assert "screen_batch(" in smoke_step
     assert "SEMANTIC_SCHOLAR_API_KEY" not in smoke_step
     assert "BARK_TOKEN" not in smoke_step

@@ -82,7 +82,7 @@ def test_fetch_bytes_retries_only_transient_transport_errors(monkeypatch, error,
     assert raised.value.category in {"timeout", "url_error"}
 
 
-@pytest.mark.parametrize("status", [429, 500, 503])
+@pytest.mark.parametrize("status", [408, 425, 429, 500, 503])
 def test_fetch_bytes_retries_retryable_http_statuses(monkeypatch, status):
     calls = []
     sleeps = []

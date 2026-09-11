@@ -2,15 +2,21 @@
 
 import json
 import math
+import time
 from collections.abc import Callable, Sequence
 from threading import Lock
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from diamond_feed.config import AiConfig
 from diamond_feed.focus import FOCUS_LABELS
 from diamond_feed.models import AiDecision, PaperRecord
 from diamond_feed.normalize import record_key
+from diamond_feed.retry import (
+    DEFAULT_RETRY_POLICY,
+    call_with_retry,
+    retryable_http_status,
+)
 
 
 DECISION_FIELDS = {
@@ -41,20 +47,12 @@ DEFAULT_TIMEOUT_SECONDS = 660.0
 Transport = Callable[[str, dict[str, str], dict[str, object], float], object]
 
 
-class RequestBudget:
-    """A thread-safe count of attempts, not just successful requests."""
+class RequestCounter:
+    """A thread-safe count of all request attempts."""
 
-    def __init__(self, maximum: int):
-        if type(maximum) is not int or maximum <= 0:
-            raise ValueError("maximum must be a positive integer")
-        self._maximum = maximum
+    def __init__(self) -> None:
         self._used = 0
         self._lock = Lock()
-
-    @property
-    def remaining(self) -> int:
-        with self._lock:
-            return self._maximum - self._used
 
     @property
     def used(self) -> int:
@@ -62,10 +60,34 @@ class RequestBudget:
             return self._used
 
     def consume(self) -> None:
+        """Record an attempt before any network operation begins."""
+        with self._lock:
+            self._used += 1
+
+
+class _RequestBudgetExhausted(RuntimeError):
+    pass
+
+
+class RequestBudget(RequestCounter):
+    """A bounded counter retained for isolated tests and explicit callers."""
+
+    def __init__(self, maximum: int):
+        if type(maximum) is not int or maximum <= 0:
+            raise ValueError("maximum must be a positive integer")
+        super().__init__()
+        self._maximum = maximum
+
+    @property
+    def remaining(self) -> int:
+        with self._lock:
+            return self._maximum - self._used
+
+    def consume(self) -> None:
         """Reserve an attempt before any network operation begins."""
         with self._lock:
             if self._used >= self._maximum:
-                raise RuntimeError("request budget exhausted")
+                raise _RequestBudgetExhausted("request budget exhausted")
             self._used += 1
 
 
@@ -134,7 +156,12 @@ def _http_status(error: Exception) -> int | None:
 
 def _retryable(error: Exception) -> bool:
     status = _http_status(error)
-    return status == 429 or (status is not None and 500 <= status <= 599)
+    if status is not None:
+        return retryable_http_status(status)
+    return isinstance(
+        error,
+        (_ModelResponseError, TimeoutError, ConnectionError, URLError),
+    )
 
 
 def _safe_request_error(error: Exception, attempt: int) -> RuntimeError:
@@ -146,10 +173,18 @@ def _safe_request_error(error: Exception, attempt: int) -> RuntimeError:
 class DeepSeekClient:
     """Small OpenAI-compatible client which never formats credentials in errors."""
 
-    def __init__(self, key: str, config: AiConfig, *, transport: Transport | None = None):
+    def __init__(
+        self,
+        key: str,
+        config: AiConfig,
+        *,
+        transport: Transport | None = None,
+        wait: Callable[[float], None] = time.sleep,
+    ):
         self._key = key
         self._config = config
         self._transport = transport or self._default_transport
+        self._wait = wait
         self._prompt_tokens = 0
         self._completion_tokens = 0
         self._token_usage_complete = True
@@ -190,9 +225,12 @@ class DeepSeekClient:
                 raise _ModelResponseError from error
 
     def complete_json(
-        self, messages: Sequence[dict[str, object]], max_tokens: int, budget: RequestBudget
+        self,
+        messages: Sequence[dict[str, object]],
+        max_tokens: int,
+        counter: RequestCounter,
     ) -> object:
-        """Send one request or retry a transient transport failure within ``budget``."""
+        """Send one logical request with three bounded transient attempts."""
         url = f"{self._config.base_url.rstrip('/')}/chat/completions"
         headers = {
             "Authorization": f"Bearer {self._key}",
@@ -208,20 +246,18 @@ class DeepSeekClient:
             "max_tokens": max_tokens,
         }
         attempt = 0
-        while True:
-            budget.consume()
+
+        def operation() -> object:
+            nonlocal attempt
+            counter.consume()
             attempt += 1
             try:
                 response = self._transport(url, headers, payload, DEFAULT_TIMEOUT_SECONDS)
-            except _ModelResponseError:
-                raise ValueError("invalid model response") from None
             except Exception as error:
                 if _http_status(error) is None:
                     with self._usage_lock:
                         self._token_usage_complete = False
-                if _retryable(error):
-                    continue
-                raise _safe_request_error(error, attempt) from None
+                raise
             usage = _response_usage(response)
             if usage is not None:
                 with self._usage_lock:
@@ -230,11 +266,26 @@ class DeepSeekClient:
             else:
                 with self._usage_lock:
                     self._token_usage_complete = False
-            try:
-                result = _extract_model_json(response)
-            except _ModelResponseError:
-                raise ValueError("invalid model response") from None
-            return result
+            return _extract_model_json(response)
+
+        def should_retry(error: Exception) -> bool:
+            if isinstance(counter, RequestBudget) and counter.remaining == 0:
+                return False
+            return _retryable(error)
+
+        try:
+            return call_with_retry(
+                operation,
+                should_retry,
+                policy=DEFAULT_RETRY_POLICY,
+                wait=self._wait,
+            )
+        except _RequestBudgetExhausted:
+            raise
+        except _ModelResponseError:
+            raise ValueError("invalid model response") from None
+        except Exception as error:
+            raise _safe_request_error(error, attempt) from None
 
 
 def _screening_messages(records: Sequence[PaperRecord], config: AiConfig) -> list[dict[str, object]]:
@@ -374,7 +425,10 @@ def _validated_decision(value: object) -> AiDecision:
 
 
 def screen_batch(
-    records: Sequence[PaperRecord], client: DeepSeekClient, config: AiConfig, budget: RequestBudget
+    records: Sequence[PaperRecord],
+    client: DeepSeekClient,
+    config: AiConfig,
+    counter: RequestCounter,
 ) -> list[AiDecision]:
     """Screen one bounded record batch and reject invalid model output atomically."""
     if not records:
@@ -384,7 +438,9 @@ def screen_batch(
     requested_keys = [record_key(record) for record in records]
     if len(set(requested_keys)) != len(requested_keys):
         raise ValueError("invalid screening batch")
-    raw = client.complete_json(_screening_messages(records, config), config.screening_max_tokens, budget)
+    raw = client.complete_json(
+        _screening_messages(records, config), config.screening_max_tokens, counter
+    )
     if type(raw) is dict:
         if set(raw) != {"decisions"} or type(raw["decisions"]) is not list:
             raise ValueError("invalid model response")

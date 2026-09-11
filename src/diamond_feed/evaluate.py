@@ -1,6 +1,7 @@
 """Explicit, isolated full-day evaluation with per-request cost observations."""
 
 import argparse
+from collections.abc import Callable
 from dataclasses import asdict
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -8,15 +9,25 @@ import json
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import time
 from time import monotonic
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from diamond_feed.ai import CATEGORIES, DECISION_FIELDS, DeepSeekClient
 from diamond_feed.config import load_config
 from diamond_feed.models import PaperRecord
 from diamond_feed.normalize import group_records, record_key
+from diamond_feed.retry import (
+    DEFAULT_RETRY_POLICY,
+    call_with_retry,
+    retryable_http_status,
+)
 from diamond_feed.state import FeedState, load_state, save_state
 from diamond_feed.summarize import run_summary
+
+
+EVALUATION_CANDIDATE_LIMIT = 40
 
 
 class ObservedClient(DeepSeekClient):
@@ -88,13 +99,43 @@ class ObservedClient(DeepSeekClient):
         return result
 
 
-def read_balance(key, base_url):
+def read_balance(
+    key: str,
+    base_url: str,
+    *,
+    wait: Callable[[float], None] = time.sleep,
+):
     """Return private balances in memory; neither logs nor reports contain them."""
-    try:
-        request = Request(base_url.rstrip("/") + "/user/balance",
-                          headers={"Authorization": "Bearer " + key})
+    request = Request(
+        base_url.rstrip("/") + "/user/balance",
+        headers={"Authorization": "Bearer " + key},
+    )
+
+    def operation():
         with urlopen(request, timeout=30) as response:
-            data = json.loads(response.read())
+            return json.loads(response.read())
+
+    def should_retry(error: Exception) -> bool:
+        if isinstance(error, HTTPError):
+            return retryable_http_status(error.code)
+        return isinstance(
+            error,
+            (
+                TimeoutError,
+                ConnectionError,
+                URLError,
+                UnicodeDecodeError,
+                json.JSONDecodeError,
+            ),
+        )
+
+    try:
+        data = call_with_retry(
+            operation,
+            should_retry,
+            policy=DEFAULT_RETRY_POLICY,
+            wait=wait,
+        )
         balances = {item["currency"]: Decimal(item["total_balance"])
                     for item in data["balance_infos"] if item["currency"] in {"CNY", "USD"}}
         return balances if balances and all(x.is_finite() for x in balances.values()) else None
@@ -116,12 +157,14 @@ def run_evaluation(config, state_path, client, now, *, output_dir, baseline_path
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=False)
     state = FeedState() if baseline_path is not None else load_state(Path(state_path))
-    keys = sorted(state.pending_ai, key=lambda k: state.papers[k].published_at)[:config.ai.daily_candidates]
+    keys = sorted(
+        state.pending_ai, key=lambda k: state.papers[k].published_at
+    )[:EVALUATION_CANDIDATE_LIMIT]
     baseline = None
     if baseline_path is not None:
         baseline = json.loads(Path(baseline_path).read_text(encoding="utf-8"))
         inputs = baseline["papers"]
-        if not 0 < len(inputs) <= config.ai.daily_candidates:
+        if not 0 < len(inputs) <= EVALUATION_CANDIDATE_LIMIT:
             raise ValueError("baseline must fit the bounded daily candidate limit")
         state = FeedState()
         for item in inputs:

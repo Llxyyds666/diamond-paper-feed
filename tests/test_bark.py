@@ -86,19 +86,40 @@ def test_bark_omits_url_when_message_has_none_and_propagates_timeout():
     assert [call[3] for call in transport.calls] == [2.5, 2.5]
 
 
+def test_bark_retries_first_message_without_suppressing_second():
+    transport = BarkTransport([
+        BarkResponse(503, b'{"code":503}'),
+        success_response(),
+        success_response(),
+    ])
+    waits = []
+
+    result = send_plan(
+        "bark-secret", plan(), transport=transport, wait=waits.append
+    )
+
+    assert result == (True, True)
+    assert len(transport.calls) == 3
+    assert waits == [1.0]
+
+
 def test_first_bark_failure_does_not_suppress_second_and_logs_no_secret(capsys):
     transport = BarkTransport(
         [
             RuntimeError("bark-secret response body"),
             BarkResponse(500, b"bark-secret response body"),
+            BarkResponse(500, b"bark-secret response body"),
+            BarkResponse(500, b"bark-secret response body"),
         ]
     )
 
-    result = send_plan("bark-secret", plan(), transport=transport)
+    result = send_plan(
+        "bark-secret", plan(), transport=transport, wait=lambda _: None
+    )
 
     captured = capsys.readouterr()
     assert result == (False, False)
-    assert len(transport.calls) == 2
+    assert len(transport.calls) == 4
     assert "bark-secret" not in captured.err
     assert "response body" not in captured.err
     assert "Bark notification 1 failed: RuntimeError status=none" in captured.err
@@ -107,25 +128,32 @@ def test_first_bark_failure_does_not_suppress_second_and_logs_no_secret(capsys):
 
 
 @pytest.mark.parametrize(
-    "response",
+    ("response", "retryable"),
     [
-        BarkResponse(200, b"not-json"),
-        BarkResponse(200, b"[]"),
-        BarkResponse(200, b'{"code":201}'),
-        BarkResponse(200, b'{"code":true}'),
-        BarkResponse(204, b""),
-        BarkResponse(299, b'{"code":"200"}'),
-        BarkResponse(300, b'{"code":200}'),
+        (BarkResponse(200, b"not-json"), True),
+        (BarkResponse(200, b"[]"), True),
+        (BarkResponse(200, b'{"code":201}'), True),
+        (BarkResponse(200, b'{"code":true}'), True),
+        (BarkResponse(204, b""), True),
+        (BarkResponse(299, b'{"code":"200"}'), True),
+        (BarkResponse(300, b'{"code":200}'), False),
     ],
 )
-def test_bark_requires_2xx_and_json_object_with_integer_200(response, capsys):
-    transport = BarkTransport([response, success_response()])
+def test_bark_requires_2xx_and_json_object_with_integer_200(
+    response, retryable, capsys
+):
+    attempts = 3 if retryable else 1
+    transport = BarkTransport([response] * attempts + [success_response()])
+    waits = []
 
-    result = send_plan("bark-secret", plan(), transport=transport)
+    result = send_plan(
+        "bark-secret", plan(), transport=transport, wait=waits.append
+    )
 
     captured = capsys.readouterr()
     assert result == (False, True)
-    assert len(transport.calls) == 2
+    assert len(transport.calls) == attempts + 1
+    assert waits == ([1.0, 2.0] if retryable else [])
     assert "bark-secret" not in captured.err
     assert "Bark notification 1 failed:" in captured.err
 
@@ -140,16 +168,52 @@ def test_bark_requires_2xx_and_json_object_with_integer_200(response, capsys):
 def test_bark_rejects_nonstandard_constants_and_duplicate_keys_without_leaking(
     body, capsys
 ):
-    transport = BarkTransport([BarkResponse(200, body), BarkResponse(200, body)])
+    transport = BarkTransport([BarkResponse(200, body)] * 6)
 
-    result = send_plan("bark-secret", plan(), transport=transport)
+    result = send_plan(
+        "bark-secret", plan(), transport=transport, wait=lambda _: None
+    )
 
     captured = capsys.readouterr()
     assert result == (False, False)
-    assert len(transport.calls) == 2
+    assert len(transport.calls) == 6
     assert captured.err.count("Bark notification") == 2
     assert "bark-secret" not in captured.err
     assert body.decode("ascii") not in captured.err
+
+
+def test_bark_does_not_retry_permanent_401_response():
+    transport = BarkTransport([
+        BarkResponse(401, b'{"code":401}'),
+        success_response(),
+    ])
+    waits = []
+
+    result = send_plan(
+        "bark-secret", plan(), transport=transport, wait=waits.append
+    )
+
+    assert result == (False, True)
+    assert len(transport.calls) == 2
+    assert waits == []
+
+
+def test_bark_retries_timeout_for_one_message_only():
+    transport = BarkTransport([
+        TimeoutError("temporary"),
+        TimeoutError("temporary"),
+        success_response(),
+        success_response(),
+    ])
+    waits = []
+
+    result = send_plan(
+        "bark-secret", plan(), transport=transport, wait=waits.append
+    )
+
+    assert result == (True, True)
+    assert len(transport.calls) == 4
+    assert waits == [1.0, 2.0]
 
 
 def test_default_transport_rejects_redirect_without_contacting_target(

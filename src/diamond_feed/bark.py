@@ -1,4 +1,4 @@
-"""Official Bark delivery with one independent attempt per planned message."""
+"""Official Bark delivery with bounded retries per planned message."""
 
 from __future__ import annotations
 
@@ -6,10 +6,17 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import json
 import sys
-from urllib.error import HTTPError
+import time
+from urllib.error import HTTPError, URLError
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from diamond_feed.notification import NotificationPlan
+from diamond_feed.retry import (
+    DEFAULT_RETRY_POLICY,
+    RetryPolicy,
+    call_with_retry,
+    retryable_http_status,
+)
 
 
 BARK_URL = "https://api.day.app/push"
@@ -31,6 +38,11 @@ BarkTransport = Callable[[str, Mapping[str, str], bytes, float], BarkResponse]
 
 class BarkProtocolError(ValueError):
     """The Bark service response did not satisfy the required contract."""
+
+    def __init__(self, *, status: int | None, retryable: bool):
+        super().__init__("invalid Bark response")
+        self.status = status
+        self.retryable = retryable
 
 
 class _DuplicateKeyError(ValueError):
@@ -70,7 +82,11 @@ def _urllib_transport(
 
 def _validate_response(response: BarkResponse) -> None:
     if type(response.status) is not int or not 200 <= response.status < 300:
-        raise BarkProtocolError("invalid Bark response")
+        status = response.status if type(response.status) is int else None
+        raise BarkProtocolError(
+            status=status,
+            retryable=status is not None and retryable_http_status(status),
+        )
     try:
         payload = json.loads(
             response.body,
@@ -78,11 +94,11 @@ def _validate_response(response: BarkResponse) -> None:
             object_pairs_hook=_unique_object,
         )
     except (UnicodeError, TypeError, ValueError) as error:
-        raise BarkProtocolError("invalid Bark response") from error
+        raise BarkProtocolError(status=response.status, retryable=True) from error
     if type(payload) is not dict or type(payload.get("code")) is not int:
-        raise BarkProtocolError("invalid Bark response")
+        raise BarkProtocolError(status=response.status, retryable=True)
     if payload["code"] != 200:
-        raise BarkProtocolError("invalid Bark response")
+        raise BarkProtocolError(status=response.status, retryable=True)
 
 
 def send_plan(
@@ -91,33 +107,51 @@ def send_plan(
     *,
     transport: BarkTransport | None = None,
     timeout_seconds: float = 10.0,
+    policy: RetryPolicy = DEFAULT_RETRY_POLICY,
+    wait: Callable[[float], None] = time.sleep,
 ) -> tuple[bool, ...]:
-    """Attempt every planned message exactly once and report each outcome."""
+    """Deliver every message independently with bounded transient retries."""
     sender = transport or _urllib_transport
     results: list[bool] = []
     for index, message in enumerate(plan.messages, start=1):
-        status: int | None = None
-        try:
-            payload = {
-                "device_key": token,
-                "title": message.title,
-                "body": message.body,
-                "group": BARK_GROUP,
-                "icon": BARK_ICON_URL,
-            }
-            if message.url is not None:
-                payload["url"] = message.url
-            body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        payload = {
+            "device_key": token,
+            "title": message.title,
+            "body": message.body,
+            "group": BARK_GROUP,
+            "icon": BARK_ICON_URL,
+        }
+        if message.url is not None:
+            payload["url"] = message.url
+        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+
+        def operation() -> None:
             response = sender(
                 BARK_URL,
                 {"Content-Type": "application/json"},
                 body,
                 timeout_seconds,
             )
-            if type(response.status) is int:
-                status = response.status
             _validate_response(response)
+
+        def should_retry(error: Exception) -> bool:
+            if isinstance(error, BarkProtocolError):
+                return error.retryable
+            if isinstance(error, HTTPError):
+                return retryable_http_status(error.code)
+            return isinstance(error, (TimeoutError, ConnectionError, URLError))
+
+        try:
+            call_with_retry(
+                operation,
+                should_retry,
+                policy=policy,
+                wait=wait,
+            )
         except Exception as error:
+            status = getattr(error, "status", None)
+            if isinstance(error, HTTPError):
+                status = error.code
             status_text = status if status is not None else "none"
             print(
                 f"Bark notification {index} failed: "

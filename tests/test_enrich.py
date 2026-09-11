@@ -170,11 +170,13 @@ def test_provider_failure_is_sanitized_and_falls_through(capsys):
     transport = RecordingTransport([
         RuntimeError("secret-value and response body"),
         MetadataResponse(503, b'secret-value and response body'),
+        MetadataResponse(503, b'secret-value and response body'),
+        MetadataResponse(503, b'secret-value and response body'),
     ])
 
-    stats = AbstractEnricher("secret-value", transport=transport).enrich(
-        state, [record_key(item)]
-    )
+    stats = AbstractEnricher(
+        "secret-value", transport=transport, wait=lambda _: None
+    ).enrich(state, [record_key(item)])
 
     captured = capsys.readouterr()
     assert stats.enriched == 0
@@ -183,6 +185,64 @@ def test_provider_failure_is_sanitized_and_falls_through(capsys):
     assert "semantic-scholar RuntimeError none" in captured.err
     assert "openaire HTTPError 503" in captured.err
     assert state.papers[record_key(item)].abstract == ""
+
+
+def test_enrichment_retries_transient_provider_response():
+    item = paper(20)
+    key = record_key(item)
+    state = FeedState(papers={key: item}, pending_ai=[key])
+    transport = RecordingTransport([
+        MetadataResponse(503, b""),
+        semantic_response([
+            semantic_record(
+                item,
+                "A complete original abstract for a diamond detector device.",
+            )
+        ]),
+    ])
+    waits = []
+
+    stats = AbstractEnricher(
+        "semantic-secret", transport=transport, wait=waits.append
+    ).enrich(state, [key])
+
+    assert stats.enriched == 1
+    assert len(transport.calls) == 2
+    assert waits == [1.0]
+
+
+def test_enrichment_does_not_retry_permanent_provider_response(capsys):
+    transport = RecordingTransport([MetadataResponse(401, b"")])
+    waits = []
+    enricher = AbstractEnricher(
+        "semantic-secret", transport=transport, wait=waits.append
+    )
+
+    result = enricher._request_json(
+        "semantic-scholar", "POST", "https://provider.test", {}, None
+    )
+
+    assert result is None
+    assert len(transport.calls) == 1
+    assert waits == []
+    assert "semantic-scholar HTTPError 401" in capsys.readouterr().err
+
+
+def test_enrichment_retries_malformed_json():
+    transport = RecordingTransport([
+        MetadataResponse(200, b"not-json"),
+        MetadataResponse(200, b'{"results":[]}'),
+    ])
+    waits = []
+    enricher = AbstractEnricher(None, transport=transport, wait=waits.append)
+
+    result = enricher._request_json(
+        "openaire", "GET", "https://provider.test", {}, None
+    )
+
+    assert result == {"results": []}
+    assert len(transport.calls) == 2
+    assert waits == [1.0]
 
 
 def test_default_semantic_transport_rejects_redirect_without_leaking_api_key(

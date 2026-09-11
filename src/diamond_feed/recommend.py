@@ -5,7 +5,7 @@ import json
 import re
 from typing import Protocol, Sequence
 
-from diamond_feed.ai import RequestBudget
+from diamond_feed.ai import RequestCounter
 from diamond_feed.config import AiConfig
 from diamond_feed.focus import FOCUS_LABELS
 from diamond_feed.models import PaperRecord
@@ -25,19 +25,9 @@ class RecommendationClient(Protocol):
         self,
         messages: Sequence[dict[str, object]],
         max_tokens: int,
-        budget: RequestBudget,
+        counter: RequestCounter,
     ) -> object:
         raise NotImplementedError
-
-
-class _SingleAttemptBudget(RequestBudget):
-    def __init__(self, shared: RequestBudget):
-        super().__init__(1)
-        self._shared = shared
-
-    def consume(self) -> None:
-        super().consume()
-        self._shared.consume()
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,7 +46,7 @@ def recommend_one(
     records: Sequence[PaperRecord],
     client: RecommendationClient,
     config: AiConfig,
-    budget: RequestBudget,
+    counter: RequestCounter,
 ) -> Recommendation:
     candidates = [record for record in records if set(record.categories) & FOCUS_LABELS]
     if not candidates:
@@ -94,9 +84,7 @@ def recommend_one(
         },
         {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
     ]
-    raw = client.complete_json(
-        messages, config.recommendation_max_tokens, _SingleAttemptBudget(budget)
-    )
+    raw = client.complete_json(messages, config.recommendation_max_tokens, counter)
     allowed = set(candidate_keys)
     if type(raw) is not dict or set(raw) != {"key", "reason"}:
         raise ValueError("invalid recommendation response")

@@ -4,13 +4,19 @@ from dataclasses import dataclass
 import json
 import re
 import sys
+import time
 import unicodedata
 from typing import Callable, Mapping, Sequence
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from diamond_feed.normalize import normalize_doi
+from diamond_feed.retry import (
+    DEFAULT_RETRY_POLICY,
+    call_with_retry,
+    retryable_http_status,
+)
 from diamond_feed.state import FeedState
 
 
@@ -58,10 +64,12 @@ class AbstractEnricher:
         *,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         transport: MetadataTransport | None = None,
+        wait: Callable[[float], None] = time.sleep,
     ) -> None:
         self._semantic_scholar_key = semantic_scholar_key or None
         self._timeout_seconds = timeout_seconds
         self._transport = transport or _default_transport
+        self._wait = wait
 
     def enrich(
         self, state: FeedState, candidate_keys: Sequence[str]
@@ -188,13 +196,29 @@ class AbstractEnricher:
         headers: Mapping[str, str],
         body: bytes | None,
     ) -> object | None:
-        try:
+        def operation() -> object:
             response = self._transport(
                 method, url, headers, body, self._timeout_seconds
             )
             if not 200 <= response.status < 300:
                 raise HTTPError(url, response.status, "", {}, None)
             return json.loads(response.body)
+
+        def should_retry(error: Exception) -> bool:
+            if isinstance(error, HTTPError):
+                return retryable_http_status(error.code)
+            return isinstance(
+                error,
+                (TimeoutError, ConnectionError, URLError, json.JSONDecodeError),
+            )
+
+        try:
+            return call_with_retry(
+                operation,
+                should_retry,
+                policy=DEFAULT_RETRY_POLICY,
+                wait=self._wait,
+            )
         except Exception as error:
             status = error.code if isinstance(error, HTTPError) else None
             _report_provider_error(provider, type(error).__name__, status)

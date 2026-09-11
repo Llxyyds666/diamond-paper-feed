@@ -16,9 +16,8 @@ VALID_CONFIG = {
     "ai": {
         "base_url": "https://api.deepseek.com",
         "model": "deepseek-v4-flash-vision-exp",
-        "daily_candidates": 40,
+        "daily_candidates": 100,
         "batch_size": 10,
-        "max_requests": 5,
         "max_abstract_chars": 1200,
         "screening_max_tokens": 4096,
         "digest_max_tokens": 8192,
@@ -37,26 +36,20 @@ def test_repository_config_has_locked_safety_limits():
     assert config.collection.lookback_days == 30
     assert config.collection.raw_feed_max_items == 2000
     assert config.ai.model == "deepseek-v4-flash-vision-exp"
-    assert config.ai.daily_candidates == 40
+    assert config.ai.daily_candidates == 100
     assert config.ai.batch_size == 10
-    assert config.ai.max_requests == 6
+    assert not hasattr(config.ai, "max_requests")
     assert config.ai.max_abstract_chars == 1200
     assert config.ai.recommendation_max_tokens == 512
 
 
-def test_invalid_batch_budget_is_rejected(tmp_path):
+def test_removed_global_request_limit_is_rejected(tmp_path):
+    config = json.loads(json.dumps(VALID_CONFIG))
+    config["ai"]["max_requests"] = 6
     path = tmp_path / "config.json"
-    path.write_text(
-        '{"collection":{"lookback_days":30,"raw_feed_max_items":2000,'
-        '"http_timeout_seconds":30,"http_attempts":3},'
-        '"ai":{"base_url":"https://api.deepseek.com","model":"deepseek-v4-flash-vision-exp",'
-        '"daily_candidates":40,"batch_size":10,"max_requests":4,"max_abstract_chars":1200,'
-        '"screening_max_tokens":4096,"digest_max_tokens":8192,'
-        '"recommendation_max_tokens":512},'
-        '"publication":{"title":"Diamond Paper Feed","base_url":""}}',
-        encoding="utf-8",
-    )
-    with pytest.raises(ValueError, match="reserve one request"):
+    write_config(path, config)
+
+    with pytest.raises(ValueError, match="unknown configuration key"):
         load_config(path)
 
 
@@ -75,9 +68,8 @@ def test_unknown_configuration_key_is_rejected(tmp_path, section):
 @pytest.mark.parametrize(
     ("field", "excessive"),
     [
-        ("daily_candidates", 41),
+        ("daily_candidates", 101),
         ("batch_size", 11),
-        ("max_requests", 7),
         ("max_abstract_chars", 1201),
         ("screening_max_tokens", 4097),
         ("digest_max_tokens", 8193),
@@ -99,7 +91,6 @@ def test_ai_limits_below_public_caps_are_accepted(tmp_path):
     config["ai"].update(
         daily_candidates=20,
         batch_size=10,
-        max_requests=3,
         max_abstract_chars=600,
         screening_max_tokens=2048,
         digest_max_tokens=4096,

@@ -124,7 +124,7 @@ def test_github_workflows_obey_the_automation_contract():
         run: exit 1
 """ in summarize
 
-    smoke_step = _workflow_step(summarize, "Run one-request DeepSeek smoke test")
+    smoke_step = _workflow_step(summarize, "Run one logical DeepSeek smoke test")
     summary_step = _workflow_step(summarize, "Generate bounded DeepSeek digest")
     publish_step = _workflow_step(summarize, "Commit and push summary outputs")
     notify_step = _workflow_step(summarize, "Send Bark notifications")
@@ -134,6 +134,8 @@ def test_github_workflows_obey_the_automation_contract():
     assert "\n          BARK_TOKEN:" not in summary_step
     assert "SEMANTIC_SCHOLAR_API_KEY" not in smoke_step
     assert "BARK_TOKEN" not in smoke_step
+    assert "RequestCounter()" in smoke_step
+    assert "RequestBudget" not in smoke_step
     assert "id: publish" in publish_step
     assert 'echo "pushed=false" >> "$GITHUB_OUTPUT"' in publish_step
     assert 'git push origin "HEAD:${GITHUB_REF_NAME}"' in publish_step
