@@ -45,13 +45,13 @@
   },
   {
     "date": "2026-09-11",
-    "candidates": 40,
-    "processed": 40,
-    "selected": 13,
-    "requests": 6,
-    "prompt_tokens": 22972,
-    "completion_tokens": 6096,
-    "total_tokens": 29068,
+    "candidates": 100,
+    "processed": 100,
+    "selected": 40,
+    "requests": 14,
+    "prompt_tokens": 52811,
+    "completion_tokens": 14669,
+    "total_tokens": 67480,
     "token_usage_complete": true
   }
 ]
