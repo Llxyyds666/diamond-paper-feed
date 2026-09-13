@@ -381,7 +381,7 @@ def test_workflow_crons_and_secret_boundary_are_exact():
     summary_workflow = Path(".github/workflows/summarize.yml").read_text(encoding="utf-8")
     evaluate_workflow = Path(".github/workflows/evaluate.yml").read_text(encoding="utf-8")
 
-    assert "cron: '0 */6 * * *'" in collect_workflow
+    assert "cron: '17 */6 * * *'" in collect_workflow
     assert "DEEPSEEK_API_KEY" not in collect_workflow
     assert "SEMANTIC_SCHOLAR_API_KEY" not in collect_workflow
     assert "BARK_TOKEN" not in collect_workflow
@@ -391,7 +391,7 @@ def test_workflow_crons_and_secret_boundary_are_exact():
     assert "python -m diamond_feed.recommend" not in collect_workflow
     assert "python -m diamond_feed.notify" not in collect_workflow
     assert "device_focus_feed.xml" not in collect_workflow
-    assert "cron: '0 0 * * *'" in summary_workflow
+    assert "cron: '47 0 * * *'" in summary_workflow
     assert "python -m diamond_feed.collect" not in summary_workflow
     assert '"device_focus_feed.xml"' in summary_workflow
 

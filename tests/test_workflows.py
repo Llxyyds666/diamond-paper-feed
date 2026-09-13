@@ -35,7 +35,7 @@ def test_github_workflows_obey_the_automation_contract():
     expected = {
         "collect": {
             "text": collect,
-            "cron": "0 */6 * * *",
+            "cron": "17 */6 * * *",
             "command": (
                 "python -m diamond_feed.collect --config paper_feed_config.json "
                 "--state state.json"
@@ -44,7 +44,7 @@ def test_github_workflows_obey_the_automation_contract():
         },
         "summarize": {
             "text": summarize,
-            "cron": "0 0 * * *",
+            "cron": "47 0 * * *",
             "command": "python -m diamond_feed.summarize",
             "outputs": (
                 "ai_summary_feed.xml",

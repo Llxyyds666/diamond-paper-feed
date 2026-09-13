@@ -2,7 +2,7 @@ name: Summarize diamond literature
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '47 0 * * *'
   workflow_dispatch:
     inputs:
       smoke_test:
