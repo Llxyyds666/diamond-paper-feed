@@ -128,6 +128,37 @@ def test_screening_accepts_the_json_object_decisions_wrapper(ai_config, diamond_
     assert [decision.key for decision in decisions] == [key]
 
 
+def test_screening_retries_valid_json_with_invalid_schema(ai_config, diamond_records):
+    key = record_key(diamond_records[0])
+    responses = iter(
+        [
+            _response(
+                json.dumps(
+                    {"decisions": [_decision(key, category="not-a-category")]},
+                    ensure_ascii=False,
+                )
+            ),
+            _response(
+                json.dumps(
+                    {"decisions": [_decision(key)]},
+                    ensure_ascii=False,
+                )
+            ),
+        ]
+    )
+    counter = RequestCounter()
+    client = DeepSeekClient(
+        "test-api-key",
+        ai_config,
+        transport=lambda *args: next(responses),
+    )
+
+    decisions = screen_batch(diamond_records[:1], client, ai_config, counter)
+
+    assert [decision.key for decision in decisions] == [key]
+    assert counter.used == 2
+
+
 def test_timeout_retries_three_times_and_reports_incomplete_usage(ai_config, diamond_records):
     calls = 0
     waits = []

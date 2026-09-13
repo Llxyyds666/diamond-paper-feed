@@ -573,7 +573,7 @@ def test_invalid_whole_batch_applies_no_partial_decisions(
         app_config, configured_state_with_100_pending, InvalidBatch(), NOW, output_dir=tmp_path
     )
 
-    assert (stats.processed, stats.requests, stats.failed) == (0, 1, True)
+    assert (stats.processed, stats.requests, stats.failed) == (0, 3, True)
     assert configured_state_with_100_pending.read_text(encoding="utf-8") == before
     assert not (tmp_path / "ai_summary_feed.xml").exists()
 

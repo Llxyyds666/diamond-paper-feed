@@ -424,23 +424,9 @@ def _validated_decision(value: object) -> AiDecision:
     )
 
 
-def screen_batch(
-    records: Sequence[PaperRecord],
-    client: DeepSeekClient,
-    config: AiConfig,
-    counter: RequestCounter,
+def _validated_screening_response(
+    raw: object, requested_keys: Sequence[str]
 ) -> list[AiDecision]:
-    """Screen one bounded record batch and reject invalid model output atomically."""
-    if not records:
-        return []
-    if len(records) > config.batch_size:
-        raise ValueError("batch size exceeds configured limit")
-    requested_keys = [record_key(record) for record in records]
-    if len(set(requested_keys)) != len(requested_keys):
-        raise ValueError("invalid screening batch")
-    raw = client.complete_json(
-        _screening_messages(records, config), config.screening_max_tokens, counter
-    )
     if type(raw) is dict:
         if set(raw) != {"decisions"} or type(raw["decisions"]) is not list:
             raise ValueError("invalid model response")
@@ -455,3 +441,34 @@ def screen_batch(
     if len(returned_keys) != len(set(returned_keys)) or set(returned_keys) != set(requested_keys):
         raise ValueError("invalid model response")
     return decisions
+
+
+def screen_batch(
+    records: Sequence[PaperRecord],
+    client: DeepSeekClient,
+    config: AiConfig,
+    counter: RequestCounter,
+) -> list[AiDecision]:
+    """Screen one batch atomically, retrying transiently invalid model schemas."""
+    if not records:
+        return []
+    if len(records) > config.batch_size:
+        raise ValueError("batch size exceeds configured limit")
+    requested_keys = [record_key(record) for record in records]
+    if len(set(requested_keys)) != len(requested_keys):
+        raise ValueError("invalid screening batch")
+    messages = _screening_messages(records, config)
+    for attempt in range(DEFAULT_RETRY_POLICY.attempts):
+        try:
+            raw = client.complete_json(
+                messages, config.screening_max_tokens, counter
+            )
+            return _validated_screening_response(raw, requested_keys)
+        except ValueError as error:
+            if str(error) != "invalid model response":
+                raise
+            if attempt == DEFAULT_RETRY_POLICY.attempts - 1:
+                raise
+            if isinstance(counter, RequestBudget) and counter.remaining == 0:
+                raise
+    raise AssertionError("unreachable")
