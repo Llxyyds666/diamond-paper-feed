@@ -9,8 +9,21 @@ from diamond_feed.normalize import normalize_doi
 
 
 _BASE_URL = "https://api.openalex.org/works"
-_SELECT = "id,doi,title,display_name,publication_date,authorships,primary_location,abstract_inverted_index"
+_SELECT = "id,doi,title,display_name,type,publication_date,authorships,primary_location,abstract_inverted_index"
 _MAX_PAGE_SIZE = 200
+_PAPER_TYPES = frozenset(
+    {
+        "article",
+        "book-chapter",
+        "conference-abstract",
+        "dissertation",
+        "letter",
+        "preprint",
+        "proceedings-article",
+        "report",
+        "review",
+    }
+)
 
 
 def build_url(query: str, from_date: date, rows: int, cursor: str = "*") -> str:
@@ -68,6 +81,8 @@ def parse_response(body: bytes) -> list[PaperRecord]:
         if not isinstance(item, dict):
             continue
         try:
+            if item.get("type") not in _PAPER_TYPES:
+                continue
             title = str(item.get("title") or item.get("display_name") or "").strip()
             publication_date = item.get("publication_date")
             source_id = str(item.get("id") or "").strip()

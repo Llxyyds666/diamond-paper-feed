@@ -30,6 +30,18 @@ def test_source_urls_have_date_window_encoded_query_rows_and_initial_cursor():
     assert "%26" in arxiv_url
 
 
+def test_json_source_urls_request_work_type_for_nonpaper_filtering():
+    openalex_query = parse_qs(
+        urlparse(openalex.build_url("diamond", date(2026, 8, 1), 50)).query
+    )
+    crossref_query = parse_qs(
+        urlparse(crossref.build_url("diamond", date(2026, 8, 1), 50)).query
+    )
+
+    assert "type" in openalex_query["select"][0].split(",")
+    assert "type" in crossref_query["select"][0].split(",")
+
+
 def test_json_source_page_sizes_are_capped_at_public_api_limits():
     openalex_query = parse_qs(
         urlparse(openalex.build_url("diamond", date(2026, 8, 1), 2000)).query
@@ -112,6 +124,28 @@ def test_openalex_fixture_becomes_records_and_skips_malformed_item():
     assert records[1].published_at.tzinfo == timezone.utc
 
 
+@pytest.mark.parametrize(
+    "work_type",
+    ["dataset", "software", "supplementary-materials", "other"],
+)
+def test_openalex_excludes_nonpaper_work_types(work_type):
+    payload = json.loads((FIXTURES / "openalex.json").read_bytes())
+    payload["results"][0]["type"] = work_type
+
+    records = openalex.parse_response(json.dumps(payload).encode())
+
+    assert [record.source_ids for record in records] == [["https://openalex.org/W124"]]
+
+
+def test_openalex_fails_closed_when_work_type_is_missing():
+    payload = json.loads((FIXTURES / "openalex.json").read_bytes())
+    payload["results"][0].pop("type")
+
+    records = openalex.parse_response(json.dumps(payload).encode())
+
+    assert [record.source_ids for record in records] == [["https://openalex.org/W124"]]
+
+
 def test_crossref_fixture_strips_tags_uses_online_date_and_print_fallback():
     records = crossref.parse_response((FIXTURES / "crossref.json").read_bytes())
 
@@ -121,6 +155,25 @@ def test_crossref_fixture_strips_tags_uses_online_date_and_print_fallback():
     assert records[0].published_at.date() == date(2026, 8, 16)
     assert records[1].published_at.date() == date(2026, 8, 10)
     assert records[0].doi == "10.1000/diamond.1"
+
+
+@pytest.mark.parametrize("work_type", ["dataset", "component", "peer-review"])
+def test_crossref_excludes_nonpaper_work_types(work_type):
+    payload = json.loads((FIXTURES / "crossref.json").read_bytes())
+    payload["message"]["items"][0]["type"] = work_type
+
+    records = crossref.parse_response(json.dumps(payload).encode())
+
+    assert [record.doi for record in records] == ["10.1000/diamond.2"]
+
+
+def test_crossref_fails_closed_when_work_type_is_missing():
+    payload = json.loads((FIXTURES / "crossref.json").read_bytes())
+    payload["message"]["items"][0].pop("type")
+
+    records = crossref.parse_response(json.dumps(payload).encode())
+
+    assert [record.doi for record in records] == ["10.1000/diamond.2"]
 
 
 @pytest.mark.parametrize(

@@ -415,6 +415,7 @@ def test_openalex_collection_paginates_to_aggregate_cap_and_returns_next_cursor(
         items = [
             {
                 "id": f"https://openalex.org/W{page_index * page_size + offset}",
+                "type": "article",
                 "title": f"Diamond material {page_index * page_size + offset}",
                 "publication_date": "2026-09-01",
             }
@@ -437,6 +438,46 @@ def test_openalex_collection_paginates_to_aggregate_cap_and_returns_next_cursor(
     assert requested == [("*", 200)] + [(f"oa-{index}", 200) for index in range(1, 10)]
 
 
+def test_openalex_collection_bounds_filtered_nonpapers_by_raw_item_count():
+    from diamond_feed.collect import _collect_scholarly
+    from diamond_feed.http import HttpResult
+
+    requested: list[str] = []
+
+    def fetcher(url):
+        query = parse_qs(urlparse(url).query)
+        cursor = query["cursor"][0]
+        requested.append(cursor)
+        if len(requested) > 2:
+            raise AssertionError("filtered pages exceeded the raw item limit")
+        page_index = 0 if cursor == "*" else int(cursor.removeprefix("oa-"))
+        items = [
+            {
+                "id": f"https://openalex.org/D{page_index * 200 + offset}",
+                "type": "dataset",
+                "title": f"Diamond dataset {page_index * 200 + offset}",
+                "publication_date": "2026-09-01",
+            }
+            for offset in range(200)
+        ]
+        body = json.dumps(
+            {
+                "meta": {"count": 5000, "next_cursor": f"oa-{page_index + 1}"},
+                "results": items,
+            }
+        ).encode()
+        return HttpResult(body, 200, url)
+
+    result = _collect_scholarly(
+        "openalex", "diamond", datetime(2026, 8, 1).date(), fetcher, 400
+    )
+
+    assert result.records == []
+    assert result.complete is False
+    assert result.continuation.cursor == "oa-2"
+    assert requested == ["*", "oa-1"]
+
+
 def test_crossref_collection_paginates_with_1000_row_pages_until_completion():
     from diamond_feed.collect import _collect_scholarly
     from diamond_feed.http import HttpResult
@@ -453,6 +494,7 @@ def test_crossref_collection_paginates_with_1000_row_pages_until_completion():
         items = [
             {
                 "DOI": f"10.1000/page-{start + offset}",
+                "type": "journal-article",
                 "title": [f"Diamond material {start + offset}"],
                 "published-online": {"date-parts": [[2026, 9, 1]]},
             }
@@ -489,9 +531,10 @@ def test_later_page_failure_keeps_records_and_retries_failed_cursor():
             {
                 "meta": {"count": 3, "next_cursor": "retry-this-page"},
                 "results": [
-                    {
-                        "id": "https://openalex.org/W-first",
-                        "title": "Diamond material first page",
+                        {
+                            "id": "https://openalex.org/W-first",
+                            "type": "article",
+                            "title": "Diamond material first page",
                         "publication_date": "2026-09-01",
                     }
                 ],

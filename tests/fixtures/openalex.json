@@ -2,6 +2,7 @@
   "results": [
     {
       "id": "https://openalex.org/W123",
+      "type": "article",
       "doi": "https://doi.org/10.1000/DIAMOND.1",
       "title": "Boron-doped diamond electrodes",
       "display_name": "Boron-doped diamond electrodes",
@@ -12,6 +13,7 @@
     },
     {
       "id": "https://openalex.org/W124",
+      "type": "preprint",
       "doi": null,
       "title": "Diamond growth study",
       "publication_date": "2026-08-14",

@@ -100,6 +100,17 @@ def _assert_repository_output_contract(root: Path) -> None:
             item.findtext("guid") for item in focus_root.findall("./channel/item")
         }
         assert None not in focus_guids and focus_guids <= summary_guids
+        repository_artifact_prefixes = (
+            "doi:10.4121/",
+            "doi:10.6084/m9.figshare.",
+            "doi:10.60893/figshare.",
+            "doi:10.71947/arim.",
+        )
+        assert not any(
+            guid.startswith(repository_artifact_prefixes)
+            for guid in summary_guids
+            if guid is not None
+        )
     if usage_path.exists():
         usage = json.loads(usage_path.read_text(encoding="utf-8"))
         assert isinstance(usage, list) and usage

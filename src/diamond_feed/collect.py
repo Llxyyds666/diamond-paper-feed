@@ -120,6 +120,7 @@ def _collect_scholarly(
     original_from_date = continuation.from_date if continuation is not None else from_date
     cursor = continuation.cursor if continuation is not None else "*"
     records: list[PaperRecord] = []
+    examined_items = 0
     pages_fetched = 0
 
     if name == "arxiv":
@@ -135,8 +136,8 @@ def _collect_scholarly(
             return ScholarlyHarvest(name, [], _failure(url, error), None, False, 0)
 
     page_limit = {"openalex": 200, "crossref": 1000}[name]
-    while len(records) < limit:
-        requested_rows = min(limit - len(records), page_limit)
+    while len(records) < limit and examined_items < limit:
+        requested_rows = min(limit - examined_items, page_limit)
         url = module.build_url(query, original_from_date, requested_rows, cursor)
         try:
             result = fetcher(url)
@@ -163,6 +164,7 @@ def _collect_scholarly(
             )
 
         pages_fetched += 1
+        examined_items += page.item_count
         records.extend(page.records)
         if page.next_cursor is None or (name == "crossref" and page.item_count < requested_rows):
             return ScholarlyHarvest(name, records, None, None, True, pages_fetched)

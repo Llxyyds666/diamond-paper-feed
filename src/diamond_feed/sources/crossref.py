@@ -11,9 +11,21 @@ from diamond_feed.normalize import normalize_doi
 
 
 _BASE_URL = "https://api.crossref.org/works"
-_SELECT = "DOI,title,abstract,author,container-title,published-online,published-print,URL"
+_SELECT = "DOI,title,type,abstract,author,container-title,published-online,published-print,URL"
 _MAX_PAGE_SIZE = 1000
 _TAGS = re.compile(r"<[^>]+>")
+_PAPER_TYPES = frozenset(
+    {
+        "book-chapter",
+        "book-section",
+        "dissertation",
+        "journal-article",
+        "monograph",
+        "posted-content",
+        "proceedings-article",
+        "report",
+    }
+)
 
 
 def build_url(query: str, from_date: date, rows: int, cursor: str = "*") -> str:
@@ -77,6 +89,8 @@ def parse_response(body: bytes) -> list[PaperRecord]:
         if not isinstance(item, dict):
             continue
         try:
+            if item.get("type") not in _PAPER_TYPES:
+                continue
             titles = item.get("title")
             title = str(titles[0]).strip() if isinstance(titles, list) and titles else ""
             doi = normalize_doi(item.get("DOI") if isinstance(item.get("DOI"), str) else None)
