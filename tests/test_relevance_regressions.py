@@ -106,14 +106,16 @@ def test_alias_enrichment_requeues_when_previously_missing_abstract(diamond_reco
     assert len(state.papers) == len(state.pending_ai) == 1
 
 
-def test_figshare_version_aliases_share_decision_but_different_ids_do_not(tmp_path, diamond_records, app_config, fake_deepseek_client):
+def test_figshare_version_aliases_are_quarantined_without_ai(tmp_path, diamond_records, app_config, fake_deepseek_client):
     first = replace(diamond_records[0], doi="10.6084/m9.figshare.12345")
     records = [first, replace(first, doi=first.doi + ".v1"), replace(first, doi="10.6084/m9.figshare.12346")]
     path = tmp_path / "state.json"
     save_state(path, FeedState(papers={record_key(p): p for p in records}, pending_ai=[record_key(p) for p in records]))
     stats = run_summary(app_config, path, fake_deepseek_client, datetime.now(timezone.utc), output_dir=tmp_path)
-    assert stats.processed == stats.selected == 2
-    assert not load_state(path).pending_ai
+    assert stats.processed == stats.selected == stats.requests == 0
+    result = load_state(path)
+    assert not result.pending_ai
+    assert all(record.ai_relevant is False for record in result.papers.values())
 
 
 def test_failure_keeps_all_aliases_pending(tmp_path, diamond_records, app_config, failing_deepseek_client):

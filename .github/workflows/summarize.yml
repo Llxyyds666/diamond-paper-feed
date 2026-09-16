@@ -90,9 +90,17 @@ jobs:
           --state state.json
           --notification-plan "${{ runner.temp }}/diamond-notification.json"
 
+      - name: Validate generated publication
+        id: validate
+        if: ${{ inputs.smoke_test != true && steps.summarize.outcome == 'success' }}
+        continue-on-error: true
+        run: >-
+          python -m pytest -q
+          tests/test_acceptance.py::test_repository_outputs_have_sustainable_cross_file_invariants
+
       - name: Commit and push summary outputs
         id: publish
-        if: ${{ always() && (steps.summarize.outcome == 'success' || steps.summarize.outcome == 'failure') }}
+        if: ${{ always() && (steps.summarize.outcome == 'failure' || (steps.summarize.outcome == 'success' && steps.validate.outcome == 'success')) }}
         shell: bash
         run: |
           echo "pushed=false" >> "$GITHUB_OUTPUT"
@@ -124,7 +132,7 @@ jobs:
           echo "pushed=true" >> "$GITHUB_OUTPUT"
 
       - name: Send Bark notifications
-        if: ${{ inputs.smoke_test != true && steps.summarize.outcome == 'success' && steps.publish.outputs.pushed == 'true' }}
+        if: ${{ inputs.smoke_test != true && steps.summarize.outcome == 'success' && steps.validate.outcome == 'success' && steps.publish.outputs.pushed == 'true' }}
         continue-on-error: true
         env:
           BARK_TOKEN: ${{ secrets.BARK_TOKEN }}
@@ -133,5 +141,5 @@ jobs:
           --plan "${{ runner.temp }}/diamond-notification.json"
 
       - name: Propagate summary failure
-        if: ${{ always() && steps.summarize.outcome == 'failure' }}
+        if: ${{ always() && (steps.summarize.outcome == 'failure' || steps.validate.outcome == 'failure') }}
         run: exit 1

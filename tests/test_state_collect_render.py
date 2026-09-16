@@ -317,6 +317,27 @@ def test_merge_deduplicates_and_keeps_pending_queue_oldest_first(query_rules):
     assert state.papers[record_key(older)].sources == ["rss", "crossref"]
 
 
+def test_merge_filters_repository_artifacts_before_the_ai_queue(query_rules):
+    from diamond_feed.collect import merge_into_state
+    from diamond_feed.state import FeedState
+
+    artifact = _paper(
+        "Diamond device supplementary dataset",
+        "Supporting data only",
+        "10.6084/m9.figshare.33366259",
+        1,
+        source="rss",
+    )
+    state = FeedState.empty()
+
+    stats = merge_into_state(state, [artifact], query_rules)
+
+    assert stats.filtered == 1
+    assert stats.added == stats.merged == 0
+    assert state.papers == {}
+    assert state.pending_ai == []
+
+
 def test_processed_record_only_requeues_when_abstract_becomes_nonempty(query_rules):
     from diamond_feed.collect import merge_into_state
     from diamond_feed.state import FeedState

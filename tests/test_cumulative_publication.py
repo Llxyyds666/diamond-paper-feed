@@ -174,6 +174,70 @@ def test_withheld_identity_is_excluded_without_mutating_decisions(tmp_path):
     assert record.to_dict() == before
 
 
+def test_cumulative_publication_deduplicates_exact_title_and_year_with_distinct_dois():
+    first = replace(
+        _record(1, title="Diamond detector preprint", doi="10.5281/zenodo.100"),
+        ai_relevant=True,
+        summary_zh="第一份摘要",
+    )
+    second = replace(
+        first,
+        doi="10.5281/zenodo.101",
+        url="https://doi.org/10.5281/zenodo.101",
+        summary_zh="第二份更完整的摘要",
+    )
+    state = FeedState(
+        papers={record_key(first): first, record_key(second): second}
+    )
+
+    records = cumulative_records(state, set())
+
+    assert len(records) == 1
+    assert records[0].title == first.title
+
+
+def test_summary_quarantines_legacy_repository_artifact_without_ai(
+    tmp_path, app_config
+):
+    artifact = replace(
+        _record(
+            1,
+            title="AIP Figshare supplement for a diamond device paper",
+            doi="10.60893/figshare.apl.33004193.v1",
+            url="https://doi.org/10.60893/figshare.apl.33004193.v1",
+            sources=["openalex"],
+        ),
+        ai_relevant=True,
+        ai_confidence=0.95,
+        categories=["diamond-power-rf-detectors"],
+        summary_zh="不应发布的数据附件摘要",
+    )
+    key = record_key(artifact)
+    state_path = tmp_path / "state.json"
+    save_state(
+        state_path,
+        FeedState(papers={key: artifact}, pending_ai=[key]),
+    )
+    client = RecordingClient()
+
+    stats = run_summary(
+        app_config,
+        state_path,
+        client,
+        DAY_ONE,
+        output_dir=tmp_path,
+    )
+
+    state = load_state(state_path)
+    assert stats.candidates == stats.processed == stats.selected == stats.requests == 0
+    assert client.payloads == []
+    assert state.pending_ai == []
+    assert state.papers[key].ai_relevant is False
+    assert cumulative_records(state, set()) == []
+    assert _feed_titles(tmp_path / "ai_summary_feed.xml") == []
+    assert _feed_titles(tmp_path / "device_focus_feed.xml") == []
+
+
 def test_shared_publication_renderer_uses_cumulative_collection(app_config):
     accepted = replace(
         _record(1), ai_relevant=True, ai_confidence=0.9,

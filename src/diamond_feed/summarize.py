@@ -34,7 +34,11 @@ from diamond_feed.focus import (
 from diamond_feed.models import AiDecision, PaperRecord
 from diamond_feed.normalize import group_records, record_key
 from diamond_feed.notification import build_notification_plan, write_notification_plan
-from diamond_feed.publication import cumulative_records, load_withheld_aliases
+from diamond_feed.publication import (
+    cumulative_records,
+    load_withheld_aliases,
+    quarantine_repository_artifacts,
+)
 from diamond_feed.recommend import Recommendation, recommend_one
 from diamond_feed.render import render_rss
 from diamond_feed.state import FeedState, load_state, stage_state
@@ -400,6 +404,52 @@ def render_publication(
     return rss, html
 
 
+def _publish_quarantine_cleanup(
+    state: FeedState,
+    state_path: Path,
+    output_dir: Path,
+    config: AppConfig,
+    day: str,
+    withheld_aliases: set[str],
+    focus_overrides: dict[str, frozenset[str]],
+) -> None:
+    """Persist a no-AI legacy-artifact cleanup and regenerate all public views."""
+    rss, html = render_publication(
+        state,
+        config,
+        day,
+        None,
+        withheld_aliases,
+        new_count=0,
+    )
+    focus_rss = render_focused_rss(
+        state,
+        config,
+        withheld_aliases,
+        focus_overrides,
+    )
+    staged: list[StagedFile] = []
+    try:
+        staged.append(stage_text(output_dir / RSS_NAME, rss))
+        staged.append(stage_text(output_dir / HTML_NAME, html))
+        staged.append(stage_text(output_dir / FOCUS_RSS_NAME, focus_rss))
+        staged.append(stage_state(state_path, state))
+    except Exception as staging_error:
+        raise_with_cleanup(
+            staging_error,
+            "stage repository-artifact cleanup",
+            discard_staged(staged),
+        )
+    try:
+        commit_staged(staged)
+    except Exception as commit_error:
+        raise_with_cleanup(
+            commit_error,
+            "publish repository-artifact cleanup",
+            discard_staged(staged),
+        )
+
+
 def _summary_stats(
     *,
     candidates: int,
@@ -476,6 +526,7 @@ def run_summary(
     )
     focus_overrides = load_focus_overrides(focus_overrides_path)
     state = load_state(state_path)
+    quarantined = quarantine_repository_artifacts(state)
     policy_path = (
         Path(policy_path)
         if policy_path is not None
@@ -507,6 +558,16 @@ def run_summary(
     candidate_limit = max(0, config.ai.daily_candidates - used_candidates)
 
     if candidate_limit == 0:
+        if quarantined:
+            _publish_quarantine_cleanup(
+                state,
+                state_path,
+                output_dir,
+                config,
+                day,
+                withheld_aliases,
+                focus_overrides,
+            )
         return SummaryStats(0, 0, 0, 0, len(state.pending_ai), False)
 
     pending_groups, candidate_keys = _pending_groups_and_candidates(
@@ -519,6 +580,16 @@ def run_summary(
             state, candidate_limit
         )
     if not candidate_keys:
+        if quarantined:
+            _publish_quarantine_cleanup(
+                state,
+                state_path,
+                output_dir,
+                config,
+                day,
+                withheld_aliases,
+                focus_overrides,
+            )
         return SummaryStats(0, 0, 0, 0, len(state.pending_ai), False)
 
     counter = RequestCounter()

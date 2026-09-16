@@ -435,11 +435,18 @@ def test_workflow_crons_and_secret_boundary_are_exact():
     assert "\n          BARK_TOKEN:" not in summary_step
     assert '--notification-plan "${{ runner.temp }}/diamond-notification.json"' in summary_step
 
+    validation_step = _workflow_step(summary_workflow, "Validate generated publication")
+    assert "id: validate" in validation_step
+    assert "steps.summarize.outcome == 'success'" in validation_step
+    assert "continue-on-error: true" in validation_step
+    assert "test_repository_outputs_have_sustainable_cross_file_invariants" in validation_step
+
     publish_step = _workflow_step(summary_workflow, "Commit and push summary outputs")
     assert "id: publish" in publish_step
     assert "if: ${{ always()" in publish_step
     assert "steps.summarize.outcome == 'success'" in publish_step
     assert "steps.summarize.outcome == 'failure'" in publish_step
+    assert "steps.validate.outcome == 'success'" in publish_step
     assert "git ls-files --error-unmatch" in publish_step
     assert 'git add -- "${existing_outputs[@]}"' in publish_step
     assert 'echo "pushed=false" >> "$GITHUB_OUTPUT"' in publish_step
@@ -458,6 +465,7 @@ def test_workflow_crons_and_secret_boundary_are_exact():
 
     notify_step = _workflow_step(summary_workflow, "Send Bark notifications")
     assert "steps.summarize.outcome == 'success'" in notify_step
+    assert "steps.validate.outcome == 'success'" in notify_step
     assert "steps.publish.outputs.pushed == 'true'" in notify_step
     assert "steps.publish.outcome" not in notify_step
     assert "continue-on-error: true" in notify_step
@@ -469,7 +477,8 @@ def test_workflow_crons_and_secret_boundary_are_exact():
     )
 
     failure_step = _workflow_step(summary_workflow, "Propagate summary failure")
-    assert "if: ${{ always() && steps.summarize.outcome == 'failure' }}" in failure_step
+    assert "steps.summarize.outcome == 'failure'" in failure_step
+    assert "steps.validate.outcome == 'failure'" in failure_step
     assert "exit 1" in failure_step
 
 

@@ -108,10 +108,10 @@ def test_github_workflows_obey_the_automation_contract():
     assert expected_digest_step in summarize
     assert """      - name: Commit and push summary outputs
         id: publish
-        if: ${{ always() && (steps.summarize.outcome == 'success' || steps.summarize.outcome == 'failure') }}
+        if: ${{ always() && (steps.summarize.outcome == 'failure' || (steps.summarize.outcome == 'success' && steps.validate.outcome == 'success')) }}
 """ in summarize
     assert """      - name: Send Bark notifications
-        if: ${{ inputs.smoke_test != true && steps.summarize.outcome == 'success' && steps.publish.outputs.pushed == 'true' }}
+        if: ${{ inputs.smoke_test != true && steps.summarize.outcome == 'success' && steps.validate.outcome == 'success' && steps.publish.outputs.pushed == 'true' }}
         continue-on-error: true
         env:
           BARK_TOKEN: ${{ secrets.BARK_TOKEN }}
@@ -120,7 +120,7 @@ def test_github_workflows_obey_the_automation_contract():
           --plan "${{ runner.temp }}/diamond-notification.json"
 """ in summarize
     assert """      - name: Propagate summary failure
-        if: ${{ always() && steps.summarize.outcome == 'failure' }}
+        if: ${{ always() && (steps.summarize.outcome == 'failure' || steps.validate.outcome == 'failure') }}
         run: exit 1
 """ in summarize
 
@@ -195,3 +195,23 @@ def test_empty_summary_queue_can_publish_without_preexisting_output_files():
         "git add -- ai_summary_feed.xml ai_summary.html device_focus_feed.xml ai_usage.json state.json"
         not in summarize
     )
+
+
+def test_summary_validates_generated_publication_before_commit_and_notification():
+    summarize = (WORKFLOW_DIRECTORY / "summarize.yml").read_text(encoding="utf-8")
+
+    validation_step = _workflow_step(summarize, "Validate generated publication")
+    publish_step = _workflow_step(summarize, "Commit and push summary outputs")
+    notify_step = _workflow_step(summarize, "Send Bark notifications")
+    failure_step = _workflow_step(summarize, "Propagate summary failure")
+
+    assert "id: validate" in validation_step
+    assert "continue-on-error: true" in validation_step
+    assert "steps.summarize.outcome == 'success'" in validation_step
+    assert "test_repository_outputs_have_sustainable_cross_file_invariants" in validation_step
+    assert summarize.index("Generate bounded DeepSeek digest") < summarize.index(
+        "Validate generated publication"
+    ) < summarize.index("Commit and push summary outputs")
+    assert "steps.validate.outcome == 'success'" in publish_step
+    assert "steps.validate.outcome == 'success'" in notify_step
+    assert "steps.validate.outcome == 'failure'" in failure_step

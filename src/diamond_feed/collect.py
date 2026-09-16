@@ -15,6 +15,7 @@ from diamond_feed.filtering import QueryRules, load_rules, matches_rules
 from diamond_feed.http import FetchError, fetch_bytes
 from diamond_feed.models import PaperRecord, SourceFailure
 from diamond_feed.normalize import group_records, merge_records, record_key
+from diamond_feed.publication import is_repository_artifact
 from diamond_feed.render import render_rss
 from diamond_feed.sources import arxiv, crossref, openalex
 from diamond_feed.sources.rss import collect_rss
@@ -43,7 +44,7 @@ def merge_into_state(state: FeedState, incoming: Iterable[PaperRecord], rules: Q
     added = merged = filtered = 0
     explicit_requeue = set(state.pending_ai)
     for record in incoming:
-        if not matches_rules(record, rules):
+        if is_repository_artifact(record) or not matches_rules(record, rules):
             filtered += 1
             continue
         key = record_key(record)
