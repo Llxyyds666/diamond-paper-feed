@@ -1,14 +1,14 @@
 timestamp	category	url	detail
-2026-10-02T22:16:34.455998+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10836&sortOrder=newest	malformed feed
-2026-10-02T22:16:34.559432+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10853&sortOrder=newest	malformed feed
-2026-10-02T22:16:34.670554+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10854&sortOrder=newest	malformed feed
-2026-10-02T22:16:34.788362+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=11051&sortOrder=newest	malformed feed
-2026-10-02T22:16:34.921806+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=11664&sortOrder=newest	malformed feed
-2026-10-02T22:16:35.031699+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=12274&sortOrder=newest	malformed feed
-2026-10-02T22:16:35.167953+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=12598&sortOrder=newest	malformed feed
-2026-10-02T22:16:35.282068+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=340&sortOrder=newest	malformed feed
-2026-10-02T22:16:35.417022+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=40823&sortOrder=newest	malformed feed
-2026-10-02T22:16:58.637171+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	malformed feed
-2026-10-02T22:16:58.778068+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	malformed feed
-2026-10-02T22:16:58.967983+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aaemcq&type=etoc&feed=rss	HTTP 403
-2026-10-02T22:16:59.999572+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aelccp&type=etoc&feed=rss	HTTP 403
+2026-10-03T05:21:49.729202+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10836&sortOrder=newest	malformed feed
+2026-10-03T05:21:49.830982+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10853&sortOrder=newest	malformed feed
+2026-10-03T05:21:49.940246+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10854&sortOrder=newest	malformed feed
+2026-10-03T05:21:50.183201+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=11051&sortOrder=newest	malformed feed
+2026-10-03T05:21:50.306679+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=11664&sortOrder=newest	malformed feed
+2026-10-03T05:21:50.412664+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=12274&sortOrder=newest	malformed feed
+2026-10-03T05:21:50.516300+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=12598&sortOrder=newest	malformed feed
+2026-10-03T05:21:50.620689+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=340&sortOrder=newest	malformed feed
+2026-10-03T05:21:50.742770+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=40823&sortOrder=newest	malformed feed
+2026-10-03T05:22:16.032939+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	malformed feed
+2026-10-03T05:22:16.127005+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	malformed feed
+2026-10-03T05:22:16.199389+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aaemcq&type=etoc&feed=rss	HTTP 403
+2026-10-03T05:22:16.280770+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aelccp&type=etoc&feed=rss	HTTP 403
