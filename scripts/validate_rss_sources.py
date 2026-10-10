@@ -26,7 +26,9 @@ FAILURE_COLUMNS = ("timestamp", "category", "url", "detail")
 HARD_FAILURES = frozenset({"http_404", "http_410", "parse_error", "retired"})
 SOFT_FAILURES = frozenset({"timeout", "url_error", "network_error", "empty_feed"})
 DATABASE_ONLY_COVERAGE = {
+    "ACS Applied Energy Materials": "official RSS returned HTTP 403",
     "ACS Applied Materials & Interfaces": "official RSS returned HTTP 403",
+    "ACS Energy Letters": "official RSS returned HTTP 403",
     "ACS Nano": "official RSS returned HTTP 403",
     "American Mineralogist": "no stable official RSS endpoint found",
     "Applied Physics Letters": "official RSS endpoint is retired (HTTP 404)",

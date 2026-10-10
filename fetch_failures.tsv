@@ -1,18 +1,3 @@
 timestamp	category	url	detail
-2026-10-10T12:35:21.841988+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10836&sortOrder=newest	malformed feed
-2026-10-10T12:35:21.927507+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10853&sortOrder=newest	malformed feed
-2026-10-10T12:35:22.000012+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10854&sortOrder=newest	malformed feed
-2026-10-10T12:35:22.075416+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=11051&sortOrder=newest	malformed feed
-2026-10-10T12:35:22.162280+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=11664&sortOrder=newest	malformed feed
-2026-10-10T12:35:22.275193+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=12274&sortOrder=newest	malformed feed
-2026-10-10T12:35:22.356723+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=12598&sortOrder=newest	malformed feed
-2026-10-10T12:35:22.452159+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=340&sortOrder=newest	malformed feed
-2026-10-10T12:35:22.532503+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=40823&sortOrder=newest	malformed feed
-2026-10-10T12:35:30.247312+00:00	parse_error	https://www.nature.com/ncomms.rss	malformed feed
-2026-10-10T12:35:30.320858+00:00	parse_error	https://www.nature.com/natelectron.rss	malformed feed
-2026-10-10T12:35:30.522774+00:00	parse_error	https://www.nature.com/nnano.rss	malformed feed
-2026-10-10T12:35:30.726850+00:00	parse_error	https://www.nature.com/natrevmats.rss	malformed feed
-2026-10-10T12:35:44.175307+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	malformed feed
-2026-10-10T12:35:44.264179+00:00	parse_error	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	malformed feed
-2026-10-10T12:35:44.570779+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aaemcq&type=etoc&feed=rss	HTTP 403
-2026-10-10T12:35:45.563400+00:00	http_403	https://pubs.acs.org/action/showFeed?jc=aelccp&type=etoc&feed=rss	HTTP 403
+2026-10-10T14:35:57.140629+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
+2026-10-10T14:35:57.140629+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries

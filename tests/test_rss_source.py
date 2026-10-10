@@ -120,26 +120,40 @@ def test_fetch_bytes_does_not_retry_retired_or_missing_endpoints(monkeypatch, st
     assert raised.value.status == status
 
 
-def test_fetch_bytes_uses_mdpi_curl_parameters(monkeypatch):
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://www.mdpi.com/rss/journal/materials",
+        "https://link.springer.com/search.rss?facet-journal-id=10853",
+        "https://www.nature.com/nmat.rss",
+    ],
+)
+def test_fetch_bytes_uses_browser_transport_for_challenge_prone_publishers(
+    monkeypatch, url
+):
     seen = {}
 
     class Response:
         content = b"feed"
         status_code = 200
-        url = "https://www.mdpi.com/final"
+        url = "https://publisher.test/final"
 
     def fake_get(url, **kwargs):
         seen.update(url=url, **kwargs)
         return Response()
 
     monkeypatch.setattr("diamond_feed.http.curl_requests.get", fake_get)
+    monkeypatch.setattr(
+        "diamond_feed.http._fetch_with_urllib",
+        lambda *_: pytest.fail("challenge-prone publisher must use browser transport"),
+    )
 
-    result = fetch_bytes("https://www.mdpi.com/rss", timeout=7, attempts=1)
+    result = fetch_bytes(url, timeout=7, attempts=1)
 
     assert result.body == b"feed"
-    assert result.final_url == "https://www.mdpi.com/final"
+    assert result.final_url == "https://publisher.test/final"
     assert seen == {
-        "url": "https://www.mdpi.com/rss",
+        "url": url,
         "timeout": 7,
         "impersonate": "chrome",
         "allow_redirects": True,

@@ -34,8 +34,10 @@ REQUIRED_README_SECTIONS = (
     "Security",
 )
 README_DATABASE_REASONS = {
+    "ACS Applied Energy Materials": "官方 RSS 返回 HTTP 403",
     "ACS Applied Materials & Interfaces": "官方 RSS 返回 HTTP 403",
     "ACS Nano": "官方 RSS 返回 HTTP 403",
+    "ACS Energy Letters": "官方 RSS 返回 HTTP 403",
     "American Mineralogist": "未找到稳定的官方 RSS 地址",
     "Applied Physics Letters": "官方 RSS 已停用并返回 HTTP 404",
     "Carbon": "官方 RSS 未通过有界 GET 验证",
@@ -330,7 +332,7 @@ def test_isolated_collection_continuation_completion_and_summary_lifecycle(
 def test_registry_is_exactly_the_curated_sorted_https_journal_set():
     rows = _registry_rows()
 
-    assert len(rows) == 158
+    assert len(rows) == 156
     assert len({row["url"] for row in rows}) == len(rows)
     assert all(row["url"].startswith("https://") for row in rows)
     assert rows == sorted(
@@ -340,6 +342,8 @@ def test_registry_is_exactly_the_curated_sorted_https_journal_set():
     registry_text = Path("config/rss_sources.tsv").read_text(encoding="utf-8").casefold()
     assert "perovskite" not in registry_text
     assert "arxiv.org/api/query" not in registry_text
+    assert "pubs.acs.org/action/showfeed?jc=aaemcq" not in registry_text
+    assert "pubs.acs.org/action/showfeed?jc=aelccp" not in registry_text
 
 
 def test_public_config_readme_and_database_only_table_describe_exact_limits():
@@ -382,6 +386,7 @@ def test_public_config_readme_and_database_only_table_describe_exact_limits():
     assert "`filtered_feed.xml`：规则筛选后的高召回 RSS，最多 2000 条" in readme
     assert "第一次运行会回溯数据库最近 30 天" in readme
     assert "数据库游标" in readme and "不推进该来源水位" in readme
+    assert "2026-10-10 的完整实测中，156 个源全部保留，硬失败为 0，软失败为 2" in readme
     assert set(README_DATABASE_REASONS) == set(DATABASE_ONLY_COVERAGE)
     for journal, translated_reason in README_DATABASE_REASONS.items():
         assert f"| {journal} | {translated_reason} |" in readme

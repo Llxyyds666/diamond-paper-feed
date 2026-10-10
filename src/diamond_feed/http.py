@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import socket
 import time
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 from curl_cffi import requests as curl_requests
@@ -10,6 +11,9 @@ from diamond_feed.retry import RetryPolicy, call_with_retry, retryable_http_stat
 
 
 USER_AGENT = "diamond-paper-feed/0.1 (resilient RSS collector)"
+BROWSER_TRANSPORT_HOSTS = frozenset(
+    {"link.springer.com", "www.mdpi.com", "www.nature.com"}
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,7 +70,7 @@ def _fetch_with_urllib(url: str, timeout: float) -> HttpResult:
         )
 
 
-def _fetch_with_mdpi(url: str, timeout: float) -> HttpResult:
+def _fetch_with_browser(url: str, timeout: float) -> HttpResult:
     response = curl_requests.get(
         url,
         timeout=timeout,
@@ -85,7 +89,12 @@ def fetch_bytes(url: str, timeout: float, attempts: int) -> HttpResult:
         attempts=attempts,
         delays=tuple(float(2**index) for index in range(attempts - 1)),
     )
-    fetch_once = _fetch_with_mdpi if "www.mdpi.com" in url else _fetch_with_urllib
+    hostname = (urlsplit(url).hostname or "").casefold()
+    fetch_once = (
+        _fetch_with_browser
+        if hostname in BROWSER_TRANSPORT_HOSTS
+        else _fetch_with_urllib
+    )
 
     def operation() -> HttpResult:
         try:

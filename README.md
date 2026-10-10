@@ -40,13 +40,17 @@ Diamond Paper Feed 是一个面向金刚石研究的高召回文献监测项目�
 3. 宽松规则产生高召回候选，DOI 优先去重；无 DOI 时按规范化题名和年份去重。
 4. 候选先写入 `state.json` 的 `pending_ai`，再由独立摘要任务按日限额消费。
 
-当前清单含 158 个活动 RSS 源。2026-09-07 的无 AI 凭据 fresh smoke 中，154 个 RSS 源成功，Crossref 与 arXiv 完成并写入水位；OpenAlex 在后续页发生瞬时网络故障，已保留 368 条规则筛选后的 OpenAlex 记录、原始起始日期和失败页游标，且未推进 OpenAlex 水位。确定性噪声复核后，最终状态和 RSS 各含 723 篇，失败报告含 2 个空 feed、2 个 HTTP 403 和 1 个网络错误。
+当前清单含 156 个活动 RSS 源。2026-09-07 的无 AI 凭据 fresh smoke 使用当时的 158 个源，其中 154 个 RSS 源成功；Crossref 与 arXiv 完成并写入水位，OpenAlex 在后续页发生瞬时网络故障，已保留 368 条规则筛选后的 OpenAlex 记录、原始起始日期和失败页游标，且未推进 OpenAlex 水位。确定性噪声复核后，最终状态和 RSS 各含 723 篇，失败报告含 2 个空 feed、2 个 HTTP 403 和 1 个网络错误。
+
+2026-10-10 的完整实测中，156 个源全部保留，硬失败为 0，软失败为 2；两个软失败均为 Springer 返回的空 feed，其余 Springer 与 Nature 源均通过真实 GET 和解析验证。
 
 以下期刊族没有通过有界真实 GET 获得稳定官方 RSS，或官方端点受反爬限制，因此标记为“仅数据库覆盖”。它们仍由 OpenAlex、Crossref 和 arXiv 查询覆盖，不应把猜测 URL 加入 RSS 清单：
 
 | 期刊族 | 仅数据库覆盖原因 |
 | --- | --- |
+| ACS Applied Energy Materials | 官方 RSS 返回 HTTP 403 |
 | ACS Applied Materials & Interfaces | 官方 RSS 返回 HTTP 403 |
+| ACS Energy Letters | 官方 RSS 返回 HTTP 403 |
 | ACS Nano | 官方 RSS 返回 HTTP 403 |
 | American Mineralogist | 未找到稳定的官方 RSS 地址 |
 | Applied Physics Letters | 官方 RSS 已停用并返回 HTTP 404 |
