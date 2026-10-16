@@ -1,3 +1,4 @@
 timestamp	category	url	detail
-2026-10-16T11:28:29.862885+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
-2026-10-16T11:28:30.607482+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
+2026-10-16T16:42:31.032910+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
+2026-10-16T16:42:32.015146+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
+2026-10-16T16:44:01.379314+00:00	http_429	https://export.arxiv.org/api/query?search_query=%28all%3A%22diamond%22%29+AND+submittedDate%3A%5B202610160000+TO+300001010000%5D&start=0&max_results=2000&sortBy=submittedDate&sortOrder=descending	HTTP 429
