@@ -1,5 +1,5 @@
 timestamp	category	url	detail
-2026-10-19T22:23:35.443193+00:00	timeout	https://www.frontiersin.org/journals/energy-research/rss	timeout
-2026-10-19T22:23:39.746746+00:00	http_500	https://www.frontiersin.org/journals/materials/rss	HTTP 500
-2026-10-19T22:24:25.672538+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
-2026-10-19T22:24:26.831025+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
+2026-10-20T04:55:28.607321+00:00	timeout	https://www.frontiersin.org/journals/energy-research/rss	timeout
+2026-10-20T04:56:40.434035+00:00	timeout	https://www.frontiersin.org/journals/materials/rss	timeout
+2026-10-20T04:57:34.710441+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
+2026-10-20T04:57:35.790290+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
