@@ -1,5 +1,5 @@
 timestamp	category	url	detail
-2026-10-20T04:55:28.607321+00:00	timeout	https://www.frontiersin.org/journals/energy-research/rss	timeout
-2026-10-20T04:56:40.434035+00:00	timeout	https://www.frontiersin.org/journals/materials/rss	timeout
-2026-10-20T04:57:34.710441+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
-2026-10-20T04:57:35.790290+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
+2026-10-20T11:41:16.078340+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC67.XML	HTTP 502
+2026-10-20T11:42:27.250548+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
+2026-10-20T11:42:28.154366+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
+2026-10-20T11:42:43.643971+00:00	http_429	https://export.arxiv.org/api/query?search_query=%28all%3A%22diamond%22%29+AND+submittedDate%3A%5B202610200000+TO+300001010000%5D&start=0&max_results=2000&sortBy=submittedDate&sortOrder=descending	HTTP 429
