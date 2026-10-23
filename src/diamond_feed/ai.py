@@ -4,6 +4,7 @@ import json
 import math
 import time
 from collections.abc import Callable, Sequence
+from http.client import IncompleteRead
 from threading import Lock
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -160,7 +161,7 @@ def _retryable(error: Exception) -> bool:
         return retryable_http_status(status)
     return isinstance(
         error,
-        (_ModelResponseError, TimeoutError, ConnectionError, URLError),
+        (_ModelResponseError, IncompleteRead, TimeoutError, ConnectionError, URLError),
     )
 
 

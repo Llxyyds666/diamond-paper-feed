@@ -1,4 +1,5 @@
 import json
+from http.client import IncompleteRead
 from math import inf, nan
 from urllib.error import HTTPError
 
@@ -179,6 +180,28 @@ def test_timeout_retries_three_times_and_reports_incomplete_usage(ai_config, dia
     assert calls == 3
     assert waits == [1.0, 2.0]
     assert counter.used == 3
+    assert client.token_usage_complete is False
+
+
+def test_incomplete_read_retries_and_can_succeed(ai_config):
+    calls = 0
+    waits = []
+
+    def transport(url, headers, payload, timeout):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise IncompleteRead(b'{"choices":', 100)
+        return _response("[]")
+
+    counter = RequestCounter()
+    client = DeepSeekClient(
+        "test-api-key", ai_config, transport=transport, wait=waits.append
+    )
+
+    assert client.complete_json([], 1, counter) == []
+    assert (calls, counter.used) == (2, 2)
+    assert waits == [1.0]
     assert client.token_usage_complete is False
 
 
