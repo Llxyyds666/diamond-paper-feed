@@ -507,13 +507,13 @@
   },
   {
     "date": "2026-10-23",
-    "candidates": 12,
-    "processed": 0,
-    "selected": 0,
-    "requests": 1,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "total_tokens": 0,
+    "candidates": 24,
+    "processed": 12,
+    "selected": 8,
+    "requests": 5,
+    "prompt_tokens": 8240,
+    "completion_tokens": 2115,
+    "total_tokens": 10355,
     "token_usage_complete": false
   }
 ]
