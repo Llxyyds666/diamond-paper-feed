@@ -1,3 +1,4 @@
 timestamp	category	url	detail
-2026-10-25T11:34:45.619867+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
-2026-10-25T11:34:46.439361+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
+2026-10-25T16:25:31.872514+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
+2026-10-25T16:25:32.974385+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
+2026-10-25T16:25:44.690177+00:00	http_429	https://api.openalex.org/works?search=diamond&filter=from_publication_date%3A2026-10-25&per-page=200&cursor=%2A&select=id%2Cdoi%2Ctitle%2Cdisplay_name%2Ctype%2Cpublication_date%2Cauthorships%2Cprimary_location%2Cabstract_inverted_index	HTTP 429
