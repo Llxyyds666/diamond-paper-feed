@@ -1,27 +1,3 @@
 timestamp	category	url	detail
-2026-10-25T04:44:38.006011+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC62.XML	HTTP 418
-2026-10-25T04:44:38.051002+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC53.XML	HTTP 418
-2026-10-25T04:44:38.100691+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC67.XML	HTTP 418
-2026-10-25T04:44:38.148331+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC54.XML	HTTP 418
-2026-10-25T04:44:38.195918+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC57.XML	HTTP 418
-2026-10-25T04:44:38.240948+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC55.XML	HTTP 418
-2026-10-25T04:44:38.288778+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC51.XML	HTTP 418
-2026-10-25T04:44:38.331953+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC64.XML	HTTP 418
-2026-10-25T04:44:38.380219+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC48.XML	HTTP 418
-2026-10-25T04:44:38.431478+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC56.XML	HTTP 418
-2026-10-25T04:44:38.478192+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC49.XML	HTTP 418
-2026-10-25T04:44:38.523649+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC65.XML	HTTP 418
-2026-10-25T04:44:38.568206+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC68.XML	HTTP 418
-2026-10-25T04:44:38.617184+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC52.XML	HTTP 418
-2026-10-25T04:44:38.665460+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC60.XML	HTTP 418
-2026-10-25T04:44:38.717560+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC91.XML	HTTP 418
-2026-10-25T04:44:38.768319+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC61.XML	HTTP 418
-2026-10-25T04:44:38.815756+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC63.XML	HTTP 418
-2026-10-25T04:44:38.864037+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC59.XML	HTTP 418
-2026-10-25T04:44:38.912985+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC66.XML	HTTP 418
-2026-10-25T04:44:38.958087+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC58.XML	HTTP 418
-2026-10-25T04:44:39.004460+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC92.XML	HTTP 418
-2026-10-25T04:44:39.056213+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC90.XML	HTTP 418
-2026-10-25T04:44:44.019209+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC50.XML	HTTP 418
-2026-10-25T04:45:17.098321+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
-2026-10-25T04:45:17.911693+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
+2026-10-25T11:34:45.619867+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
+2026-10-25T11:34:46.439361+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
