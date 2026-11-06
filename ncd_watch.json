@@ -3465,7 +3465,28 @@
     "title:虾青素宏基因组:2026",
     "title:阴阳爻网络模型dstn discrete spacetime topological network 核心推导 论证与模拟验证 core derivations demonstrations and simulation validations:2026"
   ],
-  "reviews": {},
+  "reviews": {
+    "doi:10.1016/j.diamond.2026.114340": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2026.114340",
+        "title:nanocrystalline diamond interface for monitoring electrical activity of fibroblasts when exposed to hydrogen peroxide:2027"
+      ],
+      "fingerprint": "c797c73062e8c0d45df94769cf0b7bba0e0484ad07fad7967b6cfb1f7e74abf8",
+      "is_ncd": true,
+      "summary_zh": "标题明确涉及纳米晶金刚石界面用于监测暴露于过氧化氢的成纤维细胞电活动。仅据标题，缺少摘要。",
+      "reason": "标题含明确的纳米晶金刚石（NCD）研究表述，属NCD界面/应用研究；无摘要故不推断结果。"
+    },
+    "doi:10.1016/j.diamond.2026.114358": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2026.114358",
+        "title:flexible diamond carbon nanotube hybrid electrodes for multifunctional neural interfacing with enhanced stability:2027"
+      ],
+      "fingerprint": "1c3418b20c4463becea1a527431c95de8906fb81f15106ef608164590b96b1b8",
+      "is_ncd": false,
+      "summary_zh": "标题仅称柔性金刚石-碳纳米管混合电极，未出现纳米晶或超纳米晶金刚石表述，也无纳米尺度晶粒描述。",
+      "reason": "缺少NCD/UNCD的明确证据，仅凭标题无法确认金刚石为纳米晶材料。"
+    }
+  },
   "outbox": {
     "smoke:doi:10.1016/j.diamond.2026.114099": {
       "aliases": [
@@ -3478,15 +3499,27 @@
       "created_at": "2026-11-06T09:23:38.804986+00:00",
       "sent_at": "2026-11-06T09:23:42.151374+00:00",
       "delivery_attempts": 1
+    },
+    "doi:10.1016/j.diamond.2026.114340": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2026.114340",
+        "title:nanocrystalline diamond interface for monitoring electrical activity of fibroblasts when exposed to hydrogen peroxide:2027"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Nanocrystalline diamond interface for monitoring electrical activity of fibroblasts when exposed to hydrogen peroxide\n期刊：Diamond and Related Materials\n题录日期：2027-01-01\n摘要：标题明确涉及纳米晶金刚石界面用于监测暴露于过氧化氢的成纤维细胞电活动。仅据标题，缺少摘要。\n入选依据：标题含明确的纳米晶金刚石（NCD）研究表述，属NCD界面/应用研究；无摘要故不推断结果。\nDOI：10.1016/j.diamond.2026.114340",
+      "url": "https://doi.org/10.1016/j.diamond.2026.114340",
+      "created_at": "2026-11-06T19:44:03.951784+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
     }
   },
   "usage": [
     {
       "date": "2026-11-06",
-      "requests": 1,
-      "prompt_tokens": 807,
-      "completion_tokens": 130,
-      "total_tokens": 937,
+      "requests": 2,
+      "prompt_tokens": 1402,
+      "completion_tokens": 312,
+      "total_tokens": 1714,
       "token_usage_complete": true
     }
   ]
