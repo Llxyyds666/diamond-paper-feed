@@ -1,0 +1,98 @@
+name: Track all NCD papers through Bark
+
+on:
+  schedule:
+    - cron: '47 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      smoke_paper_key:
+        description: Optional existing paper key for one explicitly marked end-to-end test
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: diamond-paper-feed-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ncd:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install project and test dependencies
+        run: python -m pip install ".[dev]"
+
+      - name: Test before NCD tracking
+        run: python -m pytest -q
+
+      - name: Screen every new NCD paper
+        id: screen
+        continue-on-error: true
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
+          NCD_SMOKE_PAPER_KEY: ${{ inputs.smoke_paper_key }}
+        shell: bash
+        run: |
+          args=(python -m diamond_feed.ncd --screen)
+          if [[ -n "${NCD_SMOKE_PAPER_KEY}" ]]; then
+            args+=(--smoke-paper-key "${NCD_SMOKE_PAPER_KEY}")
+          fi
+          "${args[@]}"
+
+      - name: Publish NCD outbox before sending
+        id: publish
+        if: ${{ always() && (steps.screen.outcome == 'success' || steps.screen.outcome == 'failure') }}
+        shell: bash
+        run: |
+          git add -- "ncd_watch.json"
+          if git diff --cached --quiet; then
+            echo "NCD outbox is already published."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: checkpoint NCD decisions and pending notifications"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Deliver pending NCD papers through Bark
+        id: deliver
+        if: ${{ !cancelled() && steps.publish.outcome == 'success' }}
+        continue-on-error: true
+        env:
+          BARK_TOKEN: ${{ secrets.BARK_TOKEN }}
+        run: python -m diamond_feed.ncd --deliver
+
+      - name: Publish NCD delivery receipts
+        if: ${{ always() && (steps.deliver.outcome == 'success' || steps.deliver.outcome == 'failure') }}
+        shell: bash
+        run: |
+          git add -- "ncd_watch.json"
+          if git diff --cached --quiet; then
+            echo "No new NCD delivery receipts."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: save NCD Bark acceptance receipts"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Propagate NCD failures
+        if: ${{ always() && (steps.screen.outcome == 'failure' || steps.deliver.outcome == 'failure') }}
+        run: exit 1

@@ -34,7 +34,10 @@ def _contains_phrase(text: str, phrase: str) -> bool:
 
 def matches_rules(record: PaperRecord, rules: QueryRules) -> bool:
     text = _normalize_text(f"{record.title} {record.abstract}")
-    if not any(term in text for term in rules.include_any):
+    if not any(
+        _contains_phrase(text, term) if term in {"ncd", "uncd"} else term in text
+        for term in rules.include_any
+    ):
         return False
     if any(_contains_phrase(text, term) for term in rules.obvious_noise):
         return False

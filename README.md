@@ -187,6 +187,20 @@ python -m diamond_feed.promote --report evaluations/34175877785/report.json --st
 
 此命令不需要 API Key，不请求模型；它先校验报告完成状态、记录身份、标题/摘要输入及重复别名的一致性，再同步既有判定并移除已处理队列项。综合 RSS、HTML、器件方向 RSS 和状态作为同一组原子发布，反复导入不产生重复。`ai_usage.json` 不会改写：评测已产生的请求和费用仍保存在原评测目录，不能记成离线同步的新消费。原始评测结果保持不变。
 
+## NCD/UNCD 全量 Bark 追踪
+
+从 2026-11-06 起，新增独立的 `Track all NCD papers through Bark` 工作流，每六小时检查完整采集库。DeepSeek 对 NCD/UNCD 候选逐篇判断，覆盖生长、成核、加工、热学、掺杂、器件、电化学及其他应用；符合条件的研究论文、综述、会议论文、学位论文和预印本全部推送，不做每日最佳排名，不受综合日报每天 100 篇候选或三个器件方向限制。只有纳米金刚石分散颗粒、数据附件、封面目录及无关缩写等不会作为 NCD 论文推送。覆盖范围以现有采集来源可获取的题名、摘要为准。
+
+该流程向 DeepSeek 提供完整原始摘要，缺失时先尝试已有的 Semantic Scholar/OpenAIRE 补全；仍缺摘要而题名明确属于 NCD 时，通知标明“仅据标题，缺少摘要”。中文与 NCD/UNCD 缩写也参与采集预筛。原有综合 RSS、三个器件方向 RSS、每日统计及每日最佳论文继续运行。
+
+每篇一条 Bark，包含标题、期刊、题录日期、中文摘要、NCD 入选依据和 DOI；点击通知进入 DOI 或论文网页。使用现有官方 Bark、金刚石图标和 `BARK_TOKEN` Secret。没有新增 NCD 时不额外发送空通知。
+
+`ncd_watch.json` 保存部署时的历史基线、DeepSeek 判断、独立费用统计、待发消息和 Bark 服务接受回执，不含密钥。既有论文不集中补推；新发现的论文按稳定身份去重。判断失败的候选在下一轮重试，已排除的候选在标题或原始摘要补全后重新判断。NCD 筛选不设每日候选数/请求数上限，每个模型请求沿用瞬时错误重试。
+
+推送前先把待发送队列提交到 GitHub，每篇服务接受后立即保存结果，最后提交所有回执。失败的消息保持待发，下轮只补发未接受项。服务返回接受代表 Bark 接收请求，手机端显示仍取决于设备；网络超时或接受后回执尚未持久化时进程中断可能造成一次重复，因此采用至少一次投递语义。不要删除或重建此文件，否则会丢失去重和补发依据。恢复时从最近已验证提交还原。
+
+手动运行该工作流时，`smoke_paper_key` 可选填一个现有键（例如 `doi:10.1016/j.vacuum.2026.115525`），只测试这一篇并给通知加“测试”标记，不触发历史全量推送。常规运行请留空。测试请求也记入 `ncd_watch.json` 的独立费用；综合日报的 `ai_usage.json` 不包含 NCD 额外请求。
+
 ## AI hard limits
 
 - 模型固定为 `deepseek-v4-flash-vision-exp`，Base URL 固定为 `https://api.deepseek.com`。
@@ -260,6 +274,6 @@ Get-Content -Raw state.json | ConvertFrom-Json | Out-Null
 - 允许的凭据名称是 `DEEPSEEK_API_KEY`、`SEMANTIC_SCHOLAR_API_KEY` 和 `BARK_TOKEN`；值只保存在 GitHub Actions Secret 或本地秘密管理器。
 - 不跟踪 `.env`、`vendor/`、`__pycache__/`、虚拟环境、用户配置或复制的上游输出 feed。
 - 不记录 Authorization 头、完整 AI 请求体、Secret 值或其片段。
-- Collection 工作流不接收任何上述 Secret；Summary 工作流按最小范围向摘要步骤注入 DeepSeek 与 Semantic Scholar 凭据，只有发布成功后的 Bark 步骤接收 `BARK_TOKEN`。
+- Collection 工作流不接收任何上述 Secret；Summary 与 NCD 工作流按最小范围向筛选步骤注入 DeepSeek 与 Semantic Scholar 凭据，只有发布成功后的 Bark 步骤接收 `BARK_TOKEN`。
 - 发布前运行 `python -m pytest -q`、敏感串扫描和 `git diff --check`，并只暂存任务声明的文件。
 - 如果凭据曾进入文件或提交，应先在 DeepSeek 控制台撤销并换新，再清理 Git 历史；仅删除当前文件并不能从历史中移除它。

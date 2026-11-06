@@ -215,3 +215,41 @@ def test_summary_validates_generated_publication_before_commit_and_notification(
     assert "steps.validate.outcome == 'success'" in publish_step
     assert "steps.validate.outcome == 'success'" in notify_step
     assert "steps.validate.outcome == 'failure'" in failure_step
+
+
+def test_ncd_workflow_screens_without_general_quota_and_persists_each_delivery_phase():
+    path = WORKFLOW_DIRECTORY / "ncd.yml"
+    assert path.is_file(), "NCD tracking must run automatically on GitHub"
+    workflow = path.read_text(encoding="utf-8")
+    assert "cron: '47 */6 * * *'" in workflow
+    assert "group: diamond-paper-feed-${{ github.ref }}" in workflow
+    assert "cancel-in-progress: false" in workflow
+    assert "smoke_paper_key:" in workflow
+    assert "python -m pytest -q" in workflow
+    screen = _workflow_step(workflow, "Screen every new NCD paper")
+    publish = _workflow_step(workflow, "Publish NCD outbox before sending")
+    deliver = _workflow_step(workflow, "Deliver pending NCD papers through Bark")
+    receipts = _workflow_step(workflow, "Publish NCD delivery receipts")
+    failure = _workflow_step(workflow, "Propagate NCD failures")
+    assert "diamond_feed.ncd --screen" in screen
+    assert "DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}" in screen
+    assert "SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}" in screen
+    assert "BARK_TOKEN" not in screen
+    assert "continue-on-error: true" in screen
+    assert "NCD_SMOKE_PAPER_KEY: ${{ inputs.smoke_paper_key }}" in screen
+    assert '"${{ inputs.smoke_paper_key }}"' not in screen
+    assert "always()" in publish and "steps.screen.outcome" in publish
+    assert 'git add -- "ncd_watch.json"' in publish
+    assert 'git add -- "ncd_watch.json"' in receipts
+    assert "BARK_TOKEN: ${{ secrets.BARK_TOKEN }}" in deliver
+    assert "DEEPSEEK_API_KEY" not in deliver
+    assert "SEMANTIC_SCHOLAR_API_KEY" not in deliver
+    assert "diamond_feed.ncd --deliver" in deliver
+    assert "steps.publish.outcome == 'success'" in deliver
+    assert "steps.publish.outputs.pushed" not in deliver, "Previously persisted failed notifications must also be retried"
+    assert "continue-on-error: true" in deliver
+    assert "always()" in receipts and "steps.deliver.outcome" in receipts
+    assert "steps.screen.outcome == 'failure'" in failure
+    assert "steps.deliver.outcome == 'failure'" in failure
+    assert workflow.index("Screen every new NCD paper") < workflow.index("Publish NCD outbox before sending") < workflow.index("Deliver pending NCD papers through Bark") < workflow.index("Publish NCD delivery receipts")
+    assert "git add -A" not in workflow and "git add -- ." not in workflow

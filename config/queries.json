@@ -1,6 +1,6 @@
 {
   "include_any": [
-    "diamond", "diamonds", "nanodiamond", "nanodiamonds",
+    "diamond", "diamonds", "nanodiamond", "nanodiamonds", "金刚石", "金剛石", "ncd", "uncd",
     "nano-diamond", "nanocrystalline diamond", "ultrananocrystalline diamond",
     "polycrystalline diamond", "single-crystal diamond", "single crystal diamond",
     "cvd diamond", "chemical vapor deposition diamond", "chemical vapour deposition diamond",
