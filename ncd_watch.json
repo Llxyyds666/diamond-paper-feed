@@ -3485,6 +3485,16 @@
       "is_ncd": false,
       "summary_zh": "标题仅称柔性金刚石-碳纳米管混合电极，未出现纳米晶或超纳米晶金刚石表述，也无纳米尺度晶粒描述。",
       "reason": "缺少NCD/UNCD的明确证据，仅凭标题无法确认金刚石为纳米晶材料。"
+    },
+    "doi:10.1016/j.diamond.2026.114313": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2026.114313",
+        "title:plasma etch process optimization for photonic grade diamond on insulator substrates and thickness evaluation using colorimetry:2027"
+      ],
+      "fingerprint": "532379fb0c61cddfc67f0589b09ca57abc84d344dbe56ecaa4c25781f9fd0721",
+      "is_ncd": false,
+      "summary_zh": "该文研究单晶金刚石（SCD）膜的等离子刻蚀减薄与金刚石-绝缘体（DOI）衬底制备，用于金刚石光子学器件，未涉及纳米晶或超纳米晶金刚石材料。",
+      "reason": "全文围绕单晶金刚石膜的加工与厚度测量，无NCD/UNCD或纳米尺度晶粒描述，故不属于NCD研究。"
     }
   },
   "outbox": {
@@ -3520,6 +3530,14 @@
       "prompt_tokens": 1402,
       "completion_tokens": 312,
       "total_tokens": 1714,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-07",
+      "requests": 1,
+      "prompt_tokens": 862,
+      "completion_tokens": 125,
+      "total_tokens": 987,
       "token_usage_complete": true
     }
   ]
