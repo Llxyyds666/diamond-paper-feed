@@ -3505,6 +3505,16 @@
       "is_ncd": false,
       "summary_zh": "该标题涉及金刚石纳米腔与锡空位自旋读出，但未出现纳米晶或超纳米晶金刚石表述，摘要缺失，无法确认材料为NCD/UNCD。",
       "reason": "缺少摘要且标题未明确纳米晶/超纳米晶金刚石证据，按规则判为false。"
+    },
+    "doi:10.3390/su182111442": {
+      "aliases": [
+        "doi:10.3390/su182111442",
+        "title:sustainability vol 18 pages 11442 integrating smart sustainable housing and preventive medicine to combat sedentary lifestyles in gcc countries a scoping review and conceptual ldquo preventive home rdquo framework:2026"
+      ],
+      "fingerprint": "2a9db41e63c7161b0ca2370a50ad07505d4bf97193723ab4d53b0458507888e9",
+      "is_ncd": false,
+      "summary_zh": "该文是关于海湾国家住房与预防医学结合以应对久坐生活方式和非传染性疾病的综述与概念框架。",
+      "reason": "文中的NCD指非传染性疾病，与纳米晶金刚石无关。"
     }
   },
   "outbox": {
@@ -3552,10 +3562,10 @@
     },
     {
       "date": "2026-11-09",
-      "requests": 1,
-      "prompt_tokens": 472,
-      "completion_tokens": 104,
-      "total_tokens": 576,
+      "requests": 2,
+      "prompt_tokens": 1608,
+      "completion_tokens": 185,
+      "total_tokens": 1793,
       "token_usage_complete": true
     }
   ]
