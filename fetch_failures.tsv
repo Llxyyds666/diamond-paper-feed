@@ -1,3 +1,27 @@
 timestamp	category	url	detail
-2026-11-08T22:09:01.240697+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
-2026-11-08T22:09:02.354490+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
+2026-11-09T06:35:24.746403+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC62.XML	HTTP 502
+2026-11-09T06:35:28.913373+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC53.XML	HTTP 502
+2026-11-09T06:35:33.093995+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC67.XML	HTTP 502
+2026-11-09T06:35:37.245168+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC54.XML	HTTP 502
+2026-11-09T06:35:41.417021+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC57.XML	HTTP 502
+2026-11-09T06:35:45.645583+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC55.XML	HTTP 502
+2026-11-09T06:35:50.011711+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC51.XML	HTTP 502
+2026-11-09T06:35:54.171994+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC64.XML	HTTP 502
+2026-11-09T06:35:58.396203+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC48.XML	HTTP 502
+2026-11-09T06:36:02.604143+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC56.XML	HTTP 502
+2026-11-09T06:36:06.503563+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC49.XML	HTTP 502
+2026-11-09T06:36:10.636700+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC65.XML	HTTP 502
+2026-11-09T06:36:14.941912+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC68.XML	HTTP 502
+2026-11-09T06:36:19.170952+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC52.XML	HTTP 502
+2026-11-09T06:36:23.507449+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC60.XML	HTTP 502
+2026-11-09T06:36:27.703910+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC91.XML	HTTP 502
+2026-11-09T06:36:31.944299+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC61.XML	HTTP 502
+2026-11-09T06:36:36.042672+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC63.XML	HTTP 502
+2026-11-09T06:36:40.174008+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC59.XML	HTTP 502
+2026-11-09T06:36:44.129735+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC66.XML	HTTP 502
+2026-11-09T06:36:48.170358+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC58.XML	HTTP 502
+2026-11-09T06:36:52.413597+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC92.XML	HTTP 502
+2026-11-09T06:36:56.598863+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC90.XML	HTTP 502
+2026-11-09T06:37:06.021630+00:00	http_502	https://ieeexplore.ieee.org/rss/TOC50.XML	HTTP 502
+2026-11-09T06:37:44.037792+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
+2026-11-09T06:37:45.117340+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
