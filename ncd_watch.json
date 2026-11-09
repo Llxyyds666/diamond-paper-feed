@@ -3495,6 +3495,16 @@
       "is_ncd": false,
       "summary_zh": "该文研究单晶金刚石（SCD）膜的等离子刻蚀减薄与金刚石-绝缘体（DOI）衬底制备，用于金刚石光子学器件，未涉及纳米晶或超纳米晶金刚石材料。",
       "reason": "全文围绕单晶金刚石膜的加工与厚度测量，无NCD/UNCD或纳米尺度晶粒描述，故不属于NCD研究。"
+    },
+    "doi:10.1364/oe.618386": {
+      "aliases": [
+        "doi:10.1364/oe.618386",
+        "title:fast single shot readout of tin vacancy spins with an overcoupled diamond nanocavity on thin film lithium niobate:2026"
+      ],
+      "fingerprint": "5421413f2719421fbcfade1d9e6421eb46255fc78eef4a3cca79bbc986015bd7",
+      "is_ncd": false,
+      "summary_zh": "该标题涉及金刚石纳米腔与锡空位自旋读出，但未出现纳米晶或超纳米晶金刚石表述，摘要缺失，无法确认材料为NCD/UNCD。",
+      "reason": "缺少摘要且标题未明确纳米晶/超纳米晶金刚石证据，按规则判为false。"
     }
   },
   "outbox": {
@@ -3538,6 +3548,14 @@
       "prompt_tokens": 862,
       "completion_tokens": 125,
       "total_tokens": 987,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-09",
+      "requests": 1,
+      "prompt_tokens": 472,
+      "completion_tokens": 104,
+      "total_tokens": 576,
       "token_usage_complete": true
     }
   ]
