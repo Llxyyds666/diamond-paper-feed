@@ -3515,6 +3515,26 @@
       "is_ncd": false,
       "summary_zh": "该文是关于海湾国家住房与预防医学结合以应对久坐生活方式和非传染性疾病的综述与概念框架。",
       "reason": "文中的NCD指非传染性疾病，与纳米晶金刚石无关。"
+    },
+    "doi:10.1117/12.3123494": {
+      "aliases": [
+        "doi:10.1117/12.3123494",
+        "title:fiber integrated nv diamond sensors for magnetic field sensing and monitoring:2026"
+      ],
+      "fingerprint": "e9a30e8ac2c93e681ec7fc6fe3a759cbe61eb518122432e9f4e14432aded8860",
+      "is_ncd": false,
+      "summary_zh": "该文研究光纤集成的NV色心金刚石磁传感器，使用掺NV纳米金刚石颗粒的光纤平台，未涉及NCD/UNCD薄膜或块体纳米晶材料。",
+      "reason": "仅使用孤立纳米金刚石颗粒作为NV载体，未研究NCD/UNCD材料本身或其形核生长。"
+    },
+    "doi:10.1007/s10854-026-18861-x": {
+      "aliases": [
+        "doi:10.1007/s10854-026-18861-x",
+        "title:nanodiamond incorporated g c sub 3 sub n sub 4 sub hybrid fillers for enhanced thermal transport in epoxy composites:2026"
+      ],
+      "fingerprint": "3afd11588eb05fb3dad9800b43c940b1ee94bf1aae07b5e83189081aecb425ce",
+      "is_ncd": false,
+      "summary_zh": "该文将纳米金刚石与g-C3N4复合作为环氧树脂填料以提升导热，属纳米金刚石颗粒填充应用。",
+      "reason": "研究对象为纳米金刚石颗粒填料复合材料，未涉及NCD/UNCD材料或其生长形核。"
     }
   },
   "outbox": {
@@ -3566,6 +3586,14 @@
       "prompt_tokens": 1608,
       "completion_tokens": 185,
       "total_tokens": 1793,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-10",
+      "requests": 1,
+      "prompt_tokens": 1205,
+      "completion_tokens": 197,
+      "total_tokens": 1402,
       "token_usage_complete": true
     }
   ]
