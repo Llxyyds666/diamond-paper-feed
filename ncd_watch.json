@@ -3545,6 +3545,36 @@
       "is_ncd": false,
       "summary_zh": "该文研究块体六方金刚石中的本征色心（碳空位与双空位）作为量子通信发射体，采用杂化密度泛函与ΔSCF计算。全文未涉及纳米晶或超纳米晶金刚石材料。",
       "reason": "研究对象为块体六方金刚石色心，无NCD/UNCD或纳米尺度晶粒描述，故不属NCD研究。"
+    },
+    "doi:10.1007/s11664-026-13321-y": {
+      "aliases": [
+        "doi:10.1007/s11664-026-13321-y",
+        "title:electrospun molecularly imprinted nanofiber modified electrochemical sensors for dibutyl phthalate detection:2026"
+      ],
+      "fingerprint": "8d0569dfc5e12cb825ecb75d11e32a59b14283a5433e89fa8c0b925dd43e4944",
+      "is_ncd": false,
+      "summary_zh": "该研究使用硼掺杂金刚石（BDD）电极结合电纺分子印迹纳米纤维检测邻苯二甲酸二丁酯，未涉及纳米晶或超纳米晶金刚石材料。",
+      "reason": "BDD电极不属于NCD/UNCD，摘要中无纳米晶金刚石相关表述。"
+    },
+    "doi:10.1007/s13369-026-11800-2": {
+      "aliases": [
+        "doi:10.1007/s13369-026-11800-2",
+        "title:exergy and sustainability analysis of an ice plant employing diamond nanoparticle enhanced eco friendly refrigerants:2026"
+      ],
+      "fingerprint": "494ab11139555d8e28b38f880eb34f6fce8788686aaa80d8c3fb1b1631a5aedc",
+      "is_ncd": false,
+      "summary_zh": "该文分析采用金刚石纳米颗粒增强环保制冷剂的制冰厂㶲与可持续性，研究对象为纳米金刚石颗粒添加剂而非NCD/UNCD薄膜或块体材料。",
+      "reason": "仅涉及孤立纳米金刚石颗粒作为制冷剂添加剂，未研究NCD/UNCD材料或其形核生长。"
+    },
+    "doi:10.1515/tjb-2026-0093": {
+      "aliases": [
+        "doi:10.1515/tjb-2026-0093",
+        "title:diamond mediated immunosensing of alpha l fructosidase for diagnosing hepatocellular carcinoma signal enhancement over conventional elisa:2026"
+      ],
+      "fingerprint": "9058617a8e9e6272025f7b450743f0da224e0cdb0c6d1917505f81d1cac9e8ee",
+      "is_ncd": false,
+      "summary_zh": "该研究在聚苯乙烯表面修饰金刚石纳米材料以改进ELISA检测AFU，但未说明金刚石为纳米晶或超纳米晶薄膜/材料。",
+      "reason": "仅泛称diamond nanomaterial，缺乏纳米晶/超纳米晶金刚石的明确证据。"
     }
   },
   "outbox": {
@@ -3608,10 +3638,10 @@
     },
     {
       "date": "2026-11-11",
-      "requests": 1,
-      "prompt_tokens": 707,
-      "completion_tokens": 134,
-      "total_tokens": 841,
+      "requests": 2,
+      "prompt_tokens": 1940,
+      "completion_tokens": 441,
+      "total_tokens": 2381,
       "token_usage_complete": true
     }
   ]
