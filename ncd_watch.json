@@ -3535,6 +3535,16 @@
       "is_ncd": false,
       "summary_zh": "该文将纳米金刚石与g-C3N4复合作为环氧树脂填料以提升导热，属纳米金刚石颗粒填充应用。",
       "reason": "研究对象为纳米金刚石颗粒填料复合材料，未涉及NCD/UNCD材料或其生长形核。"
+    },
+    "title:an infrared divacancy color center in bulk hexagonal diamond for quantum communication:2026": {
+      "aliases": [
+        "arxiv:2611.13736",
+        "title:an infrared divacancy color center in bulk hexagonal diamond for quantum communication:2026"
+      ],
+      "fingerprint": "1ad33702dc71370b1758758bb206e87f486dc3d8db2d144e674f7f2e9623bd8d",
+      "is_ncd": false,
+      "summary_zh": "该文研究块体六方金刚石中的本征色心（碳空位与双空位）作为量子通信发射体，采用杂化密度泛函与ΔSCF计算。全文未涉及纳米晶或超纳米晶金刚石材料。",
+      "reason": "研究对象为块体六方金刚石色心，无NCD/UNCD或纳米尺度晶粒描述，故不属NCD研究。"
     }
   },
   "outbox": {
@@ -3594,6 +3604,14 @@
       "prompt_tokens": 1205,
       "completion_tokens": 197,
       "total_tokens": 1402,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-11",
+      "requests": 1,
+      "prompt_tokens": 707,
+      "completion_tokens": 134,
+      "total_tokens": 841,
       "token_usage_complete": true
     }
   ]
