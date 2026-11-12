@@ -3585,6 +3585,25 @@
       "is_ncd": true,
       "summary_zh": "该研究采用微波等离子体化学气相沉积制备超纳米晶金刚石（UNCD）涂层，并系统表征了UNCD涂层对羟基磷灰石支架理化性质与生物相容性的影响。HRTEM、EDS、XPS等结果证实了UNCD涂层的存在及其与支架的化学相互作用。",
       "reason": "标题与摘要明确涉及UNCD涂层的制备、表征及生物医学应用，属于NCD/UNCD材料研究范围。"
+    },
+    "doi:10.1007/s44214-026-00112-z": {
+      "aliases": [
+        "doi:10.1007/s44214-026-00112-z",
+        "title:ultra narrow gate single electron transistors based on crossed graphene nanoribbons:2026"
+      ],
+      "fingerprint": "682ae2dbad9ff114d60d8c3ded1aca57951374ce444e3c11bd040ed5031f58c8",
+      "is_ncd": false,
+      "summary_zh": "该文研究基于交叉石墨烯纳米带的双栅单电子晶体管，利用石墨烯纳米带作为输运沟道和局域顶栅，未涉及纳米晶金刚石或超纳米晶金刚石材料。",
+      "reason": "主题为石墨烯纳米带器件与量子输运，与NCD/UNCD无关。"
+    },
+    "title:erasing chemical history fluorination driven surface engineering of detonation nanodiamonds:2026": {
+      "aliases": [
+        "title:erasing chemical history fluorination driven surface engineering of detonation nanodiamonds:2026"
+      ],
+      "fingerprint": "12dab5e6c8f99e4cd4de2839c44b93b1913475b04c92168665488f922d25fcbb",
+      "is_ncd": false,
+      "summary_zh": "该文研究爆轰纳米金刚石的氟化表面工程，属于孤立纳米金刚石颗粒的表面化学改性，未涉及NCD/UNCD薄膜材料或其形核生长。",
+      "reason": "仅涉及纳米金刚石颗粒表面改性，不符合NCD/UNCD材料研究范围。"
     }
   },
   "outbox": {
@@ -3668,10 +3687,10 @@
     },
     {
       "date": "2026-11-12",
-      "requests": 1,
-      "prompt_tokens": 795,
-      "completion_tokens": 133,
-      "total_tokens": 928,
+      "requests": 2,
+      "prompt_tokens": 1781,
+      "completion_tokens": 344,
+      "total_tokens": 2125,
       "token_usage_complete": true
     }
   ]
