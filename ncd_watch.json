@@ -3604,6 +3604,16 @@
       "is_ncd": false,
       "summary_zh": "该文研究爆轰纳米金刚石的氟化表面工程，属于孤立纳米金刚石颗粒的表面化学改性，未涉及NCD/UNCD薄膜材料或其形核生长。",
       "reason": "仅涉及纳米金刚石颗粒表面改性，不符合NCD/UNCD材料研究范围。"
+    },
+    "doi:10.1016/j.diamond.2026.114387": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2026.114387",
+        "title:systematic investigation of the relaxometric responses of fnds to sper no as a controlled radical challenge for nv nanodiamond quantum sensors:2027"
+      ],
+      "fingerprint": "9b3c395702584f6c10ae39f08e2097133b4a465494758a95166916595a561d11",
+      "is_ncd": false,
+      "summary_zh": "仅据标题，该文研究荧光纳米金刚石（FNDs）对SPER/NO的弛豫响应，用于NV纳米金刚石量子传感，未涉及NCD/UNCD薄膜或纳米晶金刚石材料。缺少摘要，无法确认任何NCD/UNCD相关内容。",
+      "reason": "标题指向孤立纳米金刚石颗粒的量子传感应用，未出现纳米晶/超纳米晶金刚石或纳米尺度晶粒描述，故排除。"
     }
   },
   "outbox": {
@@ -3691,6 +3701,14 @@
       "prompt_tokens": 1781,
       "completion_tokens": 344,
       "total_tokens": 2125,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-13",
+      "requests": 1,
+      "prompt_tokens": 489,
+      "completion_tokens": 139,
+      "total_tokens": 628,
       "token_usage_complete": true
     }
   ]
