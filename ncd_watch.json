@@ -3496,16 +3496,6 @@
       "summary_zh": "该文研究单晶金刚石（SCD）膜的等离子刻蚀减薄与金刚石-绝缘体（DOI）衬底制备，用于金刚石光子学器件，未涉及纳米晶或超纳米晶金刚石材料。",
       "reason": "全文围绕单晶金刚石膜的加工与厚度测量，无NCD/UNCD或纳米尺度晶粒描述，故不属于NCD研究。"
     },
-    "doi:10.1364/oe.618386": {
-      "aliases": [
-        "doi:10.1364/oe.618386",
-        "title:fast single shot readout of tin vacancy spins with an overcoupled diamond nanocavity on thin film lithium niobate:2026"
-      ],
-      "fingerprint": "5421413f2719421fbcfade1d9e6421eb46255fc78eef4a3cca79bbc986015bd7",
-      "is_ncd": false,
-      "summary_zh": "该标题涉及金刚石纳米腔与锡空位自旋读出，但未出现纳米晶或超纳米晶金刚石表述，摘要缺失，无法确认材料为NCD/UNCD。",
-      "reason": "缺少摘要且标题未明确纳米晶/超纳米晶金刚石证据，按规则判为false。"
-    },
     "doi:10.3390/su182111442": {
       "aliases": [
         "doi:10.3390/su182111442",
@@ -3614,6 +3604,36 @@
       "is_ncd": false,
       "summary_zh": "仅据标题，该文研究荧光纳米金刚石（FNDs）对SPER/NO的弛豫响应，用于NV纳米金刚石量子传感，未涉及NCD/UNCD薄膜或纳米晶金刚石材料。缺少摘要，无法确认任何NCD/UNCD相关内容。",
       "reason": "标题指向孤立纳米金刚石颗粒的量子传感应用，未出现纳米晶/超纳米晶金刚石或纳米尺度晶粒描述，故排除。"
+    },
+    "doi:10.1364/oe.618386": {
+      "aliases": [
+        "doi:10.1364/oe.618386",
+        "title:fast single shot readout of tin vacancy spins with an overcoupled diamond nanocavity on thin film lithium niobate:2026"
+      ],
+      "fingerprint": "eb363aecb092f8c213463785da76c5f5b4638a9d2121992dad15d3521df68ffb",
+      "is_ncd": false,
+      "summary_zh": "该文研究金刚石纳米梁腔与薄膜铌酸锂总线耦合，用于锡空位自旋的单次读出，摘要未提及纳米晶或超纳米晶金刚石材料。",
+      "reason": "缺少NCD/UNCD或纳米级晶粒的明确证据，仅为单晶金刚石腔体器件研究。"
+    },
+    "doi:10.1149/2754-2734/aec1ef": {
+      "aliases": [
+        "doi:10.1149/2754-2734/aec1ef",
+        "title:seawater oxidation on submicron crystalline boron doped diamond electrodes:2026"
+      ],
+      "fingerprint": "7ab1b2f7c7eca2613ff57c3764ccd1a4330d48ec6187d6fc0acf30417b69be8a",
+      "is_ncd": false,
+      "summary_zh": "该文研究亚微米晶（约150 nm晶粒）硼掺杂金刚石电极对海水氧化的选择性，属于亚微米晶金刚石而非纳米晶金刚石。",
+      "reason": "晶粒尺寸约150 nm为亚微米晶，未使用nanocrystalline/ultrananocrystalline表述，不满足NCD判定。"
+    },
+    "doi:10.1016/j.freeradbiomed.2026.11.013": {
+      "aliases": [
+        "doi:10.1016/j.freeradbiomed.2026.11.013",
+        "title:using diamond relaxometry to measure free radicals on human single spermatozoa from boar to human:2027"
+      ],
+      "fingerprint": "7e310e9758b576e7373f002e862e419b30001311da8bfd5b7c3d6c20a0896266",
+      "is_ncd": false,
+      "summary_zh": "该文利用荧光纳米金刚石中氮空位中心的T1弛豫测量人类精子自由基，研究对象为孤立纳米金刚石颗粒。",
+      "reason": "仅涉及纳米金刚石颗粒的生物医学应用，未研究NCD/UNCD材料或其形核生长。"
     }
   },
   "outbox": {
@@ -3709,6 +3729,14 @@
       "prompt_tokens": 489,
       "completion_tokens": 139,
       "total_tokens": 628,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-14",
+      "requests": 1,
+      "prompt_tokens": 1687,
+      "completion_tokens": 289,
+      "total_tokens": 1976,
       "token_usage_complete": true
     }
   ]
