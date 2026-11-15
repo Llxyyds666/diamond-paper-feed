@@ -629,7 +629,29 @@ def test_collection_persists_partial_page_then_resumes_and_only_watermarks_on_co
     assert seen[3] == ("openalex", next_page)
 
 
-def test_collection_uses_watermark_or_30_day_bootstrap_and_all_failure_preserves_outputs(tmp_path, monkeypatch):
+@pytest.mark.parametrize("source", ["openalex", "crossref", "arxiv"])
+@pytest.mark.parametrize(
+    "watermark, expected",
+    [
+        ("2026-11-15T00:00:00+00:00", "2026-10-16"),
+        ("2026-11-15T01:00:00+08:00", "2026-10-15"),
+    ],
+)
+def test_collection_watermark_reopens_30_day_overlap_in_utc(source, watermark, expected):
+    from diamond_feed.collect import _watermark_date
+    from diamond_feed.state import FeedState
+
+    state = FeedState.empty()
+    state.source_watermarks[source] = watermark
+
+    from_date = _watermark_date(
+        state, source, datetime(2026, 11, 16, tzinfo=timezone.utc), 30
+    )
+
+    assert from_date.isoformat() == expected
+
+
+def test_collection_uses_watermark_overlap_or_30_day_bootstrap_and_all_failure_preserves_outputs(tmp_path, monkeypatch):
     from diamond_feed import collect
     from diamond_feed.state import FeedState, save_state
 
@@ -663,8 +685,151 @@ def test_collection_uses_watermark_or_30_day_bootstrap_and_all_failure_preserves
     assert feed_path.read_text(encoding="utf-8") == "old feed"
     assert json.loads(state_path.read_text(encoding="utf-8"))["source_watermarks"]["openalex"] == "2026-09-01T00:00:00+00:00"
     assert failures.exists()
-    assert ("openalex", datetime(2026, 9, 1, tzinfo=timezone.utc).date()) in requested_dates
+    assert ("openalex", datetime(2026, 8, 2, tzinfo=timezone.utc).date()) in requested_dates
     assert ("crossref", (now - timedelta(days=30)).date()) in requested_dates
+
+
+def test_collection_recovers_late_indexed_month_date_and_does_not_repeat_ai_work(tmp_path, monkeypatch):
+    from diamond_feed import collect
+    from diamond_feed.http import HttpResult
+    from diamond_feed.state import FeedState, load_state, save_state
+
+    paths = _collection_paths(tmp_path)
+    _, sources, _, state_path, feed_path, _ = paths
+    sources.write_text("name\tcategory\turl\n", encoding="utf-8")
+    state = FeedState.empty()
+    state.source_watermarks = {
+        name: "2026-11-15T00:00:00+00:00" for name in ("openalex", "crossref", "arxiv")
+    }
+    save_state(state_path, state)
+    doi = "10.1016/j.diamond.2026.114379"
+    indexed = "2026-11-07"
+    published = "2026-11-01"
+    crossref_filters = []
+
+    def fetcher(url, *args):
+        parsed = urlparse(url)
+        query = parse_qs(parsed.query)
+        if parsed.netloc == "api.crossref.org":
+            filter_name, lower_bound = query["filter"][0].split(":", 1)
+            crossref_filters.append(query["filter"][0])
+            date_to_check = indexed if filter_name == "from-index-date" else published
+            items = [] if date_to_check < lower_bound else [{
+                "DOI": doi,
+                "type": "journal-article",
+                "title": ["Time-modulated hot-filament CVD growth of nanocrystalline diamond"],
+                "abstract": "<jats:p>Diamond film growth by time-modulated hot-filament CVD.</jats:p>",
+                "published-online": {"date-parts": [[2026, 11]]},
+                "indexed": {"date-parts": [[2026, 11, 7]], "date-time": "2026-11-07T12:00:00Z"},
+                "container-title": ["Diamond and Related Materials"],
+                "URL": f"https://doi.org/{doi}",
+            }]
+            body = json.dumps({"message": {"total-results": len(items), "items": items}}).encode()
+        elif parsed.netloc == "api.openalex.org":
+            body = b'{"meta": {"count": 0, "next_cursor": null}, "results": []}'
+        else:
+            assert parsed.netloc == "export.arxiv.org"
+            body = b'<feed xmlns="http://www.w3.org/2005/Atom"></feed>'
+        return HttpResult(body, 200, url)
+
+    monkeypatch.setattr(collect, "fetch_bytes", fetcher)
+    first_now = datetime(2026, 11, 16, tzinfo=timezone.utc)
+    assert collect.main(_collection_args(paths), now=lambda: first_now) == 0
+
+    loaded = load_state(state_path)
+    key = f"doi:{doi}"
+    assert list(loaded.papers) == [key]
+    assert loaded.pending_ai == [key]
+    assert loaded.papers[key].published_at == datetime(2026, 11, 1, tzinfo=timezone.utc)
+    assert doi in feed_path.read_text(encoding="utf-8")
+    assert crossref_filters == ["from-index-date:2026-10-16"]
+
+    loaded.papers[key].ai_relevant = True
+    loaded.papers[key].ai_confidence = 0.98
+    loaded.papers[key].summary_zh = "纳米晶金刚石薄膜生长研究。"
+    loaded.pending_ai = []
+    save_state(state_path, loaded)
+    second_now = first_now + timedelta(days=1)
+    assert collect.main(_collection_args(paths), now=lambda: second_now) == 0
+
+    repeated = load_state(state_path)
+    assert list(repeated.papers) == [key]
+    assert repeated.pending_ai == []
+    assert repeated.papers[key].ai_relevant is True
+    assert repeated.papers[key].ai_confidence == 0.98
+    assert repeated.papers[key].summary_zh == "纳米晶金刚石薄膜生长研究。"
+
+
+def test_crossref_active_cursor_resumes_original_window_until_completion(tmp_path, monkeypatch):
+    from diamond_feed import collect
+    from diamond_feed.http import HttpResult
+    from diamond_feed.state import FeedState, SourceContinuation, load_state, save_state
+
+    paths = _collection_paths(tmp_path)
+    config, sources, _, state_path, _, _ = paths
+    sources.write_text("name\tcategory\turl\n", encoding="utf-8")
+    settings = json.loads(config.read_text(encoding="utf-8"))
+    settings["collection"]["raw_feed_max_items"] = 1
+    config.write_text(json.dumps(settings), encoding="utf-8")
+    state = FeedState.empty()
+    state.source_watermarks["crossref"] = "2026-11-15T00:00:00+00:00"
+    save_state(state_path, state)
+    requests = []
+    run = 1
+
+    def fetcher(url, *args):
+        parsed = urlparse(url)
+        if parsed.netloc == "api.crossref.org":
+            query = parse_qs(parsed.query)
+            requests.append((query["filter"][0], query["cursor"][0]))
+            if run == 2:
+                return HttpResult(b"unavailable", 503, url)
+            items = [{
+                "DOI": "10.1000/diamond-paginated",
+                "type": "journal-article",
+                "title": ["Diamond film growth"],
+                "published-online": {"date-parts": [[2026, 11, 1]]},
+            }] if run == 1 else []
+            body = json.dumps({
+                "message": {"next-cursor": "retry-current-page", "items": items}
+            }).encode()
+        elif parsed.netloc == "api.openalex.org":
+            body = b'{"meta": {"count": 0, "next_cursor": null}, "results": []}'
+        else:
+            body = b'<feed xmlns="http://www.w3.org/2005/Atom"></feed>'
+        return HttpResult(body, 200, url)
+
+    monkeypatch.setattr(collect, "fetch_bytes", fetcher)
+    assert collect.main(
+        _collection_args(paths), now=lambda: datetime(2026, 11, 16, tzinfo=timezone.utc)
+    ) == 0
+
+    continuation = SourceContinuation(datetime(2026, 10, 16).date(), "retry-current-page")
+    partial = load_state(state_path)
+    assert partial.source_continuations["crossref"] == continuation
+    assert "crossref" not in partial.source_watermarks
+    assert list(partial.papers) == ["doi:10.1000/diamond-paginated"]
+
+    run = 2
+    assert collect.main(
+        _collection_args(paths), now=lambda: datetime(2026, 11, 17, tzinfo=timezone.utc)
+    ) == 0
+    failed = load_state(state_path)
+    assert failed.source_continuations["crossref"] == continuation
+    assert failed.papers == partial.papers
+
+    run = 3
+    final_now = datetime(2026, 11, 18, tzinfo=timezone.utc)
+    assert collect.main(_collection_args(paths), now=lambda: final_now) == 0
+    complete = load_state(state_path)
+    assert "crossref" not in complete.source_continuations
+    assert complete.source_watermarks["crossref"] == final_now.isoformat()
+    assert complete.papers == partial.papers
+    assert requests == [
+        ("from-index-date:2026-10-16", "*"),
+        ("from-index-date:2026-10-16", "retry-current-page"),
+        ("from-index-date:2026-10-16", "retry-current-page"),
+    ]
 
 
 def test_collection_state_staging_failure_preserves_old_outputs_and_cleans_temps(tmp_path, monkeypatch):

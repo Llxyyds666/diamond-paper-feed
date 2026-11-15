@@ -29,9 +29,9 @@ _PAPER_TYPES = frozenset(
 
 
 def build_url(query: str, from_date: date, rows: int, cursor: str = "*") -> str:
-    """Build the Crossref works request for a caller-supplied date window."""
+    """Find recently indexed works even when their publication date is older."""
     page_size = min(rows, _MAX_PAGE_SIZE)
-    return f"{_BASE_URL}?{urlencode({'query.bibliographic': query, 'filter': f'from-pub-date:{from_date.isoformat()}', 'rows': page_size, 'cursor': cursor, 'select': _SELECT})}"
+    return f"{_BASE_URL}?{urlencode({'query.bibliographic': query, 'filter': f'from-index-date:{from_date.isoformat()}', 'rows': page_size, 'cursor': cursor, 'select': _SELECT})}"
 
 
 def _strip_tags(value: object) -> str:

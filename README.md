@@ -36,13 +36,15 @@ Diamond Paper Feed 是一个面向金刚石研究的高召回文献监测项目�
 所有适配器都转换为同一种 `PaperRecord`，后续筛选、去重和发布不依赖具体来源：
 
 1. `config/rss_sources.tsv` 保存经真实 GET 验证的官方 RSS/Atom 地址。
-2. OpenAlex、Crossref 和 arXiv 使用 30 天首次回溯及后续来源水位补足没有稳定 RSS 的期刊。OpenAlex 与 Crossref 使用数据库游标逐页抓取：每个来源每轮最多解析 2000 条；若仍有后页，`state.json` 会同时保存原始起始日期和不透明续页游标，不推进该来源水位，下一轮从该页继续。只有完整走完该日期范围后才清除续页并更新水位。
-3. 宽松规则产生高召回候选，DOI 优先去重；无 DOI 时按规范化题名和年份去重。
+2. OpenAlex、Crossref 和 arXiv 首次回溯 30 天，之后每轮从上次成功采集水位回看 30 天，覆盖延迟入库和月精度发表日期的论文。Crossref 使用 `from-index-date` 按数据库索引时间查询，论文保存的发表日期仍取原始元数据。OpenAlex 与 Crossref 使用数据库游标逐页抓取：每个来源每轮最多解析 2000 条；若仍有后页，`state.json` 会同时保存原始起始日期和不透明续页游标，不推进该来源水位，下一轮从该页继续。只有完整走完该日期范围后才清除续页并更新水位。
+3. 宽松规则产生高召回候选，DOI 优先去重；无 DOI 时按规范化题名和年份去重。旧摘要不会因重复采集而重新请求 AI，新补充的实质摘要仍按既有机制复核。
 4. 候选先写入 `state.json` 的 `pending_ai`，再由独立摘要任务按日限额消费。
 
-当前清单含 156 个活动 RSS 源。2026-09-07 的无 AI 凭据 fresh smoke 使用当时的 158 个源，其中 154 个 RSS 源成功；Crossref 与 arXiv 完成并写入水位，OpenAlex 在后续页发生瞬时网络故障，已保留 368 条规则筛选后的 OpenAlex 记录、原始起始日期和失败页游标，且未推进 OpenAlex 水位。确定性噪声复核后，最终状态和 RSS 各含 723 篇，失败报告含 2 个空 feed、2 个 HTTP 403 和 1 个网络错误。
+当前清单含 157 个活动 RSS 源。2026-09-07 的无 AI 凭据 fresh smoke 使用当时的 158 个源，其中 154 个 RSS 源成功；Crossref 与 arXiv 完成并写入水位，OpenAlex 在后续页发生瞬时网络故障，已保留 368 条规则筛选后的 OpenAlex 记录、原始起始日期和失败页游标，且未推进 OpenAlex 水位。确定性噪声复核后，最终状态和 RSS 各含 723 篇，失败报告含 2 个空 feed、2 个 HTTP 403 和 1 个网络错误。
 
 2026-10-10 的完整实测中，156 个源全部保留，硬失败为 0，软失败为 2；两个软失败均为 Springer 返回的空 feed，其余 Springer 与 Nature 源均通过真实 GET 和解析验证。
+
+2026-11-15 恢复 Diamond and Related Materials 官方 RSS（`https://rss.sciencedirect.com/publication/science/09259635`）：通过项目抓取器连续两次真实 GET 均返回 HTTP 200，并成功解析出 100 条 RSS 记录。该刊现在同时由期刊 RSS 和数据库发现覆盖。重叠回看、索引时间查询与多来源采集可减少漏采，但不能保证每个出版社或数据库都提供每篇论文。
 
 以下期刊族没有通过有界真实 GET 获得稳定官方 RSS，或官方端点受反爬限制，因此标记为“仅数据库覆盖”。它们仍由 OpenAlex、Crossref 和 arXiv 查询覆盖，不应把猜测 URL 加入 RSS 清单：
 
@@ -57,7 +59,6 @@ Diamond Paper Feed 是一个面向金刚石研究的高召回文献监测项目�
 | Carbon | 官方 RSS 未通过有界 GET 验证 |
 | Carbon Trends | 官方 RSS 未通过有界 GET 验证 |
 | Crystal Growth & Design | 官方 RSS 返回 HTTP 403 |
-| Diamond and Related Materials | 官方 RSS 未通过有界 GET 验证 |
 | Earth and Planetary Science Letters | 官方 RSS 未通过有界 GET 验证 |
 | Journal of Applied Physics | 官方 RSS 已停用并返回 HTTP 404 |
 | Journal of Carbon Research | 官方 RSS 返回 HTTP 404 |
@@ -107,7 +108,7 @@ python -m diamond_feed.summarize --config paper_feed_config.json --state state.j
 
 公开配置位于 `paper_feed_config.json`，查询词和排除词位于 `config/queries.json`，RSS 清单位于 `config/rss_sources.tsv`。`config/device_focus_overrides.json` 只保存经过人工确认的精确论文身份及器件方向标签，不会扩大普通关键词匹配范围。默认值也是运行时强制的安全边界：
 
-- `collection.lookback_days`：数据库首次回溯 30 天。
+- `collection.lookback_days`：数据库首次回溯 30 天，后续每轮从上次成功采集水位重叠回看 30 天；续页始终保留原始起始日期。
 - `collection.raw_feed_max_items`：原始 RSS 最多 2000 条。
 - OpenAlex 单页最多 200 条、Crossref 单页最多 1000 条；每来源每轮合计最多 2000 条，未完成范围由状态中的数据库游标续抓。
 - `collection.http_timeout_seconds` / `http_attempts`：网络超时和有界重试。

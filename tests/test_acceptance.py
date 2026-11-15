@@ -43,7 +43,6 @@ README_DATABASE_REASONS = {
     "Carbon": "官方 RSS 未通过有界 GET 验证",
     "Carbon Trends": "官方 RSS 未通过有界 GET 验证",
     "Crystal Growth & Design": "官方 RSS 返回 HTTP 403",
-    "Diamond and Related Materials": "官方 RSS 未通过有界 GET 验证",
     "Earth and Planetary Science Letters": "官方 RSS 未通过有界 GET 验证",
     "Journal of Applied Physics": "官方 RSS 已停用并返回 HTTP 404",
     "Journal of Carbon Research": "官方 RSS 返回 HTTP 404",
@@ -332,7 +331,7 @@ def test_isolated_collection_continuation_completion_and_summary_lifecycle(
 def test_registry_is_exactly_the_curated_sorted_https_journal_set():
     rows = _registry_rows()
 
-    assert len(rows) == 156
+    assert len(rows) == 157
     assert len({row["url"] for row in rows}) == len(rows)
     assert all(row["url"].startswith("https://") for row in rows)
     assert rows == sorted(
@@ -344,6 +343,12 @@ def test_registry_is_exactly_the_curated_sorted_https_journal_set():
     assert "arxiv.org/api/query" not in registry_text
     assert "pubs.acs.org/action/showfeed?jc=aaemcq" not in registry_text
     assert "pubs.acs.org/action/showfeed?jc=aelccp" not in registry_text
+    assert {
+        "name": "Diamond and Related Materials",
+        "category": "unknown",
+        "url": "https://rss.sciencedirect.com/publication/science/09259635",
+    } in rows
+    assert "Diamond and Related Materials" not in DATABASE_ONLY_COVERAGE
 
 
 def test_public_config_readme_and_database_only_table_describe_exact_limits():
@@ -385,6 +390,12 @@ def test_public_config_readme_and_database_only_table_describe_exact_limits():
     assert "18 篇更新到 23 篇" in readme
     assert "`filtered_feed.xml`：规则筛选后的高召回 RSS，最多 2000 条" in readme
     assert "第一次运行会回溯数据库最近 30 天" in readme
+    assert "当前清单含 157 个活动 RSS 源" in readme
+    assert "每轮从上次成功采集水位回看 30 天" in readme
+    assert "from-index-date" in readme
+    assert "旧摘要不会因重复采集而重新请求 AI" in readme
+    assert "新补充的实质摘要仍按既有机制复核" in readme
+    assert "| Diamond and Related Materials | 官方 RSS 未通过有界 GET 验证 |" not in readme
     assert "数据库游标" in readme and "不推进该来源水位" in readme
     assert "2026-10-10 的完整实测中，156 个源全部保留，硬失败为 0，软失败为 2" in readme
     assert set(README_DATABASE_REASONS) == set(DATABASE_ONLY_COVERAGE)

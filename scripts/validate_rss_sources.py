@@ -35,7 +35,6 @@ DATABASE_ONLY_COVERAGE = {
     "Carbon": "official RSS did not survive bounded GET validation",
     "Carbon Trends": "official RSS did not survive bounded GET validation",
     "Crystal Growth & Design": "official RSS returned HTTP 403",
-    "Diamond and Related Materials": "official RSS did not survive bounded GET validation",
     "Earth and Planetary Science Letters": "official RSS did not survive bounded GET validation",
     "Journal of Applied Physics": "official RSS endpoint is retired (HTTP 404)",
     "Journal of Carbon Research": "official RSS endpoint returned HTTP 404",

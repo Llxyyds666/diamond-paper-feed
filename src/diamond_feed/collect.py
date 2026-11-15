@@ -93,10 +93,12 @@ def _read_sources(path: Path) -> list[dict[str, str]]:
 
 
 def _watermark_date(state: FeedState, source: str, now: datetime, lookback_days: int) -> date:
+    """Reopen the lookback window to recover records indexed after publication."""
     value = state.source_watermarks.get(source)
     if value:
         try:
-            return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc).date()
+            watermark = datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
+            return watermark.date() - timedelta(days=lookback_days)
         except ValueError:
             pass
     return (now - timedelta(days=lookback_days)).date()
