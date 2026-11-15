@@ -1,4 +1,28 @@
 timestamp	category	url	detail
-2026-11-15T08:28:25.759316+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
-2026-11-15T08:28:26.621626+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
-2026-11-15T08:28:32.406798+00:00	http_401	https://api.openalex.org/works?search=diamond&filter=from_publication_date%3A2026-10-16&per-page=200&cursor=Ils1NC4zOTA3NTUsIDE3OTM1Nzc2MDAwMDAsICdodHRwczovL29wZW5hbGV4Lm9yZy9XNzE2NTM5MDk0MiddIg%3D%3D&select=id%2Cdoi%2Ctitle%2Cdisplay_name%2Ctype%2Cpublication_date%2Cauthorships%2Cprimary_location%2Cabstract_inverted_index	HTTP 401
+2026-11-15T18:53:17.054219+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC62.XML	HTTP 418
+2026-11-15T18:53:17.216592+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC53.XML	HTTP 418
+2026-11-15T18:53:17.600248+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC67.XML	HTTP 418
+2026-11-15T18:53:17.975151+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC54.XML	HTTP 418
+2026-11-15T18:53:18.384481+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC57.XML	HTTP 418
+2026-11-15T18:53:18.783953+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC55.XML	HTTP 418
+2026-11-15T18:53:19.155400+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC51.XML	HTTP 418
+2026-11-15T18:53:19.478220+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC64.XML	HTTP 418
+2026-11-15T18:53:19.779747+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC48.XML	HTTP 418
+2026-11-15T18:53:20.090289+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC56.XML	HTTP 418
+2026-11-15T18:53:20.425368+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC49.XML	HTTP 418
+2026-11-15T18:53:20.760570+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC65.XML	HTTP 418
+2026-11-15T18:53:21.062013+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC68.XML	HTTP 418
+2026-11-15T18:53:21.350402+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC52.XML	HTTP 418
+2026-11-15T18:53:21.649641+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC60.XML	HTTP 418
+2026-11-15T18:53:21.953658+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC91.XML	HTTP 418
+2026-11-15T18:53:22.195088+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC61.XML	HTTP 418
+2026-11-15T18:53:22.448318+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC63.XML	HTTP 418
+2026-11-15T18:53:22.693237+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC59.XML	HTTP 418
+2026-11-15T18:53:22.933276+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC66.XML	HTTP 418
+2026-11-15T18:53:23.169773+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC58.XML	HTTP 418
+2026-11-15T18:53:23.392552+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC92.XML	HTTP 418
+2026-11-15T18:53:23.649700+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC90.XML	HTTP 418
+2026-11-15T18:53:28.955345+00:00	http_418	https://ieeexplore.ieee.org/rss/TOC50.XML	HTTP 418
+2026-11-15T18:54:14.744849+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
+2026-11-15T18:54:16.140122+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
+2026-11-15T18:54:22.731958+00:00	http_401	https://api.openalex.org/works?search=diamond&filter=from_publication_date%3A2026-10-16&per-page=200&cursor=Ils1NC4zOTA3NTUsIDE3OTM1Nzc2MDAwMDAsICdodHRwczovL29wZW5hbGV4Lm9yZy9XNzE2NTM5MDk0MiddIg%3D%3D&select=id%2Cdoi%2Ctitle%2Cdisplay_name%2Ctype%2Cpublication_date%2Cauthorships%2Cprimary_location%2Cabstract_inverted_index	HTTP 401
