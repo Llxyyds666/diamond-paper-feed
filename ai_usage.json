@@ -760,13 +760,13 @@
   },
   {
     "date": "2026-11-15",
-    "candidates": 4,
-    "processed": 4,
-    "selected": 1,
-    "requests": 2,
-    "prompt_tokens": 2383,
-    "completion_tokens": 661,
-    "total_tokens": 3044,
+    "candidates": 5,
+    "processed": 5,
+    "selected": 2,
+    "requests": 4,
+    "prompt_tokens": 4098,
+    "completion_tokens": 1009,
+    "total_tokens": 5107,
     "token_usage_complete": true
   }
 ]
