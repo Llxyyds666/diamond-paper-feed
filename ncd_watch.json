@@ -3634,6 +3634,16 @@
       "is_ncd": false,
       "summary_zh": "该文利用荧光纳米金刚石中氮空位中心的T1弛豫测量人类精子自由基，研究对象为孤立纳米金刚石颗粒。",
       "reason": "仅涉及纳米金刚石颗粒的生物医学应用，未研究NCD/UNCD材料或其形核生长。"
+    },
+    "doi:10.1016/j.diamond.2026.114379": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2026.114379",
+        "title:deposition of high quality nanocrystalline diamond by time modulated hot filament chemical vapor deposition:2026"
+      ],
+      "fingerprint": "0e7d4474749e0e5b5d99ba2e2f91990f3b8b035b0353d49140c05f919db10211",
+      "is_ncd": true,
+      "summary_zh": "该研究采用时间调制热丝化学气相沉积制备晶粒尺寸低于100 nm的高质量纳米晶金刚石薄膜，并通过拉曼光谱、SEM和XRD确认金刚石/石墨比提升。所得自支撑金刚石箔的弹性模量达1116±64 GPa、抗弯强度3.32±0.8 GPa，力学性能显著优于常规微晶与纳米晶金刚石膜。",
+      "reason": "标题与摘要明确研究纳米晶金刚石的沉积、微结构与力学性能，属于NCD材料研究。"
     }
   },
   "outbox": {
@@ -3672,6 +3682,18 @@
       "created_at": "2026-11-12T07:47:14.806752+00:00",
       "sent_at": "2026-11-12T07:47:18.267377+00:00",
       "delivery_attempts": 1
+    },
+    "doi:10.1016/j.diamond.2026.114379": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2026.114379",
+        "title:deposition of high quality nanocrystalline diamond by time modulated hot filament chemical vapor deposition:2026"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Deposition of high-quality nanocrystalline diamond by time-modulated hot-filament chemical vapor deposition\n期刊：Diamond and Related Materials\n题录日期：2026-11-07\n摘要：该研究采用时间调制热丝化学气相沉积制备晶粒尺寸低于100 nm的高质量纳米晶金刚石薄膜，并通过拉曼光谱、SEM和XRD确认金刚石/石墨比提升。所得自支撑金刚石箔的弹性模量达1116±64 GPa、抗弯强度3.32±0.8 GPa，力学性能显著优于常规微晶与纳米晶金刚石膜。\n入选依据：标题与摘要明确研究纳米晶金刚石的沉积、微结构与力学性能，属于NCD材料研究。\nDOI：10.1016/j.diamond.2026.114379",
+      "url": "https://doi.org/10.1016/j.diamond.2026.114379",
+      "created_at": "2026-11-15T08:26:38.858620+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
     }
   },
   "usage": [
@@ -3737,6 +3759,14 @@
       "prompt_tokens": 1687,
       "completion_tokens": 289,
       "total_tokens": 1976,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-15",
+      "requests": 1,
+      "prompt_tokens": 786,
+      "completion_tokens": 154,
+      "total_tokens": 940,
       "token_usage_complete": true
     }
   ]
