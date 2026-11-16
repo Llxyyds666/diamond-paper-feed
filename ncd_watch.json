@@ -7619,6 +7619,1305 @@
       "is_ncd": false,
       "summary_zh": "标题讨论类金刚石碳作为纳米结构的新材料基础。仅据标题，缺少摘要。",
       "reason": "研究对象为DLC，且属书籍章节，非NCD/UNCD。"
+    },
+    "doi:10.1016/b978-0-08-009708-4.50048-1": {
+      "aliases": [
+        "doi:10.1016/b978-0-08-009708-4.50048-1",
+        "title:some experimental difficulties encountered in the application of x ray diffractometer measurements to the matrix method of r diamond for the determination of crystallite size distributions in turbostratic carbons:1963"
+      ],
+      "fingerprint": "7a534c9da15603cbb63606a7f6529154e7ee39fe0fa80dcf15d815d7094e5544",
+      "is_ncd": false,
+      "summary_zh": "该文讨论X射线衍射仪测量在R. Diamond矩阵法中的应用困难，用于测定湍层碳的微晶尺寸分布。",
+      "reason": "研究对象为湍层碳而非纳米晶金刚石，且R. Diamond为人名，与NCD无关。"
+    },
+    "doi:10.1007/978-94-009-2462-8_35": {
+      "aliases": [
+        "doi:10.1007/978-94-009-2462-8_35",
+        "title:interstellar grains in meteorites diamond and silicon carbide:1989"
+      ],
+      "fingerprint": "1f2b5e2d26233ebe51996538167b125f194e0e6fff753986989ec8d7557ce25f",
+      "is_ncd": false,
+      "summary_zh": "该文讨论陨石中的星际颗粒，包括金刚石和碳化硅。",
+      "reason": "涉及陨石中的纳米金刚石颗粒，未研究NCD/UNCD薄膜材料或其形核生长。"
+    },
+    "doi:10.1016/b978-0-444-89162-4.50084-1": {
+      "aliases": [
+        "doi:10.1016/b978-0-444-89162-4.50084-1",
+        "title:the influence of surface roughness and grain size on arc jet diamond applications:1991"
+      ],
+      "fingerprint": "b3dd8685102a67899dba6650f8e7264b65e23208b3280af62b5969ecd005fe08",
+      "is_ncd": false,
+      "summary_zh": "该文研究表面粗糙度和晶粒尺寸对电弧射流金刚石应用的影响。",
+      "reason": "仅泛称金刚石，未明确纳米晶或超纳米晶金刚石表述，证据不足。"
+    },
+    "doi:10.1016/b978-0-444-89900-2.50070-1": {
+      "aliases": [
+        "doi:10.1016/b978-0-444-89900-2.50070-1",
+        "title:crystallite geometry of hot filament chemical vapor deposited diamond:1992"
+      ],
+      "fingerprint": "43871d466e2a35c88f3b204ad0efe8552859221ee2b742c73d21805cfa9359dc",
+      "is_ncd": false,
+      "summary_zh": "该文研究热丝化学气相沉积金刚石的微晶几何。",
+      "reason": "仅涉及金刚石微晶几何，未明确纳米晶/超纳米晶金刚石，证据不足。"
+    },
+    "doi:10.1007/978-3-662-08251-5_186": {
+      "aliases": [
+        "doi:10.1007/978-3-662-08251-5_186",
+        "title:deposition of diamond like carbon films by laser pvd technique using nanosecond and femtosecond excimer lasers:1994"
+      ],
+      "fingerprint": "0c16f364eca3678e18741b3a98a2cb776b84bd01aeffa1b6e6a2df58212ad3e4",
+      "is_ncd": false,
+      "summary_zh": "该文研究用纳秒和飞秒准分子激光的激光PVD技术沉积类金刚石碳膜。",
+      "reason": "研究对象为类金刚石碳（DLC），明确排除。"
+    },
+    "doi:10.1299/kikaic.60.1815": {
+      "aliases": [
+        "doi:10.1299/kikaic.60.1815",
+        "title:study on machining characteristics of wire tool with electrodeposited diamond grains:1994"
+      ],
+      "fingerprint": "d7a68dd8c01d24fb3dca41905b1ab89d732705ad34fb38cb0e7a72b70323b199",
+      "is_ncd": false,
+      "summary_zh": "该文研究电镀金刚石磨粒线工具的加工特性，用于切割硅锭。",
+      "reason": "涉及金刚石磨粒工具加工，非NCD/UNCD材料研究。"
+    },
+    "doi:10.1007/978-94-015-8771-6_24": {
+      "aliases": [
+        "doi:10.1007/978-94-015-8771-6_24",
+        "title:raman and photoluminescence spectra of diamond particles with 1 5 nm diameter:1996"
+      ],
+      "fingerprint": "e143f9345ebb4d6355a2a9cf6465f2bc57d520099c30b7f43c7e36bb750134df",
+      "is_ncd": false,
+      "summary_zh": "该文报道直径1–5 nm金刚石颗粒的拉曼和光致发光光谱。",
+      "reason": "研究对象为孤立纳米金刚石颗粒，未研究NCD/UNCD材料或其形核生长。"
+    },
+    "doi:10.1007/978-94-011-5592-2_17": {
+      "aliases": [
+        "doi:10.1007/978-94-011-5592-2_17",
+        "title:verification of nanocrystalline diamond films quality:1997"
+      ],
+      "fingerprint": "0153e5f1a71acc392f2fe791e863db277cd58c5b0b9bcc990a50a7051218ec56",
+      "is_ncd": true,
+      "summary_zh": "该文题为纳米晶金刚石膜质量的验证，属NCD薄膜研究。仅据标题，缺少摘要。",
+      "reason": "标题明确涉及纳米晶金刚石膜的质量验证，符合NCD研究范围。"
+    },
+    "doi:10.1007/978-94-011-5592-2_3": {
+      "aliases": [
+        "doi:10.1007/978-94-011-5592-2_3",
+        "title:hot pressing of nanodiamond powder:1997"
+      ],
+      "fingerprint": "8068bf1f6e64e8da558ef70e429aa3a4e30b053f3bdb3a3e3c25d403fb8bb3f2",
+      "is_ncd": false,
+      "summary_zh": "该文研究纳米金刚石粉末的热压。",
+      "reason": "研究对象为纳米金刚石粉末的热压，未涉及NCD/UNCD材料或其形核生长。"
+    },
+    "doi:10.1007/978-94-011-5592-2_31": {
+      "aliases": [
+        "doi:10.1007/978-94-011-5592-2_31",
+        "title:nanophase diamond containing material based on detonation synthesis powders:1997"
+      ],
+      "fingerprint": "50e5fe515b75d53199660d6f26acefdfc2a7d7fb5a3c533e50412428cbe8340e",
+      "is_ncd": false,
+      "summary_zh": "该文研究基于爆轰合成粉末的纳米相含金刚石材料。",
+      "reason": "基于爆轰纳米金刚石粉末的材料，未明确研究NCD/UNCD薄膜或其形核生长。"
+    },
+    "doi:10.1007/978-94-011-5592-2_32": {
+      "aliases": [
+        "doi:10.1007/978-94-011-5592-2_32",
+        "title:cluster polymers composites on basis of diamond containing nanocarbon of explosive synthesis:1997"
+      ],
+      "fingerprint": "190c74998b8c42fa79f45189e55b44cc5c31065381666e87372b3a31b57743ce",
+      "is_ncd": false,
+      "summary_zh": "标题涉及爆炸合成含金刚石纳米碳的团簇聚合物复合材料，但无摘要且未明确为NCD/UNCD薄膜或纳米晶金刚石材料。",
+      "reason": "仅有标题，缺少摘要，无法确认研究NCD/UNCD材料本身；纳米碳复合材料不构成充分证据。"
+    },
+    "doi:10.1007/978-94-010-0520-3_36": {
+      "aliases": [
+        "doi:10.1007/978-94-010-0520-3_36",
+        "title:in situ raman investigations of single wall carbon nanotubes pressurized in diamond anvil cell:2001"
+      ],
+      "fingerprint": "044ae4d3a2b6df448538a5091e9bffcce952558a79ffdf08a9767645e19f1799",
+      "is_ncd": false,
+      "summary_zh": "该文为金刚石压砧中单壁碳纳米管加压的原位拉曼研究，与纳米晶金刚石材料无关。",
+      "reason": "研究对象是碳纳米管，金刚石仅作为压砧工具，非NCD研究。"
+    },
+    "doi:10.1007/978-94-010-0736-8_36": {
+      "aliases": [
+        "doi:10.1007/978-94-010-0736-8_36",
+        "title:determining the nanoscale friction and wear behavior of si sic and diamond by microscale environmental tribometry:2001"
+      ],
+      "fingerprint": "d184af0ef35864a6da1e4058d44a973d7d7dfca5ef3f5beafff63ebbf8156fb6",
+      "is_ncd": false,
+      "summary_zh": "标题研究Si、SiC和金刚石的纳米尺度摩擦磨损行为，未指明纳米晶或超纳米晶金刚石。",
+      "reason": "仅泛称金刚石，缺少纳米晶/超纳米晶表述或纳米级晶粒描述。"
+    },
+    "doi:10.1007/978-94-010-0858-7_2": {
+      "aliases": [
+        "doi:10.1007/978-94-010-0858-7_2",
+        "title:nano and microstructural features in cvd diamond growth:2001"
+      ],
+      "fingerprint": "8c1591979bc2d483f2b0dd76be70576a29e2d5d29cf3a0e30f45f5fd02ecd28b",
+      "is_ncd": false,
+      "summary_zh": "标题讨论CVD金刚石生长中的纳米与微结构特征，但无摘要，未明确为NCD/UNCD材料。",
+      "reason": "缺少摘要，标题未明确纳米晶/超纳米晶金刚石，证据不足。"
+    },
+    "doi:10.1007/978-94-010-0858-7_9": {
+      "aliases": [
+        "doi:10.1007/978-94-010-0858-7_9",
+        "title:is there a nanocrystalline diamond raman peak in nanocrystalline diamond:2001"
+      ],
+      "fingerprint": "59f39d53d33b1415f5226c42e64b7e140c073d68b59bde0469fb24f616a656d7",
+      "is_ncd": true,
+      "summary_zh": "仅据标题，缺少摘要；标题直接讨论纳米晶金刚石中是否存在“纳米晶金刚石”拉曼峰。",
+      "reason": "标题明确含Nanocrystalline Diamond且属NCD表征研究；无摘要故不推断结果。"
+    },
+    "doi:10.1007/978-94-010-9598-3_18": {
+      "aliases": [
+        "doi:10.1007/978-94-010-9598-3_18",
+        "title:ultrananocrystalline diamond films from fullerene precursors:2002"
+      ],
+      "fingerprint": "1bb8c00e06795811f47556721ab17099f7de1834d51fee5b188f1886e3eab547",
+      "is_ncd": true,
+      "summary_zh": "仅据标题，缺少摘要；标题为以富勒烯前驱体制备超纳米晶金刚石薄膜。",
+      "reason": "标题明确含Ultrananocrystalline Diamond Films，属UNCD生长研究；无摘要故不推断结果。"
+    },
+    "doi:10.1201/b12250-4": {
+      "aliases": [
+        "doi:10.1201/b12250-4",
+        "title:adhesion properties of functionally gradient diamond like carbon nanocomposite films:2005"
+      ],
+      "fingerprint": "3b9ee072a41e4b4029f2c507f5c235e5eba778eeda93064d91972b5a49a83be1",
+      "is_ncd": false,
+      "summary_zh": "标题研究功能梯度类金刚石碳纳米复合薄膜的附着性能，属DLC而非纳米晶金刚石。",
+      "reason": "DLC材料不构成NCD/UNCD证据。"
+    },
+    "doi:10.1016/b978-0-8155-1583-8.00012-0": {
+      "aliases": [
+        "doi:10.1016/b978-0-8155-1583-8.00012-0",
+        "title:nanocrystalline diamond for rf mems applications:2010"
+      ],
+      "fingerprint": "24815c066cf99fcdc0cf87917d1b30a9235a78f66f695d5508d902a917589112",
+      "is_ncd": true,
+      "summary_zh": "仅据标题，缺少摘要；标题为纳米晶金刚石用于RF-MEMS应用。",
+      "reason": "标题明确含Nanocrystalline Diamond且属NCD应用研究；无摘要故不推断结果。"
+    },
+    "doi:10.5772/8178": {
+      "aliases": [
+        "doi:10.5772/8178",
+        "title:nano crystalline diamond films for x ray lithography mask:2010"
+      ],
+      "fingerprint": "ebfc882f740b35b285a5601aab72f3c52e1a3da00ea32ed343b0a43124207569",
+      "is_ncd": true,
+      "summary_zh": "仅据标题，缺少摘要；标题为用于X射线光刻掩模的纳米晶金刚石薄膜。",
+      "reason": "标题明确含Nano-Crystalline Diamond Films，属NCD薄膜应用；无摘要故不推断结果。"
+    },
+    "doi:10.1201/9781420009378.ch5": {
+      "aliases": [
+        "doi:10.1201/9781420009378.ch5",
+        "title:nanocrystalline diamond:2010"
+      ],
+      "fingerprint": "8a4ec955439886d81336e31b81d7074f06d668dc04ff16d8523ade54df082c15",
+      "is_ncd": true,
+      "summary_zh": "仅据标题，缺少摘要；标题为纳米晶金刚石，属NCD材料综述/章节。",
+      "reason": "标题明确含Nanocrystalline Diamond；无摘要故不推断内容。"
+    },
+    "doi:10.1201/b11144-3": {
+      "aliases": [
+        "doi:10.1201/b11144-3",
+        "title:the nanodiamond connection of life and consciousness:2011"
+      ],
+      "fingerprint": "40afba155ada281662b5031030d0bd77a7a599099bc9d1f828428fc0767e2997",
+      "is_ncd": false,
+      "summary_zh": "该条目为《Diamond Nanotechnology》书中章节，标题涉及纳米金刚石与生命/意识，无摘要。",
+      "reason": "缺少摘要且标题未明确涉及NCD/UNCD薄膜或纳米晶材料研究，证据不足。"
+    },
+    "doi:10.1201/b11144-6": {
+      "aliases": [
+        "doi:10.1201/b11144-6",
+        "title:micron fines and nanodiamonds:2011"
+      ],
+      "fingerprint": "2c3a875821a6533e8195f18de18759549e24ccc6c4e41982b788142f8cadb08d",
+      "is_ncd": false,
+      "summary_zh": "该条目为书中章节，标题为微米细粉与纳米金刚石，无摘要。",
+      "reason": "无摘要，标题指向纳米金刚石颗粒/细粉而非NCD/UNCD材料研究，证据不足。"
+    },
+    "doi:10.1201/b11144-8": {
+      "aliases": [
+        "doi:10.1201/b11144-8",
+        "title:nanodiamond applications:2011"
+      ],
+      "fingerprint": "c8c12d676f54920b1cc7dc00c1cd6f041ed125f24c61c2961f3cbae1af3f941b",
+      "is_ncd": false,
+      "summary_zh": "该条目为书中章节，标题为纳米金刚石应用，无摘要。",
+      "reason": "无摘要且标题泛指纳米金刚石应用，未明确NCD/UNCD材料研究，证据不足。"
+    },
+    "doi:10.1002/pssa.201184272": {
+      "aliases": [
+        "doi:10.1002/pssa.201184272",
+        "title:coherent imaging at the diamond beamline i13:2011"
+      ],
+      "fingerprint": "c19d28c199cd1b85e6aad18bd9041d9941eb974727bda423da0316227da8c573",
+      "is_ncd": false,
+      "summary_zh": "该文介绍Diamond同步辐射光束线I13的相干成像装置与方法。",
+      "reason": "Diamond指同步辐射光源名称，与纳米晶金刚石材料无关。"
+    },
+    "doi:10.1063/1.3658638": {
+      "aliases": [
+        "doi:10.1063/1.3658638",
+        "title:combined visible light photo emission and low temperature thermionic emission from nitrogen doped diamond films:2011"
+      ],
+      "fingerprint": "2410f3dc9e1e8ac7dbef57e33e1a37d96e7634becceacfd99d6bc86c94a1756b",
+      "is_ncd": true,
+      "summary_zh": "研究氮掺杂纳米晶金刚石薄膜的光发射阈值约1.5 eV，并观测光电子与热电子联合发射。",
+      "reason": "摘要明确涉及氮掺杂纳米晶金刚石薄膜的发射性质研究。"
+    },
+    "doi:10.5772/19969": {
+      "aliases": [
+        "doi:10.5772/19969",
+        "title:ultrananocrystalline diamond as material for surface acoustic wave devices:2011"
+      ],
+      "fingerprint": "0fef948f8147e0d4b0eee8caea90c4b343f71c1fabb28d2de66d384cd897e53c",
+      "is_ncd": true,
+      "summary_zh": "研究UNCD薄膜生长与性能调控，并用激光诱导SAW脉冲法表征，探索其在SAW器件中的应用。",
+      "reason": "摘要明确研究超纳米晶金刚石（UNCD）薄膜生长、性质与应用。"
+    },
+    "doi:10.5772/24575": {
+      "aliases": [
+        "doi:10.5772/24575",
+        "title:nanocrystalline diamond films applications and advances in nanomedicine:2011"
+      ],
+      "fingerprint": "62819a1bb3e46882a8743235e428df54bd2b842a0f08f700da1c458c4db7327d",
+      "is_ncd": true,
+      "summary_zh": "该章节讨论纳米晶金刚石薄膜在纳米医学中的应用与进展。",
+      "reason": "标题明确为纳米晶金刚石薄膜的应用研究综述。"
+    },
+    "doi:10.1088/1741-2560/9/1/016002": {
+      "aliases": [
+        "doi:10.1088/1741-2560/9/1/016002",
+        "title:ultra nanocrystalline diamond electrodes optimization towards neural stimulation applications:2011"
+      ],
+      "fingerprint": "239fbf71d7a992f0bdec8dc83ee0db1e84955de62e46dd217c8ef4d473b552a3",
+      "is_ncd": true,
+      "summary_zh": "仅据标题，缺少摘要：该文研究超纳米晶金刚石电极面向神经刺激应用的优化。",
+      "reason": "标题明确含ultra-nanocrystalline diamond电极研究，但无摘要可核实细节。"
+    },
+    "doi:10.1155/2012/567171": {
+      "aliases": [
+        "doi:10.1155/2012/567171",
+        "title:electrochemical biosensor based on boron doped diamond electrodes with modified surfaces:2011"
+      ],
+      "fingerprint": "4c5d30779297616941060af68f57ae3b5408d6c76cacbee968d8d290cadce98f",
+      "is_ncd": false,
+      "summary_zh": "综述基于硼掺杂金刚石电极（含纳米结构表面）的电化学生物传感器。",
+      "reason": "主题为硼掺杂金刚石电极，未明确为纳米晶/超纳米晶金刚石材料研究。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00001-3": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00001-3",
+        "title:stability of diamond at the nanoscale:2012"
+      ],
+      "fingerprint": "825d1f8796ad41513958f533bd8d641a1dff8500c3d4bb1980da41cfa53ca5bd",
+      "is_ncd": false,
+      "summary_zh": "该条目为《Ultananocrystalline Diamond》书中章节，标题为纳米尺度金刚石稳定性，无摘要。",
+      "reason": "属书籍章节重印且无摘要，不能作为独立研究论文纳入。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00002-5": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00002-5",
+        "title:advances in plasma synthesis of uncd films:2012"
+      ],
+      "fingerprint": "0569bd2eb725b8bf3279ce90491bb31130e05cdacf7ce45de38875543dbd3c91",
+      "is_ncd": true,
+      "summary_zh": "标题明确涉及UNCD薄膜的等离子体合成进展。仅据标题，缺少摘要。",
+      "reason": "标题明确为UNCD薄膜合成研究，符合纳入范围；无摘要故不推断具体结果。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00003-7": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00003-7",
+        "title:theoretical studies of uncd properties:2012"
+      ],
+      "fingerprint": "50858efcd98457faef794ce27e1d1939f8641c20c42e18ca74e9c49d25107dcb",
+      "is_ncd": true,
+      "summary_zh": "标题明确为UNCD性质的理论研究。仅据标题，缺少摘要。",
+      "reason": "标题明确针对UNCD材料性质的理论研究，符合纳入范围。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00004-9": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00004-9",
+        "title:n type nanocrystalline diamond films:2012"
+      ],
+      "fingerprint": "d84c03a8b2eb1180338ce0aea66e4f9ff1932731702545a794f4d4d01ca2ced9",
+      "is_ncd": true,
+      "summary_zh": "标题明确涉及n型纳米晶金刚石薄膜。仅据标题，缺少摘要。",
+      "reason": "标题明确为纳米晶金刚石薄膜的掺杂研究，符合纳入范围。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00005-0": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00005-0",
+        "title:advances in synthesis of nanodiamond particles:2012"
+      ],
+      "fingerprint": "afe3c639c000298873f4b78836cc01368bb58e1ef527890c91067c133df2fcdd",
+      "is_ncd": false,
+      "summary_zh": "标题为纳米金刚石颗粒合成进展，未涉及NCD/UNCD薄膜或材料。仅据标题，缺少摘要。",
+      "reason": "主题为孤立纳米金刚石颗粒合成，不属于NCD/UNCD材料研究。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00006-2": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00006-2",
+        "title:deagglomeration of detonation nanodiamond:2012"
+      ],
+      "fingerprint": "698aa777118cf8eac71f4d4067e9c0cf3cd5752d10fb0e6fc33bc90700646376",
+      "is_ncd": false,
+      "summary_zh": "标题为爆轰纳米金刚石解团聚，属颗粒处理。仅据标题，缺少摘要。",
+      "reason": "仅涉及纳米金刚石颗粒解团聚，未研究NCD/UNCD材料或其形核生长。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00007-4": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00007-4",
+        "title:diamond phase transitions at nanoscale:2012"
+      ],
+      "fingerprint": "bbd073746f20bd0b7d3cff5d95fe835c9cbd5095c15939dfa99f1675931e8a1e",
+      "is_ncd": false,
+      "summary_zh": "标题为纳米尺度金刚石相变，未明确为NCD/UNCD材料。仅据标题，缺少摘要。",
+      "reason": "标题仅泛称纳米尺度金刚石相变，缺乏明确的纳米晶/超纳米晶金刚石证据。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00008-6": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00008-6",
+        "title:bonding and concentration of hydrogen and thermal stability of nanocrystalline diamond films:2012"
+      ],
+      "fingerprint": "9784001c06d5e14113abf8822a2e5687ed85c64b816eb79da3ba3e3677551605",
+      "is_ncd": true,
+      "summary_zh": "标题明确涉及纳米晶金刚石薄膜的氢键合、浓度与热稳定性。仅据标题，缺少摘要。",
+      "reason": "标题明确为纳米晶金刚石薄膜研究，符合纳入范围。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00009-8": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00009-8",
+        "title:recent results on characterization of detonation nanodiamonds:2012"
+      ],
+      "fingerprint": "33f6297c8b9b41241c4f4493ec413581b9ca000285af90be7af78f7c6b4de5dc",
+      "is_ncd": false,
+      "summary_zh": "标题为爆轰纳米金刚石表征新结果，属颗粒研究。仅据标题，缺少摘要。",
+      "reason": "主题为孤立纳米金刚石颗粒表征，不属于NCD/UNCD材料研究。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00010-4": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00010-4",
+        "title:optical and spin properties of nitrogen vacancy color centers in diamond crystals nanodiamonds and proximity to surfaces:2012"
+      ],
+      "fingerprint": "df49d16562b822e94511f914461350cc6eac93af868188269814116dbaa030a9",
+      "is_ncd": false,
+      "summary_zh": "标题涉及金刚石晶体与纳米金刚石中NV色心的光学与自旋性质。仅据标题，缺少摘要。",
+      "reason": "主题为NV色心性质，未明确研究NCD/UNCD材料或其形核生长。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00012-8": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00012-8",
+        "title:science and technology of ultrananocrystalline diamond uncdtm film based mems and nems devices and systems:2012"
+      ],
+      "fingerprint": "55256fc5a6d95ce58dc554cdfe7242234a2ddc19b9785da84a25bff6811e7492",
+      "is_ncd": true,
+      "summary_zh": "标题明确涉及UNCD薄膜基MEMS/NEMS器件与系统。仅据标题，缺少摘要。",
+      "reason": "标题明确为UNCD薄膜材料及其器件应用，符合纳入范围。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00013-x": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00013-x",
+        "title:advances in surface chemistry of nanodiamond and nanodiamond polymer composites:2012"
+      ],
+      "fingerprint": "8f810151b75e78850723e869fb2313d8c6f4425ef15336ad027dee024f6adb34",
+      "is_ncd": false,
+      "summary_zh": "该条目为《Ultananocrystalline Diamond》书中章节，讨论纳米金刚石颗粒及纳米金刚石-聚合物复合材料的表面化学。",
+      "reason": "标题与摘要聚焦纳米金刚石颗粒/复合材料的表面化学，未明确研究NCD/UNCD薄膜材料或其形核生长，且属书籍章节。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00014-1": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00014-1",
+        "title:nanodiamond nanoparticles as additives to lubricants:2012"
+      ],
+      "fingerprint": "8378b81fbe002b91f8249b659beafd68c3dd52f9e51a84e76c8875b5b6beb7e8",
+      "is_ncd": false,
+      "summary_zh": "该条目为书中章节，讨论纳米金刚石颗粒作为润滑添加剂的应用。",
+      "reason": "内容为孤立纳米金刚石颗粒的润滑应用，未涉及NCD/UNCD材料或其形核生长，且为书籍章节。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00015-3": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00015-3",
+        "title:engineering nanoparticulate diamond for applications in nanomedicine and biology:2012"
+      ],
+      "fingerprint": "54dfe43318f265ef90bc178bf03a247937e9207b89c605c10b89aaacbd840eff",
+      "is_ncd": false,
+      "summary_zh": "该条目为书中章节，讨论用于纳米医学和生物学的纳米颗粒金刚石工程。",
+      "reason": "聚焦纳米金刚石颗粒的生物医学应用，未研究NCD/UNCD材料本身，且为书籍章节。"
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00016-5": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00016-5",
+        "title:characterization of detonation nanodiamonds for biocompatibility:2012"
+      ],
+      "fingerprint": "f9aba11e2ebc2bfe125a404f47788f8ee0a60fa54e38b3fc26a3d49977f8b71a",
+      "is_ncd": false,
+      "summary_zh": "该条目为书中章节，表征爆轰纳米金刚石的生物相容性。",
+      "reason": "研究对象为爆轰纳米金刚石颗粒的生物相容性，非NCD/UNCD材料，且为书籍章节。"
+    },
+    "doi:10.1016/j.diamond.2011.10.010": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2011.10.010",
+        "title:bmk ct conjugated fluorescence nanodiamond as potential glioma targeted imaging and drug:2012"
+      ],
+      "fingerprint": "3e4aefa665f59e52fcb96f044bc089733a08e1a8eee6fa2d4e433ce00af01e56",
+      "is_ncd": false,
+      "summary_zh": "该文研究BmK CT偶联的荧光纳米金刚石用于胶质瘤靶向成像与药物。",
+      "reason": "属孤立纳米金刚石颗粒的生物医学应用，未涉及NCD/UNCD材料或其形核生长。"
+    },
+    "doi:10.1142/9789812703484_0006": {
+      "aliases": [
+        "doi:10.1142/9789812703484_0006",
+        "title:diamond graphite and oxide grains:2012"
+      ],
+      "fingerprint": "e0a2d977d5194da820e701646deb4a2ca4ed9ac8a0d5417cc99d0e66b12874b9",
+      "is_ncd": false,
+      "summary_zh": "该条目为天文学书籍章节，讨论金刚石、石墨和氧化物颗粒。",
+      "reason": "主题为天体环境中的金刚石/石墨颗粒，与NCD/UNCD材料研究无关，且为书籍章节。"
+    },
+    "doi:10.1088/0022-3727/45/6/062001": {
+      "aliases": [
+        "doi:10.1088/0022-3727/45/6/062001",
+        "title:luminescent isolated diamond particles with controllably embedded silicon vacancy colour centres:2012"
+      ],
+      "fingerprint": "68b77956358535564a058f26ad25076d48f047e3af45a66cca2d00bfc64fb462",
+      "is_ncd": false,
+      "summary_zh": "该文用CVD制备嵌入硅空位色心的孤立金刚石颗粒并研究其发光。",
+      "reason": "研究对象为孤立金刚石颗粒的色心发光，未明确为NCD/UNCD薄膜或纳米晶材料。"
+    },
+    "doi:10.1016/j.diamond.2011.12.009": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2011.12.009",
+        "title:identification quantification and modification of detonation nanodiamond functional groups:2012"
+      ],
+      "fingerprint": "12c9e5b2fde1118a8de813fa30f301ebae51bff40aadd04520fa03f616a6b994",
+      "is_ncd": false,
+      "summary_zh": "该文鉴定、定量并修饰爆轰纳米金刚石的官能团。",
+      "reason": "聚焦爆轰纳米金刚石颗粒的表面官能团，未研究NCD/UNCD材料或其形核生长。"
+    },
+    "doi:10.1002/lpor.201100030": {
+      "aliases": [
+        "doi:10.1002/lpor.201100030",
+        "title:laser in micro and nanoprocessing of diamond materials:2012"
+      ],
+      "fingerprint": "d0f18ccc6e662f2c8a783c6477f4e40503cceaf151b6f0f678295e6f5a26a3e0",
+      "is_ncd": false,
+      "summary_zh": "该综述介绍金刚石材料的激光微纳加工，包括抛光、成形、导电通道及激光辅助CVD生长。",
+      "reason": "讨论金刚石材料的激光加工，未明确涉及NCD/UNCD纳米晶材料或其形核生长。"
+    },
+    "doi:10.1201/b11623-5": {
+      "aliases": [
+        "doi:10.1201/b11623-5",
+        "title:thermodynamic and kinetic approaches of diamond and related nanomaterials formed by laser ablation in liquid:2012"
+      ],
+      "fingerprint": "ffa82ee72bc82174ab5573481037a8895716447f9132573900272372bae06cb5",
+      "is_ncd": false,
+      "summary_zh": "该条目为书籍章节，讨论液相激光烧蚀形成金刚石及相关纳米材料的热力学与动力学。",
+      "reason": "主题为激光烧蚀合成金刚石纳米材料，未明确研究NCD/UNCD材料，且为书籍章节。"
+    },
+    "doi:10.1021/nl204449n": {
+      "aliases": [
+        "doi:10.1021/nl204449n",
+        "title:integrated diamond networks for quantum nanophotonics:2012"
+      ],
+      "fingerprint": "c99a44ecba19c888b7ddbbf6f7d73b8b7dd0c852e7c5ce5a541cef8c409d35a7",
+      "is_ncd": false,
+      "summary_zh": "该文演示了金刚石中的集成纳米光子网络，使用环形谐振腔中的氮-空位色心实现单光子产生与路由。",
+      "reason": "摘要未提及纳米晶或超纳米晶金刚石，也未描述纳米尺度晶粒，仅涉及单晶金刚石光子器件，故不符合NCD/UNCD范围。"
+    },
+    "doi:10.1016/j.diamond.2012.01.021": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2012.01.021",
+        "title:electrostatic grafting of diamond nanoparticles towards 3d diamond nanostructures:2012"
+      ],
+      "fingerprint": "1718caacb5481c5817e1915568bd20c5e45d1215d9f91fc807f679679895f0fd",
+      "is_ncd": false,
+      "summary_zh": "标题涉及将金刚石纳米颗粒静电接枝以构建三维金刚石纳米结构，但缺少摘要。",
+      "reason": "仅有标题且无摘要，无法确认是否研究NCD/UNCD薄膜或纳米晶金刚石材料；证据不足，按规则判为false。"
+    },
+    "doi:10.1021/ma202057g": {
+      "aliases": [
+        "doi:10.1021/ma202057g",
+        "title:order order transition between equilibrium ordered bicontinuous nanostructures of double diamond and double gyroid in stereoregular block copolymer:2012"
+      ],
+      "fingerprint": "0f64eaa96f6eb2c3ce0c16a5944fa5837a63d58377f3b8c62ca6adcbaa460b03",
+      "is_ncd": false,
+      "summary_zh": "该文研究嵌段共聚物中双金刚石与双螺旋有序双连续纳米结构之间的有序-有序转变。",
+      "reason": "这里的\"双金刚石\"指嵌段共聚物自组装形成的金刚石型网络结构，并非纳米晶金刚石材料。"
+    },
+    "doi:10.1063/1.3683544": {
+      "aliases": [
+        "doi:10.1063/1.3683544",
+        "title:the mechanical properties of various chemical vapor deposition diamond structures compared to the ideal single crystal:2012"
+      ],
+      "fingerprint": "649c80a4259099bcf5d14dcc3199c9c343249dc4f6f6598538c82fa2f53290ec",
+      "is_ncd": true,
+      "summary_zh": "该文比较了超纳米晶、纳米晶、微晶及单晶CVD金刚石等多种金刚石结构的力学性能，指出优化沉积条件下UNC金刚石可接近单晶金刚石的杨氏模量。",
+      "reason": "摘要明确讨论超纳米晶（UNC）和纳米晶CVD金刚石的弹性模量与力学性能，属于NCD/UNCD材料研究。"
+    },
+    "doi:10.1063/1.3693308": {
+      "aliases": [
+        "doi:10.1063/1.3693308",
+        "title:thermomechanical stability of ultrananocrystalline diamond:2012"
+      ],
+      "fingerprint": "e452003c39056c63be52eae7aa258c3f18afebc60d34f22f3ff4625296cd69cf",
+      "is_ncd": true,
+      "summary_zh": "该文用微悬臂谐振器在63–450 K测量超纳米晶金刚石（UNCD）的刚度与耗散，发现极低的温度系数（−26 ppm/K），并归因于晶界缺陷主导的机械耗散。",
+      "reason": "标题与摘要明确研究UNCD的热机械稳定性，属于超纳米晶金刚石材料性能研究。"
+    },
+    "doi:10.5772/29671": {
+      "aliases": [
+        "doi:10.5772/29671",
+        "title:diamond diamond like carbon dlc and diamond like nanocomposite dln thin films for mems applications:2012"
+      ],
+      "fingerprint": "560765499b47e1f0ec486dbf98c3b4b47ae03fa859a4c57707de821d9a4d5247",
+      "is_ncd": false,
+      "summary_zh": "该文综述金刚石、类金刚石碳（DLC）和类金刚石纳米复合（DLN）薄膜在MEMS中的应用。",
+      "reason": "主题为DLC/DLN薄膜，摘要未涉及纳米晶或超纳米晶金刚石材料，按规则排除DLC相关研究。"
+    },
+    "doi:10.2147/ijn.s26665": {
+      "aliases": [
+        "doi:10.2147/ijn.s26665",
+        "title:nanofibrous poly lactide co glycolide membranes loaded with diamond nanoparticles as promising substrates for bone tissue engineering:2012"
+      ],
+      "fingerprint": "92a591706136c4755679d4c06b95e2763bdef0150ec78ae4568c7d21c196ceb6",
+      "is_ncd": false,
+      "summary_zh": "该文研究负载金刚石纳米颗粒的聚乳酸-羟基乙酸共聚物纳米纤维膜作为骨组织工程基底。",
+      "reason": "仅涉及孤立纳米金刚石颗粒的生物医学应用，未研究NCD/UNCD材料或其形核生长。"
+    },
+    "doi:10.1115/1.4005631": {
+      "aliases": [
+        "doi:10.1115/1.4005631",
+        "title:effect of diamond nanolubricant on r134a pool boiling heat transfer:2012"
+      ],
+      "fingerprint": "759e9979fb1b902d15d9fcfd72d6344d0215dea5cefa563ec35014e90965debd",
+      "is_ncd": false,
+      "summary_zh": "该文量化了金刚石纳米颗粒润滑剂对R134a池沸腾传热的影响。",
+      "reason": "研究的是悬浮于润滑剂中的孤立纳米金刚石颗粒对传热的影响，不涉及NCD/UNCD材料。"
+    },
+    "doi:10.1038/nnano.2012.50": {
+      "aliases": [
+        "doi:10.1038/nnano.2012.50",
+        "title:a robust scanning diamond sensor for nanoscale imaging with single nitrogen vacancy centres:2012"
+      ],
+      "fingerprint": "d3a858346520728d67318404a9add9fd352c4e6ba3b37b2bbdcc1907105ddad7",
+      "is_ncd": false,
+      "summary_zh": "该文将单个氮-空位色心置于高纯金刚石纳米柱末端作为原子力显微镜探针，实现纳米尺度磁成像。",
+      "reason": "摘要未提及纳米晶或超纳米晶金刚石，也未描述纳米尺度晶粒结构，属于单晶金刚石探针器件。"
+    },
+    "doi:10.1103/physrevb.85.155448": {
+      "aliases": [
+        "doi:10.1103/physrevb.85.155448",
+        "title:influence of surface passivation on the friction and wear behavior of ultrananocrystalline diamond and tetrahedral amorphous carbon thin films:2012"
+      ],
+      "fingerprint": "b83f174087b0450e99bc54746ae0d013c7f862861dcac58fa2b2dd77bfdd32e1",
+      "is_ncd": true,
+      "summary_zh": "该文研究表面钝化对超纳米晶金刚石（UNCD）与四面体非晶碳薄膜摩擦磨损行为的影响。",
+      "reason": "标题明确以UNCD薄膜为研究对象，属于超纳米晶金刚石材料的摩擦学性能研究。"
+    },
+    "doi:10.1016/j.diamond.2012.02.023": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2012.02.023",
+        "title:direct electrochemistry of tyrosinase and biosensing for phenol based on gold nanoparticles electrodeposited on a boron doped diamond electrode:2012"
+      ],
+      "fingerprint": "980973aa147504851eb2f6ed41c81831a4c7c53466694aedf83abebb9e23c44a",
+      "is_ncd": false,
+      "summary_zh": "该研究在硼掺杂金刚石电极上电沉积金纳米颗粒用于酪氨酸酶直接电化学与苯酚生物传感，未涉及纳米晶或超纳米晶金刚石材料。",
+      "reason": "仅涉及硼掺杂金刚石电极，无NCD/UNCD或纳米尺度晶粒描述，不符合范围。"
+    },
+    "doi:10.1103/physrevb.85.195436": {
+      "aliases": [
+        "doi:10.1103/physrevb.85.195436",
+        "title:thermal conductivity of diamond nanowires from first principles:2012"
+      ],
+      "fingerprint": "d564db018b7424233347e671207a3bc389ece7f2ca0897295ff501085e5112cf",
+      "is_ncd": false,
+      "summary_zh": "该文用第一性原理计算金刚石纳米线的热导率，研究对象为金刚石纳米线而非纳米晶/超纳米晶金刚石薄膜或块体材料。",
+      "reason": "金刚石纳米线不属于NCD/UNCD材料范畴，缺少纳米晶金刚石证据。"
+    },
+    "doi:10.1016/j.diamond.2012.04.005": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2012.04.005",
+        "title:influence of the surface termination of ultrananocrystalline diamond amorphous carbon composite films on their interaction with neurons:2012"
+      ],
+      "fingerprint": "185a9465468a82854b42afb7a25371b0b3f590e4275c50503c136bfc5fc1bbc9",
+      "is_ncd": true,
+      "summary_zh": "该研究考察超纳米晶金刚石/非晶碳复合薄膜表面终止对其与神经元相互作用的影响，属于UNCD薄膜的生物界面研究。",
+      "reason": "标题明确含ultrananocrystalline diamond复合薄膜，符合NCD/UNCD范围。"
+    },
+    "doi:10.1103/physrevlett.108.267401": {
+      "aliases": [
+        "doi:10.1103/physrevlett.108.267401",
+        "title:tuning the optical gap of nanometer size diamond cages by sulfurization a time dependent density functional study:2012"
+      ],
+      "fingerprint": "b1a301f411be2f9a247600a00e69e33c46e0644115a63ff9d3c75b8bf9af279d",
+      "is_ncd": false,
+      "summary_zh": "该文用含时密度泛函研究硫化工对纳米尺寸金刚石笼光学带隙的调控，对象为金刚石笼分子结构而非NCD/UNCD材料。",
+      "reason": "研究对象为纳米金刚石笼分子，非纳米晶金刚石薄膜或块体材料。"
+    },
+    "doi:10.1016/j.diamond.2012.05.009": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2012.05.009",
+        "title:low threshold field emission from nanocrystalline diamond carbon nanowall composite films:2012"
+      ],
+      "fingerprint": "38b86521404152a5aee8d03e58bed0ed1613051d9c35a9c6dd7126cebeb5a160",
+      "is_ncd": true,
+      "summary_zh": "该研究报告纳米晶金刚石/碳纳米墙复合薄膜的低阈值场发射，属于NCD复合薄膜的场发射应用研究。",
+      "reason": "标题明确含nanocrystalline diamond复合薄膜，符合NCD范围。"
+    },
+    "doi:10.1016/j.scriptamat.2012.04.017": {
+      "aliases": [
+        "doi:10.1016/j.scriptamat.2012.04.017",
+        "title:a novel model for undeformed nanometer chips of soft brittle hgcdte films induced by ultrafine diamond grits:2012"
+      ],
+      "fingerprint": "a0ab2126763eae7278f9dc5e8b76a9c243fdb30c57bc6e4d206ecafa2d816b34",
+      "is_ncd": false,
+      "summary_zh": "该文提出超细金刚石磨粒诱导HgCdTe软脆薄膜未变形纳米切屑的模型，研究的是金刚石磨粒加工而非NCD/UNCD材料。",
+      "reason": "仅涉及金刚石磨粒的机械加工，无纳米晶金刚石材料研究。"
+    },
+    "doi:10.1063/1.4738192": {
+      "aliases": [
+        "doi:10.1063/1.4738192",
+        "title:evidence for phase separation of ethanol water mixtures at the hydrogen terminated nanocrystalline diamond surface:2012"
+      ],
+      "fingerprint": "99a52e0e0776f19cb44492083f6714e278d89af26f0d9d85eec20430b4b35433",
+      "is_ncd": true,
+      "summary_zh": "该研究通过接触角测量与计算探讨乙醇-水混合物在氢终止纳米晶金刚石表面的相分离行为，属于NCD表面界面研究。",
+      "reason": "摘要明确研究氢终止纳米晶金刚石表面，符合NCD范围。"
+    },
+    "doi:10.1021/am300895s": {
+      "aliases": [
+        "doi:10.1021/am300895s",
+        "title:modulation of polymer refractive indices with diamond nanoparticles for metal free multilayer film mirrors:2012"
+      ],
+      "fingerprint": "6d4dc07b5e0c638a22f304892131bd1950ef8193c81f1f091dddcc1748a779ab",
+      "is_ncd": false,
+      "summary_zh": "该文用金刚石纳米颗粒调制聚合物折射率以制备无金属多层膜反射镜，研究的是纳米金刚石颗粒填料而非NCD/UNCD材料。",
+      "reason": "仅涉及孤立纳米金刚石颗粒作为填料，未研究NCD/UNCD材料或其形核生长。"
+    },
+    "doi:10.3390/jfb3030588": {
+      "aliases": [
+        "doi:10.3390/jfb3030588",
+        "title:cell growth on different types of ultrananocrystalline diamond thin films:2012"
+      ],
+      "fingerprint": "544d33b171e481f300fc62f94539889ce5ad47e4e10af05844efa7ac6faf8c35",
+      "is_ncd": true,
+      "summary_zh": "该研究比较细胞在不同类型超纳米晶金刚石薄膜上的生长，并分析细胞黏附与增殖机制，属于UNCD薄膜的生物应用研究。",
+      "reason": "摘要明确研究超纳米晶金刚石薄膜作为细胞培养基底，符合UNCD范围。"
+    },
+    "doi:10.1021/jp306086b": {
+      "aliases": [
+        "doi:10.1021/jp306086b",
+        "title:electrophoresis of nanodiamond on the growth of ultrananocrystalline diamond films on silicon nanowires and the enhancement of the electron field emission properties:2012"
+      ],
+      "fingerprint": "08a3163b03476f363b2075d55465854e6afbf27cc9e700eb4277bbb29e0323fc",
+      "is_ncd": true,
+      "summary_zh": "该研究利用纳米金刚石电泳在硅纳米线上生长超纳米晶金刚石薄膜并增强场发射性能，涉及UNCD薄膜生长与形核。",
+      "reason": "标题明确含ultrananocrystalline diamond薄膜生长，符合NCD/UNCD范围。"
+    },
+    "doi:10.1007/978-90-481-3150-1_17": {
+      "aliases": [
+        "doi:10.1007/978-90-481-3150-1_17",
+        "title:electron transport studies of disorder and dimensionality in nano crystalline diamond:2012"
+      ],
+      "fingerprint": "4ba894cdec14c64b07272b4040c90a26508ab56060034c5aa204bd7503c4870b",
+      "is_ncd": true,
+      "summary_zh": "标题明确研究纳米晶金刚石的电子输运、无序与维度效应。仅据标题，缺少摘要，无法获知具体结果。",
+      "reason": "标题明确含nano-crystalline diamond且主题为NCD电子输运研究，符合纳入范围。"
+    },
+    "doi:10.1063/1.4752455": {
+      "aliases": [
+        "doi:10.1063/1.4752455",
+        "title:nano hillock formation in diamond like carbon induced by swift heavy projectiles in the electronic stopping regime experiments and atomistic simulations:2012"
+      ],
+      "fingerprint": "ad02a65003108d8c42ce79d416c9dc80950638b8d9b3b27d29be3fbea6d305e9",
+      "is_ncd": false,
+      "summary_zh": "该文研究类金刚石碳（DLC）在快重离子辐照下的表面丘状结构形成。",
+      "reason": "研究对象为DLC而非NCD/UNCD，不符合纳入标准。"
+    },
+    "doi:10.1186/1556-276x-7-522": {
+      "aliases": [
+        "doi:10.1186/1556-276x-7-522",
+        "title:microplasma illumination enhancement of vertically aligned conducting ultrananocrystalline diamond nanorods:2012"
+      ],
+      "fingerprint": "08e0a0c6fb7af5b6030469fbe4055d6edf51b67d54a8d2f5245d5a4dff2a2096",
+      "is_ncd": true,
+      "summary_zh": "采用反应离子刻蚀结合纳米金刚石掩模制备垂直排列导电超纳米晶金刚石纳米棒，并展示其微等离子体发光增强特性。",
+      "reason": "明确研究UNCD纳米棒的制备与电学/等离子体应用，属UNCD材料研究。"
+    },
+    "doi:10.1186/1556-276x-7-535": {
+      "aliases": [
+        "doi:10.1186/1556-276x-7-535",
+        "title:single step route to diamond nanotube composite:2012"
+      ],
+      "fingerprint": "5ac8f13af16ccd34ffe05acf4d0159e11686bade3f65246f498d3b14ebb343d7",
+      "is_ncd": false,
+      "summary_zh": "以蜡烛蜡为前驱体单步制备金刚石-纳米管复合薄膜并表征其结构。",
+      "reason": "摘要仅称金刚石-纳米管复合，未提供纳米晶/超纳米晶金刚石或纳米尺度晶粒证据。"
+    },
+    "doi:10.1016/j.elecom.2012.08.005": {
+      "aliases": [
+        "doi:10.1016/j.elecom.2012.08.005",
+        "title:secm detection of single boron doped diamond nanodes and nanoelectrode arrays using phase operated shear force technique:2012"
+      ],
+      "fingerprint": "a21fec2fb43599530c25ebfe934a3e6021e2fb4bcef509e76ea239a7cbcd8571",
+      "is_ncd": false,
+      "summary_zh": "标题涉及硼掺杂金刚石纳米电极及纳米电极阵列的SECM检测。",
+      "reason": "仅据标题，缺少摘要，且未明确纳米晶/超纳米晶金刚石材料，证据不足。"
+    },
+    "doi:10.1016/j.scriptamat.2012.07.016": {
+      "aliases": [
+        "doi:10.1016/j.scriptamat.2012.07.016",
+        "title:fabrication and size prediction of crystalline nanoparticles of silicon induced by nanogrinding with ultrafine diamond grits:2012"
+      ],
+      "fingerprint": "433ca25244790cc15fad225e2d5e0360a03c2cc5bf95e0686be83340251e745c",
+      "is_ncd": false,
+      "summary_zh": "研究超细金刚石磨粒纳米磨削制备硅晶体纳米颗粒。",
+      "reason": "金刚石仅作为磨削工具，研究对象为硅纳米颗粒，非NCD/UNCD材料。"
+    },
+    "doi:10.1201/b12181-11": {
+      "aliases": [
+        "doi:10.1201/b12181-11",
+        "title:atomistic factors governing adhesion between diamond amorphous carbon and model diamond nanocomposite surfaces:2012"
+      ],
+      "fingerprint": "e162960dfa428c08243228eae6699c2644be3627588eb2ed106ac8e76c26b373",
+      "is_ncd": false,
+      "summary_zh": "标题涉及金刚石、非晶碳与模型金刚石纳米复合表面的粘附原子机制。",
+      "reason": "仅据标题，缺少摘要，未明确纳米晶/超纳米晶金刚石，证据不足。"
+    },
+    "doi:10.5772/50545": {
+      "aliases": [
+        "doi:10.5772/50545",
+        "title:nanoindentation as a tool to clarify the mechanism causing variable stiffness of a silane layer on diamond:2012"
+      ],
+      "fingerprint": "c27537400b9959c2d0bef7bcc9a6cbd6d8d6005f10c2b5709c4e37f6dbdb6f5d",
+      "is_ncd": false,
+      "summary_zh": "利用纳米压痕研究金刚石表面硅烷层刚度变化机制。",
+      "reason": "研究对象为金刚石表面硅烷层，未涉及NCD/UNCD材料。"
+    },
+    "doi:10.1002/pssb.201200079": {
+      "aliases": [
+        "doi:10.1002/pssb.201200079",
+        "title:antibacterial behavior of diamond nanoparticles against i escherichia coli i:2012"
+      ],
+      "fingerprint": "3188979ad696f1a24bafe07d71d45392b76d9a123d7d332e1f596984f28b9f9e",
+      "is_ncd": false,
+      "summary_zh": "测试纳米金刚石颗粒对大肠杆菌的抗菌行为。",
+      "reason": "研究对象为孤立纳米金刚石颗粒的抗菌应用，未研究NCD/UNCD材料或其形核生长。"
+    },
+    "doi:10.1007/978-3-642-33750-5_40": {
+      "aliases": [
+        "doi:10.1007/978-3-642-33750-5_40",
+        "title:the impact of oil based diamond nanofluids on diesel engine performance:2012"
+      ],
+      "fingerprint": "d20411571f76c72a07c33b861c2d11556e83008422d0ffd64b7011c7305eb984",
+      "is_ncd": false,
+      "summary_zh": "标题研究油基金刚石纳米流体对柴油机性能的影响。",
+      "reason": "仅据标题，缺少摘要，金刚石纳米流体非NCD/UNCD材料研究，证据不足。"
+    },
+    "doi:10.1002/cctc.201200569": {
+      "aliases": [
+        "doi:10.1002/cctc.201200569",
+        "title:aerobic oxidation of thiols catalyzed by copper nanoparticles supported on diamond nanoparticles:2012"
+      ],
+      "fingerprint": "43a665b26e0c1c051d857f737fa16dea6f9e817b2db07ecd0c9d35c8050ad37b",
+      "is_ncd": false,
+      "summary_zh": "该研究使用经Fenton纯化的商业纳米金刚石颗粒作为Cu纳米颗粒的载体，用于硫醇的有氧氧化。",
+      "reason": "研究对象是作为催化剂载体的孤立纳米金刚石颗粒，未研究NCD/UNCD薄膜材料或其形核生长，故排除。"
+    },
+    "doi:10.1515/nanoph-2012-0001": {
+      "aliases": [
+        "doi:10.1515/nanoph-2012-0001",
+        "title:frontiers in diffraction unlimited optical methods for spin manipulation magnetic field sensing and imaging using diamond nitrogen vacancy defects:2012"
+      ],
+      "fingerprint": "d5502d242774ab123831634d43d7a1e833e1fe5300779891b70bd9be08b0d6b1",
+      "is_ncd": false,
+      "summary_zh": "该综述讨论金刚石中氮空位缺陷中心在自旋操控、磁场传感与超分辨成像中的应用。",
+      "reason": "内容聚焦单晶金刚石中的NV色心缺陷，未涉及纳米晶/超纳米晶金刚石材料，故排除。"
+    },
+    "doi:10.1021/nl302541e": {
+      "aliases": [
+        "doi:10.1021/nl302541e",
+        "title:free standing mechanical and photonic nanostructures in single crystal diamond:2012"
+      ],
+      "fingerprint": "f4d339f209d441e98649aa00d50fcf57bcd942c677c0e3cacf1027c7d3ee046f",
+      "is_ncd": false,
+      "summary_zh": "该文采用斜角等离子体刻蚀在块体单晶金刚石中制备自由悬空的纳米机械与光子结构。",
+      "reason": "材料为单晶金刚石而非纳米晶/超纳米晶金刚石，故排除。"
+    },
+    "doi:10.1016/j.corsci.2012.09.015": {
+      "aliases": [
+        "doi:10.1016/j.corsci.2012.09.015",
+        "title:cell response and corrosion behavior of electrodeposited diamond like carbon films on nanostructured titanium:2013"
+      ],
+      "fingerprint": "d54bcf95bce86056735c6709aa66f1aaf1748f7b708a422fa9194fcaff3bf67e",
+      "is_ncd": false,
+      "summary_zh": "该文研究电沉积类金刚石碳膜在纳米结构钛上的细胞响应与腐蚀行为。",
+      "reason": "研究对象为类金刚石碳（DLC）膜，不属于NCD/UNCD，故排除。"
+    },
+    "doi:10.1039/c2nr32939e": {
+      "aliases": [
+        "doi:10.1039/c2nr32939e",
+        "title:in situ detection of dopamine using nitrogen incorporated diamond nanowire electrode:2013"
+      ],
+      "fingerprint": "490a739e90429ccf51ff2cced5370cc1d3c591d535d1928223c6d641e92e7683",
+      "is_ncd": false,
+      "summary_zh": "该文报道氮掺入金刚石纳米线电极用于多巴胺的原位检测。",
+      "reason": "标题仅提及金刚石纳米线电极，缺少纳米晶/超纳米晶金刚石材料的明确证据，故排除。"
+    },
+    "doi:10.1039/c3nr01992f": {
+      "aliases": [
+        "doi:10.1039/c3nr01992f",
+        "title:enhancing the plasma illumination behaviour of microplasma devices using microcrystalline ultra nanocrystalline hybrid diamond materials as cathodes:2013"
+      ],
+      "fingerprint": "acf10dc45d0dbd739ed9374dbdfe0edccf97ab316952fe5a41d8b5ce9da77a0d",
+      "is_ncd": true,
+      "summary_zh": "该研究以微晶/超纳米晶杂化金刚石材料作为阴极，提升微等离子体器件的等离子体发光性能。",
+      "reason": "标题明确涉及超纳米晶（ultra-nanocrystalline）金刚石材料及其应用，符合纳入范围。"
+    },
+    "doi:10.14233/ajchem.2013.14299": {
+      "aliases": [
+        "doi:10.14233/ajchem.2013.14299",
+        "title:photoelectrochemical properties and its application of nano tio2 boron doped diamond heterojunction electrode material:2013"
+      ],
+      "fingerprint": "a0ca6476d24ff72342027a1d56f41c9f1ae900451936f055233caa528158679b",
+      "is_ncd": false,
+      "summary_zh": "该文研究纳米TiO2/硼掺杂金刚石异质结电极材料的光电化学性能与应用。",
+      "reason": "材料为硼掺杂金刚石，未明确为纳米晶/超纳米晶金刚石，故排除。"
+    },
+    "doi:10.1533/9780857093516.1.48": {
+      "aliases": [
+        "doi:10.1533/9780857093516.1.48",
+        "title:biotribology and biological behaviour of nanocrystalline diamond ncd coatings for medical applications:2013"
+      ],
+      "fingerprint": "48e6fd0e0a7969878e48d3938b9a3ddf063cdf8b49dbab12c8af90bc826fd08e",
+      "is_ncd": true,
+      "summary_zh": "该章节讨论纳米晶金刚石（NCD）涂层用于医学应用的生物摩擦学与生物学行为。仅据标题，缺少摘要。",
+      "reason": "标题明确为NCD涂层研究，属专著章节，符合纳入范围。"
+    },
+    "doi:10.1533/9780857093516.2.105": {
+      "aliases": [
+        "doi:10.1533/9780857093516.2.105",
+        "title:nanostructured diamond coatings for orthopaedic applications:2013"
+      ],
+      "fingerprint": "e166f82b6c56f6b62f60531e27a74edda834507fe4b62faa260d65a51acceef7",
+      "is_ncd": true,
+      "summary_zh": "该章节讨论纳米结构金刚石涂层作为骨科植入物承载表面的摩擦磨损与生物相容性。",
+      "reason": "摘要明确涉及纳米结构金刚石涂层用于骨科应用，符合纳入范围。"
+    },
+    "doi:10.1533/9780857093516.2.151": {
+      "aliases": [
+        "doi:10.1533/9780857093516.2.151",
+        "title:ultrananocrystalline diamond uncd films for ophthalmological applications:2013"
+      ],
+      "fingerprint": "8a15e35ec8fe5103e72ee6fba0de8443e4f336d26ed91852c97c9735dc854393",
+      "is_ncd": true,
+      "summary_zh": "该章节讨论超纳米晶金刚石（UNCD）薄膜在眼科领域的应用。仅据标题，缺少摘要。",
+      "reason": "标题明确为UNCD薄膜研究，属专著章节，符合纳入范围。"
+    },
+    "doi:10.1533/9780857093516.2.171": {
+      "aliases": [
+        "doi:10.1533/9780857093516.2.171",
+        "title:ultrananocrystalline diamond uncd for neural applications:2013"
+      ],
+      "fingerprint": "3321dce63ec9226b3982b79d10c27193c87670cbf540cbfe73eb321ae0d52b50",
+      "is_ncd": true,
+      "summary_zh": "该章节标题明确讨论超纳米晶金刚石（UNCD）在神经领域的应用，属于UNCD材料应用研究。仅据标题，缺少摘要。",
+      "reason": "标题明确含UNCD且为应用研究章节，符合纳入范围。"
+    },
+    "doi:10.1533/9780857093516.2.186": {
+      "aliases": [
+        "doi:10.1533/9780857093516.2.186",
+        "title:nanodiamonds for drug delivery systems:2013"
+      ],
+      "fingerprint": "fb4e28fdbf73e0ef9ee352faa54e3b0dfd9675c2be26ddb000698f558689494c",
+      "is_ncd": false,
+      "summary_zh": "该章节标题为纳米金刚石用于药物递送系统，聚焦孤立纳米金刚石颗粒的生物医学应用。仅据标题，缺少摘要。",
+      "reason": "仅涉及纳米金刚石颗粒的药物递送，未研究NCD/UNCD材料或其形核生长。"
+    },
+    "doi:10.1021/cm303239d": {
+      "aliases": [
+        "doi:10.1021/cm303239d",
+        "title:chessboard diamond nanostructures and the i a i site deficient li sub 1 2 3 i x i sub nd sub 1 2 i x i sub tio sub 3 sub defect perovskite solid solution:2013"
+      ],
+      "fingerprint": "0fab6eeb5dafe4250357e03b0681fc62f863e3e8e26ce6656294b2beb180cf6e",
+      "is_ncd": false,
+      "summary_zh": "该文研究钙钛矿固溶体中的棋盘/金刚石状纳米结构，与纳米晶金刚石材料无关。",
+      "reason": "标题中的diamond指钙钛矿中的金刚石状结构，非NCD/UNCD材料。"
+    },
+    "doi:10.1016/j.jmatprotec.2012.08.010": {
+      "aliases": [
+        "doi:10.1016/j.jmatprotec.2012.08.010",
+        "title:micro nanometric investigations of the effects of laser ablation in the generation of micro tools from solid cvd diamond structures:2013"
+      ],
+      "fingerprint": "2eb9710a1f334c9cfe2e97f491c28bb10045b02a0f7e38c05ceeb11fc9d0ff9d",
+      "is_ncd": false,
+      "summary_zh": "该文研究激光烧蚀从固态CVD金刚石结构制备微型工具，未明确涉及纳米晶或超纳米晶金刚石。",
+      "reason": "仅提CVD金刚石，缺少纳米晶/超纳米晶的明确证据。"
+    },
+    "doi:10.1016/j.tsf.2012.10.073": {
+      "aliases": [
+        "doi:10.1016/j.tsf.2012.10.073",
+        "title:the role of nano graphite phase on enhancing the plasma illumination characteristics of the diamond coated inverted pyramidal cavities:2013"
+      ],
+      "fingerprint": "5c2276a985dad47517a8281bf8c7b38afefb8e1fca0d1300bdff9b2807d61dfa",
+      "is_ncd": false,
+      "summary_zh": "该文讨论纳米石墨相对金刚石涂层倒金字塔腔等离子体照明特性的作用，未明确为纳米晶金刚石材料研究。",
+      "reason": "缺少纳米晶/超纳米晶金刚石的明确表述，证据不足。"
+    },
+    "doi:10.1557/mrs.2013.23": {
+      "aliases": [
+        "doi:10.1557/mrs.2013.23",
+        "title:nanoscale magnetometry with nv centers in diamond:2013"
+      ],
+      "fingerprint": "591312021cc26fa161488f748c5a4edb8cf18cbd21b69ebbb5524186be9bc804",
+      "is_ncd": false,
+      "summary_zh": "该文综述利用金刚石中NV色心进行纳米尺度磁测量，聚焦缺陷色心而非纳米晶金刚石材料。",
+      "reason": "研究对象为金刚石NV色心，未涉及NCD/UNCD材料或其生长。"
+    },
+    "doi:10.1016/j.electacta.2012.12.078": {
+      "aliases": [
+        "doi:10.1016/j.electacta.2012.12.078",
+        "title:ultra nanocrystalline diamond nanowires with enhanced electrochemical properties:2013"
+      ],
+      "fingerprint": "5673f2467d3ec638fd6effeb9f9ed4b2bf8372a897dcfa989d02f67147f6100d",
+      "is_ncd": true,
+      "summary_zh": "该文研究超纳米晶金刚石纳米线并提升其电化学性能，属于UNCD材料的加工与性能研究。",
+      "reason": "标题明确含超纳米晶金刚石纳米线，符合纳入范围。"
+    },
+    "doi:10.1063/1.4796168": {
+      "aliases": [
+        "doi:10.1063/1.4796168",
+        "title:thermal conduction inhomogeneity of nanocrystalline diamond films by dual side thermoreflectance:2013"
+      ],
+      "fingerprint": "b6db975d3bbfa324dee0f260820424dcb90c7207077a5e17599baf0357724e6a",
+      "is_ncd": true,
+      "summary_zh": "该文用双面热反射法研究纳米晶金刚石薄膜热导率的不均匀性，涉及不同厚度薄膜的局部热导率分布。",
+      "reason": "摘要明确为纳米晶CVD金刚石薄膜的热学性质研究。"
+    },
+    "doi:10.1146/annurev-conmatphys-030212-184238": {
+      "aliases": [
+        "doi:10.1146/annurev-conmatphys-030212-184238",
+        "title:quantum control over single spins in diamond:2013"
+      ],
+      "fingerprint": "9a2495082b044d4f3af338c608f4195d0e5e46f93564feaa5fe5f9e99488d9d0",
+      "is_ncd": false,
+      "summary_zh": "该文综述金刚石中单自旋的量子控制，聚焦NV色心量子信息与传感，而非纳米晶金刚石材料。",
+      "reason": "研究对象为金刚石NV色心量子技术，未涉及NCD/UNCD材料。"
+    },
+    "doi:10.1103/physrevlett.110.156402": {
+      "aliases": [
+        "doi:10.1103/physrevlett.110.156402",
+        "title:phonon induced spin spin interactions in diamond nanostructures application to spin squeezing:2013"
+      ],
+      "fingerprint": "e88712863d57de9716a63ca93047a8b429e161786c9686c21ef82e1d6f487e46",
+      "is_ncd": false,
+      "summary_zh": "该文提出金刚石纳米结构中声子诱导的自旋-自旋相互作用机制，聚焦NV色心自旋压缩。",
+      "reason": "研究NV色心自旋物理，未涉及NCD/UNCD材料或其生长。"
+    },
+    "doi:10.1021/nn400239n": {
+      "aliases": [
+        "doi:10.1021/nn400239n",
+        "title:approach to dark spin cooling in a diamond nanocrystal:2013"
+      ],
+      "fingerprint": "f2d0fbef5a09a6be3da0b7e0ba6096506ec0c4058137a885b58b07798a5f5d63",
+      "is_ncd": false,
+      "summary_zh": "研究单个金刚石纳米晶中NV色心向自旋浴的极化转移与自旋浴冷却，属于纳米金刚石颗粒中的缺陷物理。",
+      "reason": "研究对象是纳米金刚石颗粒中的NV色心自旋物理，未涉及NCD/UNCD薄膜材料或其形核生长。"
+    },
+    "doi:10.1016/j.aca.2013.03.007": {
+      "aliases": [
+        "doi:10.1016/j.aca.2013.03.007",
+        "title:functionalized diamond nanopowder for phosphopeptides enrichment from complex biological fluids:2013"
+      ],
+      "fingerprint": "399c08361685046b10f9f167c851dc9f424dcbb43becdbd0643f9ca9896ded5c",
+      "is_ncd": false,
+      "summary_zh": "仅据标题，该文用功能化金刚石纳米粉富集磷酸肽，属纳米金刚石颗粒的生物分析应用。",
+      "reason": "缺少摘要，标题显示为纳米金刚石颗粒的生化应用，未研究NCD/UNCD材料本身。"
+    },
+    "doi:10.1016/j.matdes.2012.11.061": {
+      "aliases": [
+        "doi:10.1016/j.matdes.2012.11.061",
+        "title:enhanced thermal conductivity in diamond aluminum composites with a tungsten interface nanolayer:2013"
+      ],
+      "fingerprint": "621d846a9480e111be88cec0f2d4434c47be4105ab642dc87970ac60582c1cd1",
+      "is_ncd": false,
+      "summary_zh": "仅据标题，该文研究含钨界面纳米层的金刚石/铝复合材料热导率。",
+      "reason": "缺少摘要，标题未出现纳米晶/超纳米晶金刚石表述，无法确认NCD材料。"
+    },
+    "doi:10.1016/j.wear.2013.03.049": {
+      "aliases": [
+        "doi:10.1016/j.wear.2013.03.049",
+        "title:self mated tribological systems based on multilayer micro nanocrystalline cvd diamond coatings:2013"
+      ],
+      "fingerprint": "64931b67533e3a40d7f335578e97440c9f83a3ac386bbc956113cf4c381f9c3c",
+      "is_ncd": true,
+      "summary_zh": "仅据标题，该文研究基于多层微米/纳米晶CVD金刚石涂层的自配对摩擦学系统。",
+      "reason": "标题明确含纳米晶CVD金刚石涂层，属NCD涂层摩擦学应用；缺少摘要。"
+    },
+    "doi:10.1021/nl401216y": {
+      "aliases": [
+        "doi:10.1021/nl401216y",
+        "title:high precision nanoscale temperature sensing using single defects in diamond:2013"
+      ],
+      "fingerprint": "f84720790b70ca8df3ac3828bad38fd91bb8fe5956013f968396ab9d909920ec",
+      "is_ncd": false,
+      "summary_zh": "研究利用金刚石中单个缺陷（含掺杂纳米金刚石）进行高精度纳米尺度温度传感。",
+      "reason": "主体是金刚石缺陷传感，纳米金刚石仅作传感器，未研究NCD/UNCD材料或形核生长。"
+    },
+    "doi:10.1088/0022-3727/46/27/275501": {
+      "aliases": [
+        "doi:10.1088/0022-3727/46/27/275501",
+        "title:humidity dependent friction mechanism in an ultrananocrystalline diamond film:2013"
+      ],
+      "fingerprint": "d789f25953503960c8cde7a2dbf856d97680f74765291948827341b5045809f5",
+      "is_ncd": true,
+      "summary_zh": "仅据标题，该文研究超纳米晶金刚石薄膜的湿度依赖摩擦机制。",
+      "reason": "标题明确为UNCD薄膜的摩擦学性质研究；缺少摘要。"
+    },
+    "doi:10.1103/physrevb.87.235436": {
+      "aliases": [
+        "doi:10.1103/physrevb.87.235436",
+        "title:spin relaxometry of single nitrogen vacancy defects in diamond nanocrystals for magnetic noise sensing:2013"
+      ],
+      "fingerprint": "e22c939df073bce2f177aa989341d7e9f231f2790a3938cc4fba376daa4a586b",
+      "is_ncd": false,
+      "summary_zh": "研究金刚石纳米晶中单个NV缺陷的自旋弛豫时间及磁噪声传感。",
+      "reason": "对象为纳米金刚石颗粒中的NV色心自旋物理，未涉及NCD/UNCD材料研究。"
+    },
+    "doi:10.1021/nl401791v": {
+      "aliases": [
+        "doi:10.1021/nl401791v",
+        "title:nanoscale fluorescence lifetime imaging of an optical antenna with a single diamond nv center:2013"
+      ],
+      "fingerprint": "f433c31f9a62e54c8e128c3f689b286788ea3dd34e0c98ad7cdb5e6edffbaab8",
+      "is_ncd": false,
+      "summary_zh": "利用承载单个NV色心的金刚石纳米晶对光学天线进行纳米尺度荧光寿命成像。",
+      "reason": "纳米金刚石仅作为NV色心载体用于近场成像，未研究NCD/UNCD材料。"
+    },
+    "doi:10.1002/lpor.201300065": {
+      "aliases": [
+        "doi:10.1002/lpor.201300065",
+        "title:bottom up engineering of diamond micro and nano structures:2013"
+      ],
+      "fingerprint": "ba18dfa04c8752e1b677e74615dec4cef23852a8c7d031e6c6635f5bcd5c82f3",
+      "is_ncd": false,
+      "summary_zh": "通过图案化生长纳米尺度单晶金刚石实现周期结构与波导等自下而上金刚石微纳结构。",
+      "reason": "研究单晶金刚石微纳结构工程，未涉及纳米晶/超纳米晶金刚石材料。"
+    },
+    "doi:10.1007/978-81-322-1173-0_6": {
+      "aliases": [
+        "doi:10.1007/978-81-322-1173-0_6",
+        "title:utilization of olivine macrocryst grain size and abundance data as a proxy for diamond size and grade in pyroclastic deposits of the orion south kimberlite fort à la corne saskatchewan canada:2013"
+      ],
+      "fingerprint": "e8d9f24a1fe002dad3887817111848108984370aa17be44793ce7db5b1fa17b8",
+      "is_ncd": false,
+      "summary_zh": "仅据标题，该文用橄榄石斑晶粒度与丰度数据推断金伯利岩中金刚石粒度与品位。",
+      "reason": "属地质金刚石矿床研究，与纳米晶金刚石材料无关。"
+    },
+    "doi:10.1115/1.4024034": {
+      "aliases": [
+        "doi:10.1115/1.4024034",
+        "title:chemical mechanical polishing slurries for chemically vapor deposited diamond films:2013"
+      ],
+      "fingerprint": "f0b58fbe1f9568d750994ba5cbab168c64d5a6df1a8c5dd7da04f4e6c3b42385",
+      "is_ncd": false,
+      "summary_zh": "该研究针对化学气相沉积金刚石薄膜的化学机械抛光浆料进行优化，未涉及纳米晶或超纳米晶金刚石材料。",
+      "reason": "研究对象为CVD金刚石薄膜抛光，无NCD/UNCD或纳米尺度晶粒描述。"
+    },
+    "doi:10.1002/smll.201301293": {
+      "aliases": [
+        "doi:10.1002/smll.201301293",
+        "title:electron field emission enhancement of vertically aligned ultrananocrystalline diamond coated zno core shell heterostructured nanorods:2013"
+      ],
+      "fingerprint": "2491fd1f0da19d88b0864252cf880cea63af697c04f307d1db986d564197133a",
+      "is_ncd": true,
+      "summary_zh": "研究ZnO纳米棒核与超纳米晶金刚石针壳构成的核壳异质结构，其电子场发射性能显著增强，开启场低至2.08 V/μm。",
+      "reason": "明确涉及超纳米晶金刚石（UNCD）壳层材料及其场发射应用。"
+    },
+    "doi:10.1016/j.ijmachtools.2013.04.004": {
+      "aliases": [
+        "doi:10.1016/j.ijmachtools.2013.04.004",
+        "title:experimental study on brittle ductile transition in elliptical ultrasonic assisted grinding euag of monocrystal sapphire using single diamond abrasive grain:2013"
+      ],
+      "fingerprint": "9fb08a9ed61616ba20175806409bb7969a346b0e208c34352d8b6ab9a4889852",
+      "is_ncd": false,
+      "summary_zh": "该文研究单颗金刚石磨粒椭圆超声辅助磨削单晶蓝宝石的脆塑转变，与纳米晶金刚石材料无关。",
+      "reason": "主题为单晶蓝宝石磨削加工，金刚石仅作为磨粒工具，非NCD/UNCD研究。"
+    },
+    "doi:10.1063/1.4817377": {
+      "aliases": [
+        "doi:10.1063/1.4817377",
+        "title:improvement in plasma illumination properties of ultrananocrystalline diamond films by grain boundary engineering:2013"
+      ],
+      "fingerprint": "a93f145f16e94bd5b70c5e29970987995f4a9143cf7ae57dbf90f5301b511dd6",
+      "is_ncd": true,
+      "summary_zh": "通过衬底温度和氢气调控超纳米晶金刚石薄膜的晶界工程，获得低阈值场0.21 V/μm的高性能等离子体照明。",
+      "reason": "明确研究UNCD薄膜的微结构演化与晶界工程及其功能特性。"
+    },
+    "doi:10.1038/ncomms3343": {
+      "aliases": [
+        "doi:10.1038/ncomms3343",
+        "title:observation of higher stiffness in nanopolycrystal diamond than monocrystal diamond:2013"
+      ],
+      "fingerprint": "03c58da5dddff95ed96317012c31f3fe19ba5a1e671a05ddd457f671cb9ca2df",
+      "is_ncd": true,
+      "summary_zh": "仅据标题，缺少摘要。标题报道纳米多晶金刚石的刚度高于单晶金刚石。",
+      "reason": "标题明确含纳米多晶金刚石（nanopolycrystal diamond）表述，属纳米晶金刚石研究；无摘要故不推断结果。"
+    },
+    "doi:10.1063/1.4819834": {
+      "aliases": [
+        "doi:10.1063/1.4819834",
+        "title:measurement of the full stress tensor in a crystal using photoluminescence from point defects the example of nitrogen vacancy centers in diamond:2013"
+      ],
+      "fingerprint": "da5f779dba1a717bddfc2180778c83d084ebb81188f22addd73edf06f06043bb",
+      "is_ncd": false,
+      "summary_zh": "利用金刚石中氮空位色心光致发光测量晶体全应力张量，未涉及纳米晶金刚石材料。",
+      "reason": "研究对象为单晶金刚石中的点缺陷应力测量，无NCD/UNCD内容。"
+    },
+    "doi:10.1201/b15591-13": {
+      "aliases": [
+        "doi:10.1201/b15591-13",
+        "title:nanocrystalline diamond:2013"
+      ],
+      "fingerprint": "5d4852a463de426d37eb6cce26cfaef31c200a473523affe395fd91cd98f730a",
+      "is_ncd": false,
+      "summary_zh": "该条目为《Carbon Nanomaterials》书中题为“Nanocrystalline Diamond”的章节，无摘要。",
+      "reason": "属书籍章节重印，按规则排除。"
+    },
+    "doi:10.1016/j.jeurceramsoc.2013.04.016": {
+      "aliases": [
+        "doi:10.1016/j.jeurceramsoc.2013.04.016",
+        "title:aqueous colloidal processing of submicrometric sic plus y3al5o12 with diamond nanoparticles:2013"
+      ],
+      "fingerprint": "07c9eb72480604508056bcd8d1ae878707018be236b95e51a79c6a015752d931",
+      "is_ncd": false,
+      "summary_zh": "研究含金刚石纳米颗粒的SiC与Y3Al5O12亚微米粉体水基胶体处理，属纳米金刚石颗粒作为添加剂。",
+      "reason": "仅涉及孤立纳米金刚石颗粒用于陶瓷胶体加工，未研究NCD/UNCD材料或其形核生长。"
+    },
+    "doi:10.1063/1.4829875": {
+      "aliases": [
+        "doi:10.1063/1.4829875",
+        "title:increasing the creation yield of shallow single defects in diamond by surface plasma treatment:2013"
+      ],
+      "fingerprint": "a55e7d1d0091434df418481c042bb917c829ed589611dc5f77639a514c7762f9",
+      "is_ncd": false,
+      "summary_zh": "通过氟和氧等离子体处理提高金刚石表面浅层单个氮空位色心的产率，未涉及纳米晶金刚石。",
+      "reason": "研究对象为单晶金刚石表面NV色心，无NCD/UNCD材料内容。"
+    },
+    "doi:10.1021/am403386a": {
+      "aliases": [
+        "doi:10.1021/am403386a",
+        "title:field emission from hybrid diamond like carbon and carbon nanotube composite structures:2013"
+      ],
+      "fingerprint": "a1280231f9456081e1e95270c9e38482567da1b9d1f47ed1639b9c3a706839e9",
+      "is_ncd": false,
+      "summary_zh": "研究类金刚石碳与碳纳米管复合结构的场发射，未涉及纳米晶或超纳米晶金刚石。",
+      "reason": "材料为DLC与碳纳米管复合，按规则排除DLC且无NCD/UNCD证据。"
+    },
+    "doi:10.1038/nmat3805": {
+      "aliases": [
+        "doi:10.1038/nmat3805",
+        "title:observing bulk diamond spin coherence in high purity nanodiamonds:2013"
+      ],
+      "fingerprint": "490f868462000af2710a7b4886b87838f2c6da26ec26828bd4659fb76907a716",
+      "is_ncd": false,
+      "summary_zh": "研究高纯纳米金刚石颗粒中氮-空位中心的体相自旋相干，属于孤立纳米金刚石颗粒的量子传感研究。",
+      "reason": "摘要聚焦纳米金刚石颗粒的NV色心相干性，未涉及NCD/UNCD薄膜或纳米晶金刚石材料的生长、成核或性质。"
+    },
+    "doi:10.1016/j.ijleo.2013.05.178": {
+      "aliases": [
+        "doi:10.1016/j.ijleo.2013.05.178",
+        "title:studies on the influence of argon flow rate on pecvd grown diamond like nanocomposite film:2013"
+      ],
+      "fingerprint": "e2fd357713dca564af3e897a8d7c6eb232ad27159ef91c3a01016ad0f0278f3e",
+      "is_ncd": false,
+      "summary_zh": "研究PECVD生长类金刚石纳米复合膜中氩气流量的影响。",
+      "reason": "类金刚石纳米复合膜（DLC类）不属于NCD/UNCD，且无纳米晶金刚石表述。"
+    },
+    "doi:10.1016/j.mechmat.2013.07.019": {
+      "aliases": [
+        "doi:10.1016/j.mechmat.2013.07.019",
+        "title:structure and mechanical properties of ultra nanocrystalline diamond and nanocrystalline cu from atomistic simulations:2013"
+      ],
+      "fingerprint": "9b0932f435e6d6be2942b1cd291cf4ce35d26a19edf39e04423c933cf7fc1df0",
+      "is_ncd": true,
+      "summary_zh": "用原子模拟研究超纳米晶金刚石与纳米晶铜的结构和力学性质。",
+      "reason": "标题明确涉及超纳米晶金刚石（UNCD）的原子尺度模拟研究。"
+    },
+    "doi:10.1007/978-3-319-03002-9_120": {
+      "aliases": [
+        "doi:10.1007/978-3-319-03002-9_120",
+        "title:a novel room temperature ammonia gas sensor based on diamond like nanocomposite c silicon heterojunction:2014"
+      ],
+      "fingerprint": "b3974cc5e8a2f5c34cdb6e9fb108e6715784d53c31887e1eabc7ab002e944625",
+      "is_ncd": false,
+      "summary_zh": "报道基于类金刚石纳米复合/硅异质结的室温氨气传感器。",
+      "reason": "材料为类金刚石纳米复合（DLC类），非NCD/UNCD。"
+    },
+    "doi:10.1007/978-3-319-03002-9_191": {
+      "aliases": [
+        "doi:10.1007/978-3-319-03002-9_191",
+        "title:nanoindentation study of mechanical properties of diamond like carbon coatings:2014"
+      ],
+      "fingerprint": "13d9eab33cc6c2f8d8b2c5bfbb9352f999965b3e6cdd5af1d95ff9e5318469b7",
+      "is_ncd": false,
+      "summary_zh": "对类金刚石碳涂层进行纳米压痕力学性能研究。",
+      "reason": "研究对象为DLC涂层，明确排除。"
+    },
+    "doi:10.1007/978-3-319-03002-9_82": {
+      "aliases": [
+        "doi:10.1007/978-3-319-03002-9_82",
+        "title:encapsulation of sinws array with diamond like nanocomposite thin film for ultra low reflection:2014"
+      ],
+      "fingerprint": "b49de0d7f41fcdb5c7004cf28afbf1231f8e7457506008a1480398942648b635",
+      "is_ncd": false,
+      "summary_zh": "用类金刚石纳米复合薄膜封装硅纳米线阵列以实现超低反射。",
+      "reason": "材料为类金刚石纳米复合，非NCD/UNCD。"
+    },
+    "doi:10.1016/j.triboint.2013.09.012": {
+      "aliases": [
+        "doi:10.1016/j.triboint.2013.09.012",
+        "title:tribological behavior between micro and nano crystalline diamond films under dry sliding and water lubrication:2014"
+      ],
+      "fingerprint": "0f5404627b84aa151cc715d6d576dc98b60b4b7872a844377cf81992e6b3ed4a",
+      "is_ncd": true,
+      "summary_zh": "比较微米晶与纳米晶金刚石薄膜在干滑动和水润滑下的摩擦学行为。",
+      "reason": "标题明确涉及纳米晶金刚石薄膜的摩擦学研究。"
+    },
+    "doi:10.1146/annurev-physchem-040513-103659": {
+      "aliases": [
+        "doi:10.1146/annurev-physchem-040513-103659",
+        "title:nitrogen vacancy centers in diamond nanoscale sensors for physics and biology:2014"
+      ],
+      "fingerprint": "6ac2a1aea0ed590abe6784119e7e0710c7cd5f1bd2684801e099b466e89db637",
+      "is_ncd": false,
+      "summary_zh": "综述金刚石中氮-空位色心作为纳米尺度物理与生物传感器。",
+      "reason": "聚焦NV色心传感，未研究NCD/UNCD材料本身；纳米金刚石仅作载体背景。"
+    },
+    "doi:10.2174/157341371130900098": {
+      "aliases": [
+        "doi:10.2174/157341371130900098",
+        "title:atomistic simulations of ultrashort pulsed laser ablation of polycrystalline diamond:2015"
+      ],
+      "fingerprint": "f4e68f4e42068673b3f9b3976ffd6448fd7d86e45c0fb90fbd69e2a32e704d98",
+      "is_ncd": false,
+      "summary_zh": "用分子动力学模拟多晶金刚石的超短脉冲激光烧蚀机制。",
+      "reason": "研究对象为多晶金刚石（PCD），未明确纳米晶/超纳米晶表述，不足以判定为NCD。"
+    },
+    "title:electroanalytical detection of moxifloxacin using single walled carbon nanohorn modified electrodes applications in milk urine and pharmaceutical analysis:2026": {
+      "aliases": [
+        "title:electroanalytical detection of moxifloxacin using single walled carbon nanohorn modified electrodes applications in milk urine and pharmaceutical analysis:2026"
+      ],
+      "fingerprint": "3e49c7afa16bee2e70a54f1ed0dfa0f5b80834b949c9e732f8f6fc1ba412b82d",
+      "is_ncd": false,
+      "summary_zh": "研究单壁碳纳米角修饰电极对莫西沙星的伏安检测。",
+      "reason": "研究对象为碳纳米角电极，与NCD/UNCD无关。"
     }
   },
   "outbox": {
@@ -9288,6 +10587,474 @@
       "created_at": "2026-11-16T07:21:49.680121+00:00",
       "sent_at": "2026-11-16T07:23:06.599379+00:00",
       "delivery_attempts": 1
+    },
+    "doi:10.1007/978-94-011-5592-2_17": {
+      "aliases": [
+        "doi:10.1007/978-94-011-5592-2_17",
+        "title:verification of nanocrystalline diamond films quality:1997"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Verification of Nanocrystalline Diamond Films’ Quality\n期刊：Diamond Based Composites\n题录日期：1997-01-01\n摘要：该文题为纳米晶金刚石膜质量的验证，属NCD薄膜研究。仅据标题，缺少摘要。\n入选依据：标题明确涉及纳米晶金刚石膜的质量验证，符合NCD研究范围。\nDOI：10.1007/978-94-011-5592-2_17",
+      "url": "https://doi.org/10.1007/978-94-011-5592-2_17",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1007/978-94-010-0858-7_9": {
+      "aliases": [
+        "doi:10.1007/978-94-010-0858-7_9",
+        "title:is there a nanocrystalline diamond raman peak in nanocrystalline diamond:2001"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Is there a “Nanocrystalline Diamond” Raman Peak in Nanocrystalline Diamond?\n期刊：Nanostructured Carbon for Advanced Applications\n题录日期：2001-01-01\n摘要：仅据标题，缺少摘要；标题直接讨论纳米晶金刚石中是否存在“纳米晶金刚石”拉曼峰。\n入选依据：标题明确含Nanocrystalline Diamond且属NCD表征研究；无摘要故不推断结果。\nDOI：10.1007/978-94-010-0858-7_9",
+      "url": "https://doi.org/10.1007/978-94-010-0858-7_9",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1007/978-94-010-9598-3_18": {
+      "aliases": [
+        "doi:10.1007/978-94-010-9598-3_18",
+        "title:ultrananocrystalline diamond films from fullerene precursors:2002"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Ultrananocrystalline Diamond Films from Fullerene Precursors\n期刊：Perspectives of Fullerene Nanotechnology\n题录日期：2002-01-01\n摘要：仅据标题，缺少摘要；标题为以富勒烯前驱体制备超纳米晶金刚石薄膜。\n入选依据：标题明确含Ultrananocrystalline Diamond Films，属UNCD生长研究；无摘要故不推断结果。\nDOI：10.1007/978-94-010-9598-3_18",
+      "url": "https://doi.org/10.1007/978-94-010-9598-3_18",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1016/b978-0-8155-1583-8.00012-0": {
+      "aliases": [
+        "doi:10.1016/b978-0-8155-1583-8.00012-0",
+        "title:nanocrystalline diamond for rf mems applications:2010"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Nanocrystalline Diamond for RF-MEMS Applications\n期刊：Emerging Nanotechnologies for Manufacturing\n题录日期：2010-01-01\n摘要：仅据标题，缺少摘要；标题为纳米晶金刚石用于RF-MEMS应用。\n入选依据：标题明确含Nanocrystalline Diamond且属NCD应用研究；无摘要故不推断结果。\nDOI：10.1016/b978-0-8155-1583-8.00012-0",
+      "url": "https://doi.org/10.1016/b978-0-8155-1583-8.00012-0",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.5772/8178": {
+      "aliases": [
+        "doi:10.5772/8178",
+        "title:nano crystalline diamond films for x ray lithography mask:2010"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Nano-Crystalline Diamond Films for X-ray Lithography Mask\n期刊：Lithography\n题录日期：2010-02-01\n摘要：仅据标题，缺少摘要；标题为用于X射线光刻掩模的纳米晶金刚石薄膜。\n入选依据：标题明确含Nano-Crystalline Diamond Films，属NCD薄膜应用；无摘要故不推断结果。\nDOI：10.5772/8178",
+      "url": "https://doi.org/10.5772/8178",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1201/9781420009378.ch5": {
+      "aliases": [
+        "doi:10.1201/9781420009378.ch5",
+        "title:nanocrystalline diamond:2010"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Nanocrystalline Diamond\n期刊：Advanced Materials and Technologies\n题录日期：2010-02-19\n摘要：仅据标题，缺少摘要；标题为纳米晶金刚石，属NCD材料综述/章节。\n入选依据：标题明确含Nanocrystalline Diamond；无摘要故不推断内容。\nDOI：10.1201/9781420009378.ch5",
+      "url": "https://doi.org/10.1201/9781420009378.ch5",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1063/1.3658638": {
+      "aliases": [
+        "doi:10.1063/1.3658638",
+        "title:combined visible light photo emission and low temperature thermionic emission from nitrogen doped diamond films:2011"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Combined visible light photo-emission and low temperature thermionic emission from nitrogen doped diamond films\n期刊：Applied Physics Letters\n题录日期：2011-11-14\n摘要：研究氮掺杂纳米晶金刚石薄膜的光发射阈值约1.5 eV，并观测光电子与热电子联合发射。\n入选依据：摘要明确涉及氮掺杂纳米晶金刚石薄膜的发射性质研究。\nDOI：10.1063/1.3658638",
+      "url": "https://doi.org/10.1063/1.3658638",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.5772/19969": {
+      "aliases": [
+        "doi:10.5772/19969",
+        "title:ultrananocrystalline diamond as material for surface acoustic wave devices:2011"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Ultrananocrystalline Diamond as Material for Surface Acoustic Wave Devices\n期刊：Acoustic Waves - From Microdevices to Helioseismology\n题录日期：2011-11-14\n摘要：研究UNCD薄膜生长与性能调控，并用激光诱导SAW脉冲法表征，探索其在SAW器件中的应用。\n入选依据：摘要明确研究超纳米晶金刚石（UNCD）薄膜生长、性质与应用。\nDOI：10.5772/19969",
+      "url": "https://doi.org/10.5772/19969",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.5772/24575": {
+      "aliases": [
+        "doi:10.5772/24575",
+        "title:nanocrystalline diamond films applications and advances in nanomedicine:2011"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Nanocrystalline Diamond Films: Applications and Advances in Nanomedicine\n期刊：Biomaterials Applications for Nanomedicine\n题录日期：2011-11-16\n摘要：该章节讨论纳米晶金刚石薄膜在纳米医学中的应用与进展。\n入选依据：标题明确为纳米晶金刚石薄膜的应用研究综述。\nDOI：10.5772/24575",
+      "url": "https://doi.org/10.5772/24575",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1088/1741-2560/9/1/016002": {
+      "aliases": [
+        "doi:10.1088/1741-2560/9/1/016002",
+        "title:ultra nanocrystalline diamond electrodes optimization towards neural stimulation applications:2011"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Ultra-nanocrystalline diamond electrodes: optimization towards neural stimulation applications\n期刊：Journal of Neural Engineering\n题录日期：2011-12-07\n摘要：仅据标题，缺少摘要：该文研究超纳米晶金刚石电极面向神经刺激应用的优化。\n入选依据：标题明确含ultra-nanocrystalline diamond电极研究，但无摘要可核实细节。\nDOI：10.1088/1741-2560/9/1/016002",
+      "url": "https://doi.org/10.1088/1741-2560/9/1/016002",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00002-5": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00002-5",
+        "title:advances in plasma synthesis of uncd films:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Advances in Plasma Synthesis of UNCD Films\n期刊：Ultananocrystalline Diamond\n题录日期：2012-01-01\n摘要：标题明确涉及UNCD薄膜的等离子体合成进展。仅据标题，缺少摘要。\n入选依据：标题明确为UNCD薄膜合成研究，符合纳入范围；无摘要故不推断具体结果。\nDOI：10.1016/b978-1-4377-3465-2.00002-5",
+      "url": "https://doi.org/10.1016/b978-1-4377-3465-2.00002-5",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00003-7": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00003-7",
+        "title:theoretical studies of uncd properties:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Theoretical Studies of UNCD Properties\n期刊：Ultananocrystalline Diamond\n题录日期：2012-01-01\n摘要：标题明确为UNCD性质的理论研究。仅据标题，缺少摘要。\n入选依据：标题明确针对UNCD材料性质的理论研究，符合纳入范围。\nDOI：10.1016/b978-1-4377-3465-2.00003-7",
+      "url": "https://doi.org/10.1016/b978-1-4377-3465-2.00003-7",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00004-9": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00004-9",
+        "title:n type nanocrystalline diamond films:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "n-Type Nanocrystalline Diamond Films\n期刊：Ultananocrystalline Diamond\n题录日期：2012-01-01\n摘要：标题明确涉及n型纳米晶金刚石薄膜。仅据标题，缺少摘要。\n入选依据：标题明确为纳米晶金刚石薄膜的掺杂研究，符合纳入范围。\nDOI：10.1016/b978-1-4377-3465-2.00004-9",
+      "url": "https://doi.org/10.1016/b978-1-4377-3465-2.00004-9",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00008-6": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00008-6",
+        "title:bonding and concentration of hydrogen and thermal stability of nanocrystalline diamond films:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Bonding and Concentration of Hydrogen and Thermal Stability of Nanocrystalline Diamond Films\n期刊：Ultananocrystalline Diamond\n题录日期：2012-01-01\n摘要：标题明确涉及纳米晶金刚石薄膜的氢键合、浓度与热稳定性。仅据标题，缺少摘要。\n入选依据：标题明确为纳米晶金刚石薄膜研究，符合纳入范围。\nDOI：10.1016/b978-1-4377-3465-2.00008-6",
+      "url": "https://doi.org/10.1016/b978-1-4377-3465-2.00008-6",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1016/b978-1-4377-3465-2.00012-8": {
+      "aliases": [
+        "doi:10.1016/b978-1-4377-3465-2.00012-8",
+        "title:science and technology of ultrananocrystalline diamond uncdtm film based mems and nems devices and systems:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Science and Technology of Ultrananocrystalline Diamond (UNCD™) Film-Based MEMS and NEMS Devices and Systems\n期刊：Ultananocrystalline Diamond\n题录日期：2012-01-01\n摘要：标题明确涉及UNCD薄膜基MEMS/NEMS器件与系统。仅据标题，缺少摘要。\n入选依据：标题明确为UNCD薄膜材料及其器件应用，符合纳入范围。\nDOI：10.1016/b978-1-4377-3465-2.00012-8",
+      "url": "https://doi.org/10.1016/b978-1-4377-3465-2.00012-8",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1063/1.3683544": {
+      "aliases": [
+        "doi:10.1063/1.3683544",
+        "title:the mechanical properties of various chemical vapor deposition diamond structures compared to the ideal single crystal:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "The mechanical properties of various chemical vapor deposition diamond structures compared to the ideal single crystal\n期刊：Journal of Applied Physics\n题录日期：2012-03-02\n摘要：该文比较了超纳米晶、纳米晶、微晶及单晶CVD金刚石等多种金刚石结构的力学性能，指出优化沉积条件下UNC金刚石可接近单晶金刚石的杨氏模量。\n入选依据：摘要明确讨论超纳米晶（UNC）和纳米晶CVD金刚石的弹性模量与力学性能，属于NCD/UNCD材料研究。\nDOI：10.1063/1.3683544",
+      "url": "https://doi.org/10.1063/1.3683544",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1063/1.3693308": {
+      "aliases": [
+        "doi:10.1063/1.3693308",
+        "title:thermomechanical stability of ultrananocrystalline diamond:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Thermomechanical stability of ultrananocrystalline diamond\n期刊：Journal of Applied Physics\n题录日期：2012-03-13\n摘要：该文用微悬臂谐振器在63–450 K测量超纳米晶金刚石（UNCD）的刚度与耗散，发现极低的温度系数（−26 ppm/K），并归因于晶界缺陷主导的机械耗散。\n入选依据：标题与摘要明确研究UNCD的热机械稳定性，属于超纳米晶金刚石材料性能研究。\nDOI：10.1063/1.3693308",
+      "url": "https://doi.org/10.1063/1.3693308",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1103/physrevb.85.155448": {
+      "aliases": [
+        "doi:10.1103/physrevb.85.155448",
+        "title:influence of surface passivation on the friction and wear behavior of ultrananocrystalline diamond and tetrahedral amorphous carbon thin films:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Influence of surface passivation on the friction and wear behavior of ultrananocrystalline diamond and tetrahedral amorphous carbon thin films\n期刊：Physical Review B\n题录日期：2012-04-25\n摘要：该文研究表面钝化对超纳米晶金刚石（UNCD）与四面体非晶碳薄膜摩擦磨损行为的影响。\n入选依据：标题明确以UNCD薄膜为研究对象，属于超纳米晶金刚石材料的摩擦学性能研究。\nDOI：10.1103/physrevb.85.155448",
+      "url": "https://doi.org/10.1103/physrevb.85.155448",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1016/j.diamond.2012.04.005": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2012.04.005",
+        "title:influence of the surface termination of ultrananocrystalline diamond amorphous carbon composite films on their interaction with neurons:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Influence of the surface termination of ultrananocrystalline diamond/amorphous carbon composite films on their interaction with neurons\n期刊：Diamond and Related Materials\n题录日期：2012-06-01\n摘要：该研究考察超纳米晶金刚石/非晶碳复合薄膜表面终止对其与神经元相互作用的影响，属于UNCD薄膜的生物界面研究。\n入选依据：标题明确含ultrananocrystalline diamond复合薄膜，符合NCD/UNCD范围。\nDOI：10.1016/j.diamond.2012.04.005",
+      "url": "https://doi.org/10.1016/j.diamond.2012.04.005",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1016/j.diamond.2012.05.009": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2012.05.009",
+        "title:low threshold field emission from nanocrystalline diamond carbon nanowall composite films:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Low threshold field emission from nanocrystalline diamond/carbon nanowall composite films\n期刊：Diamond and Related Materials\n题录日期：2012-07-01\n摘要：该研究报告纳米晶金刚石/碳纳米墙复合薄膜的低阈值场发射，属于NCD复合薄膜的场发射应用研究。\n入选依据：标题明确含nanocrystalline diamond复合薄膜，符合NCD范围。\nDOI：10.1016/j.diamond.2012.05.009",
+      "url": "https://doi.org/10.1016/j.diamond.2012.05.009",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1063/1.4738192": {
+      "aliases": [
+        "doi:10.1063/1.4738192",
+        "title:evidence for phase separation of ethanol water mixtures at the hydrogen terminated nanocrystalline diamond surface:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Evidence for phase separation of ethanol-water mixtures at the hydrogen terminated nanocrystalline diamond surface\n期刊：The Journal of Chemical Physics\n题录日期：2012-07-23\n摘要：该研究通过接触角测量与计算探讨乙醇-水混合物在氢终止纳米晶金刚石表面的相分离行为，属于NCD表面界面研究。\n入选依据：摘要明确研究氢终止纳米晶金刚石表面，符合NCD范围。\nDOI：10.1063/1.4738192",
+      "url": "https://doi.org/10.1063/1.4738192",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.3390/jfb3030588": {
+      "aliases": [
+        "doi:10.3390/jfb3030588",
+        "title:cell growth on different types of ultrananocrystalline diamond thin films:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Cell Growth on Different Types of Ultrananocrystalline Diamond Thin Films\n期刊：Journal of Functional Biomaterials\n题录日期：2012-08-16\n摘要：该研究比较细胞在不同类型超纳米晶金刚石薄膜上的生长，并分析细胞黏附与增殖机制，属于UNCD薄膜的生物应用研究。\n入选依据：摘要明确研究超纳米晶金刚石薄膜作为细胞培养基底，符合UNCD范围。\nDOI：10.3390/jfb3030588",
+      "url": "https://doi.org/10.3390/jfb3030588",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1021/jp306086b": {
+      "aliases": [
+        "doi:10.1021/jp306086b",
+        "title:electrophoresis of nanodiamond on the growth of ultrananocrystalline diamond films on silicon nanowires and the enhancement of the electron field emission properties:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Electrophoresis of Nanodiamond on the Growth of Ultrananocrystalline Diamond Films on Silicon Nanowires and the Enhancement of the Electron Field Emission Properties\n期刊：The Journal of Physical Chemistry C\n题录日期：2012-09-10\n摘要：该研究利用纳米金刚石电泳在硅纳米线上生长超纳米晶金刚石薄膜并增强场发射性能，涉及UNCD薄膜生长与形核。\n入选依据：标题明确含ultrananocrystalline diamond薄膜生长，符合NCD/UNCD范围。\nDOI：10.1021/jp306086b",
+      "url": "https://doi.org/10.1021/jp306086b",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1007/978-90-481-3150-1_17": {
+      "aliases": [
+        "doi:10.1007/978-90-481-3150-1_17",
+        "title:electron transport studies of disorder and dimensionality in nano crystalline diamond:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Electron Transport Studies of Disorder and Dimensionality in Nano-Crystalline Diamond\n期刊：Hot Topics in Thermal Analysis and Calorimetry\n题录日期：2012-09-13\n摘要：标题明确研究纳米晶金刚石的电子输运、无序与维度效应。仅据标题，缺少摘要，无法获知具体结果。\n入选依据：标题明确含nano-crystalline diamond且主题为NCD电子输运研究，符合纳入范围。\nDOI：10.1007/978-90-481-3150-1_17",
+      "url": "https://doi.org/10.1007/978-90-481-3150-1_17",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1186/1556-276x-7-522": {
+      "aliases": [
+        "doi:10.1186/1556-276x-7-522",
+        "title:microplasma illumination enhancement of vertically aligned conducting ultrananocrystalline diamond nanorods:2012"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Microplasma illumination enhancement of vertically aligned conducting ultrananocrystalline diamond nanorods\n期刊：Nanoscale Research Letters\n题录日期：2012-09-25\n摘要：采用反应离子刻蚀结合纳米金刚石掩模制备垂直排列导电超纳米晶金刚石纳米棒，并展示其微等离子体发光增强特性。\n入选依据：明确研究UNCD纳米棒的制备与电学/等离子体应用，属UNCD材料研究。\nDOI：10.1186/1556-276x-7-522",
+      "url": "https://doi.org/10.1186/1556-276x-7-522",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1039/c3nr01992f": {
+      "aliases": [
+        "doi:10.1039/c3nr01992f",
+        "title:enhancing the plasma illumination behaviour of microplasma devices using microcrystalline ultra nanocrystalline hybrid diamond materials as cathodes:2013"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Enhancing the plasma illumination behaviour of microplasma devices using microcrystalline/ultra-nanocrystalline hybrid diamond materials as cathodes\n期刊：Nanoscale\n题录日期：2013-01-01\n摘要：该研究以微晶/超纳米晶杂化金刚石材料作为阴极，提升微等离子体器件的等离子体发光性能。\n入选依据：标题明确涉及超纳米晶（ultra-nanocrystalline）金刚石材料及其应用，符合纳入范围。\nDOI：10.1039/c3nr01992f",
+      "url": "https://doi.org/10.1039/c3nr01992f",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1533/9780857093516.1.48": {
+      "aliases": [
+        "doi:10.1533/9780857093516.1.48",
+        "title:biotribology and biological behaviour of nanocrystalline diamond ncd coatings for medical applications:2013"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Biotribology and biological behaviour of nanocrystalline diamond (NCD) coatings for medical applications\n期刊：Diamond-Based Materials for Biomedical Applications\n题录日期：2013-01-01\n摘要：该章节讨论纳米晶金刚石（NCD）涂层用于医学应用的生物摩擦学与生物学行为。仅据标题，缺少摘要。\n入选依据：标题明确为NCD涂层研究，属专著章节，符合纳入范围。\nDOI：10.1533/9780857093516.1.48",
+      "url": "https://doi.org/10.1533/9780857093516.1.48",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1533/9780857093516.2.105": {
+      "aliases": [
+        "doi:10.1533/9780857093516.2.105",
+        "title:nanostructured diamond coatings for orthopaedic applications:2013"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Nanostructured diamond coatings for orthopaedic applications\n期刊：Diamond-Based Materials for Biomedical Applications\n题录日期：2013-01-01\n摘要：该章节讨论纳米结构金刚石涂层作为骨科植入物承载表面的摩擦磨损与生物相容性。\n入选依据：摘要明确涉及纳米结构金刚石涂层用于骨科应用，符合纳入范围。\nDOI：10.1533/9780857093516.2.105",
+      "url": "https://doi.org/10.1533/9780857093516.2.105",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1533/9780857093516.2.151": {
+      "aliases": [
+        "doi:10.1533/9780857093516.2.151",
+        "title:ultrananocrystalline diamond uncd films for ophthalmological applications:2013"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Ultrananocrystalline diamond (UNCD) films for ophthalmological applications\n期刊：Diamond-Based Materials for Biomedical Applications\n题录日期：2013-01-01\n摘要：该章节讨论超纳米晶金刚石（UNCD）薄膜在眼科领域的应用。仅据标题，缺少摘要。\n入选依据：标题明确为UNCD薄膜研究，属专著章节，符合纳入范围。\nDOI：10.1533/9780857093516.2.151",
+      "url": "https://doi.org/10.1533/9780857093516.2.151",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1533/9780857093516.2.171": {
+      "aliases": [
+        "doi:10.1533/9780857093516.2.171",
+        "title:ultrananocrystalline diamond uncd for neural applications:2013"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Ultrananocrystalline diamond (UNCD) for neural applications\n期刊：Diamond-Based Materials for Biomedical Applications\n题录日期：2013-01-01\n摘要：该章节标题明确讨论超纳米晶金刚石（UNCD）在神经领域的应用，属于UNCD材料应用研究。仅据标题，缺少摘要。\n入选依据：标题明确含UNCD且为应用研究章节，符合纳入范围。\nDOI：10.1533/9780857093516.2.171",
+      "url": "https://doi.org/10.1533/9780857093516.2.171",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1016/j.electacta.2012.12.078": {
+      "aliases": [
+        "doi:10.1016/j.electacta.2012.12.078",
+        "title:ultra nanocrystalline diamond nanowires with enhanced electrochemical properties:2013"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Ultra-nanocrystalline diamond nanowires with enhanced electrochemical properties\n期刊：Electrochimica Acta\n题录日期：2013-03-01\n摘要：该文研究超纳米晶金刚石纳米线并提升其电化学性能，属于UNCD材料的加工与性能研究。\n入选依据：标题明确含超纳米晶金刚石纳米线，符合纳入范围。\nDOI：10.1016/j.electacta.2012.12.078",
+      "url": "https://doi.org/10.1016/j.electacta.2012.12.078",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1063/1.4796168": {
+      "aliases": [
+        "doi:10.1063/1.4796168",
+        "title:thermal conduction inhomogeneity of nanocrystalline diamond films by dual side thermoreflectance:2013"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Thermal conduction inhomogeneity of nanocrystalline diamond films by dual-side thermoreflectance\n期刊：Applied Physics Letters\n题录日期：2013-03-20\n摘要：该文用双面热反射法研究纳米晶金刚石薄膜热导率的不均匀性，涉及不同厚度薄膜的局部热导率分布。\n入选依据：摘要明确为纳米晶CVD金刚石薄膜的热学性质研究。\nDOI：10.1063/1.4796168",
+      "url": "https://doi.org/10.1063/1.4796168",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1016/j.wear.2013.03.049": {
+      "aliases": [
+        "doi:10.1016/j.wear.2013.03.049",
+        "title:self mated tribological systems based on multilayer micro nanocrystalline cvd diamond coatings:2013"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Self-mated tribological systems based on multilayer micro/nanocrystalline CVD diamond coatings\n期刊：Wear\n题录日期：2013-06-01\n摘要：仅据标题，该文研究基于多层微米/纳米晶CVD金刚石涂层的自配对摩擦学系统。\n入选依据：标题明确含纳米晶CVD金刚石涂层，属NCD涂层摩擦学应用；缺少摘要。\nDOI：10.1016/j.wear.2013.03.049",
+      "url": "https://doi.org/10.1016/j.wear.2013.03.049",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1088/0022-3727/46/27/275501": {
+      "aliases": [
+        "doi:10.1088/0022-3727/46/27/275501",
+        "title:humidity dependent friction mechanism in an ultrananocrystalline diamond film:2013"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Humidity-dependent friction mechanism in an ultrananocrystalline diamond film\n期刊：Journal of Physics D: Applied Physics\n题录日期：2013-06-18\n摘要：仅据标题，该文研究超纳米晶金刚石薄膜的湿度依赖摩擦机制。\n入选依据：标题明确为UNCD薄膜的摩擦学性质研究；缺少摘要。\nDOI：10.1088/0022-3727/46/27/275501",
+      "url": "https://doi.org/10.1088/0022-3727/46/27/275501",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1002/smll.201301293": {
+      "aliases": [
+        "doi:10.1002/smll.201301293",
+        "title:electron field emission enhancement of vertically aligned ultrananocrystalline diamond coated zno core shell heterostructured nanorods:2013"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Electron Field Emission Enhancement of Vertically Aligned Ultrananocrystalline Diamond‐Coated ZnO Core–Shell Heterostructured Nanorods\n期刊：Small\n题录日期：2013-07-29\n摘要：研究ZnO纳米棒核与超纳米晶金刚石针壳构成的核壳异质结构，其电子场发射性能显著增强，开启场低至2.08 V/μm。\n入选依据：明确涉及超纳米晶金刚石（UNCD）壳层材料及其场发射应用。\nDOI：10.1002/smll.201301293",
+      "url": "https://doi.org/10.1002/smll.201301293",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1063/1.4817377": {
+      "aliases": [
+        "doi:10.1063/1.4817377",
+        "title:improvement in plasma illumination properties of ultrananocrystalline diamond films by grain boundary engineering:2013"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Improvement in plasma illumination properties of ultrananocrystalline diamond films by grain boundary engineering\n期刊：Journal of Applied Physics\n题录日期：2013-08-02\n摘要：通过衬底温度和氢气调控超纳米晶金刚石薄膜的晶界工程，获得低阈值场0.21 V/μm的高性能等离子体照明。\n入选依据：明确研究UNCD薄膜的微结构演化与晶界工程及其功能特性。\nDOI：10.1063/1.4817377",
+      "url": "https://doi.org/10.1063/1.4817377",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1038/ncomms3343": {
+      "aliases": [
+        "doi:10.1038/ncomms3343",
+        "title:observation of higher stiffness in nanopolycrystal diamond than monocrystal diamond:2013"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Observation of higher stiffness in nanopolycrystal diamond than monocrystal diamond\n期刊：Nature Communications\n题录日期：2013-08-12\n摘要：仅据标题，缺少摘要。标题报道纳米多晶金刚石的刚度高于单晶金刚石。\n入选依据：标题明确含纳米多晶金刚石（nanopolycrystal diamond）表述，属纳米晶金刚石研究；无摘要故不推断结果。\nDOI：10.1038/ncomms3343",
+      "url": "https://doi.org/10.1038/ncomms3343",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1016/j.mechmat.2013.07.019": {
+      "aliases": [
+        "doi:10.1016/j.mechmat.2013.07.019",
+        "title:structure and mechanical properties of ultra nanocrystalline diamond and nanocrystalline cu from atomistic simulations:2013"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Structure and mechanical properties of ultra-nanocrystalline diamond and nanocrystalline Cu from atomistic simulations\n期刊：Mechanics of Materials\n题录日期：2013-12-01\n摘要：用原子模拟研究超纳米晶金刚石与纳米晶铜的结构和力学性质。\n入选依据：标题明确涉及超纳米晶金刚石（UNCD）的原子尺度模拟研究。\nDOI：10.1016/j.mechmat.2013.07.019",
+      "url": "https://doi.org/10.1016/j.mechmat.2013.07.019",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
+    },
+    "doi:10.1016/j.triboint.2013.09.012": {
+      "aliases": [
+        "doi:10.1016/j.triboint.2013.09.012",
+        "title:tribological behavior between micro and nano crystalline diamond films under dry sliding and water lubrication:2014"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Tribological behavior between micro- and nano-crystalline diamond films under dry sliding and water lubrication\n期刊：Tribology International\n题录日期：2014-01-01\n摘要：比较微米晶与纳米晶金刚石薄膜在干滑动和水润滑下的摩擦学行为。\n入选依据：标题明确涉及纳米晶金刚石薄膜的摩擦学研究。\nDOI：10.1016/j.triboint.2013.09.012",
+      "url": "https://doi.org/10.1016/j.triboint.2013.09.012",
+      "created_at": "2026-11-16T22:34:01.833742+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
     }
   },
   "usage": [
@@ -9365,10 +11132,10 @@
     },
     {
       "date": "2026-11-16",
-      "requests": 13,
-      "prompt_tokens": 30309,
-      "completion_tokens": 10182,
-      "total_tokens": 40491,
+      "requests": 26,
+      "prompt_tokens": 58867,
+      "completion_tokens": 20478,
+      "total_tokens": 79345,
       "token_usage_complete": true
     }
   ]
