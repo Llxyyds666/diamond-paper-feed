@@ -338,6 +338,130 @@ def test_merge_filters_repository_artifacts_before_the_ai_queue(query_rules):
     assert state.pending_ai == []
 
 
+def test_merge_rejects_stale_or_undated_imports_and_prunes_only_stale_pending(query_rules):
+    from dataclasses import replace
+
+    from diamond_feed.collect import merge_into_state
+    from diamond_feed.state import FeedState
+
+    now = datetime(2026, 11, 17, tzinfo=timezone.utc)
+    old = _paper("Diamond historical paper", "abstract", "10.1000/historical", 1)
+    old.published_at = datetime(2015, 9, 1, tzinfo=timezone.utc)
+    incoming_old = replace(old, doi="10.1000/reindexed-historical", sources=["crossref"])
+    recent = replace(old, doi="10.1000/recent", published_at=now)
+    undated = replace(recent, doi="10.1000/undated", categories=["missing_date"])
+    key = record_key(old)
+    state = FeedState(papers={key: old}, pending_ai=[key], source_watermarks={})
+
+    stats = merge_into_state(state, [incoming_old, recent, undated], query_rules, now=now)
+
+    assert stats.added == 1
+    assert stats.filtered == 2
+    assert state.pending_ai == [record_key(recent)]
+    assert set(state.papers) == {key, record_key(recent)}
+
+
+def test_collection_applies_publication_window_to_rss_and_scholarly_sources(tmp_path, monkeypatch):
+    from dataclasses import replace
+
+    from diamond_feed import collect
+    from diamond_feed.state import load_state
+
+    paths = _collection_paths(tmp_path)
+    paths[1].write_text("name\tcategory\turl\nA\tjournal\thttps://one.test/rss\n", encoding="utf-8")
+    now = datetime(2026, 11, 17, tzinfo=timezone.utc)
+    old = _paper("Diamond historical study", "abstract", "10.1000/rss-old", 1)
+    old.published_at = datetime(2016, 9, 1, tzinfo=timezone.utc)
+    recent = replace(old, doi="10.1000/rss-recent", published_at=now)
+    monkeypatch.setattr(collect, "collect_rss", lambda *args: ([old, recent], None))
+
+    def scholarly(name, *args):
+        return collect.ScholarlyHarvest(
+            name,
+            [replace(old, doi=f"10.1000/{name}-old"), replace(recent, doi=f"10.1000/{name}-recent")],
+            None,
+            None,
+            True,
+            1,
+        )
+
+    monkeypatch.setattr(collect, "_collect_scholarly", scholarly)
+
+    assert collect.main(_collection_args(paths), now=lambda: now) == 0
+    loaded = load_state(paths[3])
+    assert len(loaded.papers) == 4
+    assert all("recent" in key for key in loaded.papers)
+    assert set(loaded.pending_ai) == set(loaded.papers)
+
+
+def test_merge_replaces_legacy_missing_date_with_verified_recent_publication(query_rules):
+    from dataclasses import replace
+
+    from diamond_feed.collect import merge_into_state
+    from diamond_feed.state import FeedState
+
+    now = datetime(2026, 11, 17, tzinfo=timezone.utc)
+    undated = _paper("Diamond newly dated study", "abstract", "10.1000/newly-dated", 1)
+    undated.categories = ["missing_date"]
+    key = record_key(undated)
+    state = FeedState(papers={key: undated}, pending_ai=[key], source_watermarks={})
+    verified = replace(undated, published_at=now, categories=[], sources=["crossref"])
+
+    merge_into_state(state, [verified], query_rules, now=now)
+
+    assert state.papers[key].published_at == now
+    assert "missing_date" not in state.papers[key].categories
+    assert state.pending_ai == [key]
+
+
+@pytest.mark.parametrize("ai_relevant", [None, False, True])
+def test_merge_verified_date_requeues_only_unscreened_pruned_missing_date_record(query_rules, ai_relevant):
+    from dataclasses import replace
+
+    from diamond_feed.collect import merge_into_state
+    from diamond_feed.state import FeedState
+
+    now = datetime(2026, 11, 17, tzinfo=timezone.utc)
+    undated = _paper("Diamond newly dated pruned study", "abstract", "10.1000/pruned-date", 1)
+    undated.categories = ["missing_date"]
+    undated.ai_relevant = ai_relevant
+    key = record_key(undated)
+    state = FeedState(papers={key: undated}, pending_ai=[], source_watermarks={})
+    verified = replace(undated, published_at=now, categories=[], sources=["crossref"])
+
+    merge_into_state(state, [verified], query_rules, now=now)
+
+    assert state.papers[key].published_at == now
+    assert "missing_date" not in state.papers[key].categories
+    assert state.papers[key].ai_relevant is ai_relevant
+    assert state.pending_ai == ([key] if ai_relevant is None else [])
+
+
+def test_merge_verified_historical_date_does_not_requeue_pruned_missing_date_record(query_rules):
+    from dataclasses import replace
+
+    from diamond_feed.collect import merge_into_state
+    from diamond_feed.state import FeedState
+
+    now = datetime(2026, 11, 17, tzinfo=timezone.utc)
+    undated = _paper("Diamond historical pruned study", "abstract", "10.1000/pruned-old-date", 1)
+    undated.categories = ["missing_date"]
+    key = record_key(undated)
+    state = FeedState(papers={key: undated}, pending_ai=[], source_watermarks={})
+    verified = replace(
+        undated,
+        published_at=datetime(2015, 1, 1, tzinfo=timezone.utc),
+        categories=[],
+        sources=["crossref"],
+    )
+
+    stats = merge_into_state(state, [verified], query_rules, now=now)
+
+    assert stats.filtered == 1
+    assert state.pending_ai == []
+    assert state.papers[key] == undated
+
+
 def test_processed_record_only_requeues_when_abstract_becomes_nonempty(query_rules):
     from diamond_feed.collect import merge_into_state
     from diamond_feed.state import FeedState
@@ -711,10 +835,10 @@ def test_collection_recovers_late_indexed_month_date_and_does_not_repeat_ai_work
         parsed = urlparse(url)
         query = parse_qs(parsed.query)
         if parsed.netloc == "api.crossref.org":
-            filter_name, lower_bound = query["filter"][0].split(":", 1)
             crossref_filters.append(query["filter"][0])
-            date_to_check = indexed if filter_name == "from-index-date" else published
-            items = [] if date_to_check < lower_bound else [{
+            filters = dict(value.split(":", 1) for value in query["filter"][0].split(","))
+            eligible = indexed >= filters["from-index-date"] and published >= filters["from-pub-date"]
+            items = [] if not eligible else [{
                 "DOI": doi,
                 "type": "journal-article",
                 "title": ["Time-modulated hot-filament CVD growth of nanocrystalline diamond"],
@@ -742,7 +866,7 @@ def test_collection_recovers_late_indexed_month_date_and_does_not_repeat_ai_work
     assert loaded.pending_ai == [key]
     assert loaded.papers[key].published_at == datetime(2026, 11, 1, tzinfo=timezone.utc)
     assert doi in feed_path.read_text(encoding="utf-8")
-    assert crossref_filters == ["from-index-date:2026-10-16"]
+    assert crossref_filters == ["from-index-date:2026-10-16,from-pub-date:2026-10-16"]
 
     loaded.papers[key].ai_relevant = True
     loaded.papers[key].ai_confidence = 0.98
@@ -826,9 +950,9 @@ def test_crossref_active_cursor_resumes_original_window_until_completion(tmp_pat
     assert complete.source_watermarks["crossref"] == final_now.isoformat()
     assert complete.papers == partial.papers
     assert requests == [
-        ("from-index-date:2026-10-16", "*"),
-        ("from-index-date:2026-10-16", "retry-current-page"),
-        ("from-index-date:2026-10-16", "retry-current-page"),
+        ("from-index-date:2026-10-16,from-pub-date:2026-10-16", "*"),
+        ("from-index-date:2026-10-16,from-pub-date:2026-10-16", "retry-current-page"),
+        ("from-index-date:2026-10-16,from-pub-date:2026-10-16", "retry-current-page"),
     ]
 
 

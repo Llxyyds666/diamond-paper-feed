@@ -40,6 +40,7 @@ from diamond_feed.publication import (
     quarantine_repository_artifacts,
 )
 from diamond_feed.recommend import Recommendation, recommend_one
+from diamond_feed.recency import is_recent_publication, prune_stale_pending
 from diamond_feed.render import render_rss
 from diamond_feed.state import FeedState, load_state, stage_state
 
@@ -413,7 +414,7 @@ def _publish_quarantine_cleanup(
     withheld_aliases: set[str],
     focus_overrides: dict[str, frozenset[str]],
 ) -> None:
-    """Persist a no-AI legacy-artifact cleanup and regenerate all public views."""
+    """Persist a no-AI queue/artifact cleanup and regenerate all public views."""
     rss, html = render_publication(
         state,
         config,
@@ -512,6 +513,7 @@ def run_summary(
     enricher: AbstractEnricher | None = None,
     bark_enabled: bool = False,
     notification_plan_path: Path | None = None,
+    enforce_recency: bool = True,
 ) -> SummaryStats:
     """Process one bounded oldest-first queue slice and atomically publish its digest."""
     state_path = Path(state_path)
@@ -535,6 +537,10 @@ def run_summary(
     withheld_aliases = load_withheld_aliases(policy_path)
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError("now must include a timezone")
+    # Only isolated historical evaluations may explicitly opt out. Production
+    # calls always retain this default, including no-budget and retry paths.
+    stale_pending = prune_stale_pending(state, now, config.collection.lookback_days) if enforce_recency else 0
+    cleanup_needed = bool(quarantined or stale_pending)
     day = now.astimezone(timezone.utc).date().isoformat()
     rss_path = output_dir / RSS_NAME
     html_path = output_dir / HTML_NAME
@@ -558,7 +564,7 @@ def run_summary(
     candidate_limit = max(0, config.ai.daily_candidates - used_candidates)
 
     if candidate_limit == 0:
-        if quarantined:
+        if cleanup_needed:
             _publish_quarantine_cleanup(
                 state,
                 state_path,
@@ -574,13 +580,25 @@ def run_summary(
         state, candidate_limit
     )
     if enricher is not None:
-        enrichment = enricher.enrich(state, candidate_keys)
+        # Enrichment may fall back to other missing abstracts in the state.
+        # Share recent record objects, but never expose the historical backlog.
+        enrichment_state = replace(
+            state,
+            papers={key: record for key, record in state.papers.items()
+                    if not enforce_recency or is_recent_publication(record, now, config.collection.lookback_days)},
+            pending_ai=list(state.pending_ai),
+        )
+        enrichment = enricher.enrich(enrichment_state, candidate_keys)
+        state.pending_ai = enrichment_state.pending_ai
+        cleanup_needed = (enforce_recency and bool(prune_stale_pending(
+            state, now, config.collection.lookback_days
+        ))) or cleanup_needed
         print(f"enriched={enrichment.enriched}")
         pending_groups, candidate_keys = _pending_groups_and_candidates(
             state, candidate_limit
         )
     if not candidate_keys:
-        if quarantined:
+        if cleanup_needed:
             _publish_quarantine_cleanup(
                 state,
                 state_path,
@@ -625,6 +643,11 @@ def run_summary(
             token_after=token_after_screening,
         )
         _publish_usage(usage_path, previous_usage, stats, day)
+        if cleanup_needed:
+            _publish_quarantine_cleanup(
+                state, state_path, output_dir, config, day,
+                withheld_aliases, focus_overrides,
+            )
         return stats
 
     processed_keys = {

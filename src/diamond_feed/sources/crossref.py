@@ -29,9 +29,11 @@ _PAPER_TYPES = frozenset(
 
 
 def build_url(query: str, from_date: date, rows: int, cursor: str = "*") -> str:
-    """Find recently indexed works even when their publication date is older."""
+    """Recover late indexing within the publication window, not historical updates."""
     page_size = min(rows, _MAX_PAGE_SIZE)
-    return f"{_BASE_URL}?{urlencode({'query.bibliographic': query, 'filter': f'from-index-date:{from_date.isoformat()}', 'rows': page_size, 'cursor': cursor, 'select': _SELECT})}"
+    lower_bound = from_date.isoformat()
+    filters = f"from-index-date:{lower_bound},from-pub-date:{lower_bound}"
+    return f"{_BASE_URL}?{urlencode({'query.bibliographic': query, 'filter': filters, 'rows': page_size, 'cursor': cursor, 'select': _SELECT})}"
 
 
 def _strip_tags(value: object) -> str:

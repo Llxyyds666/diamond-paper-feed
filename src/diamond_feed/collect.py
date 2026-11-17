@@ -16,6 +16,7 @@ from diamond_feed.http import FetchError, fetch_bytes
 from diamond_feed.models import PaperRecord, SourceFailure
 from diamond_feed.normalize import group_records, merge_records, record_key
 from diamond_feed.publication import is_repository_artifact
+from diamond_feed.recency import is_recent_publication, prune_stale_pending
 from diamond_feed.render import render_rss
 from diamond_feed.sources import arxiv, crossref, openalex
 from diamond_feed.sources.rss import collect_rss
@@ -39,12 +40,24 @@ class ScholarlyHarvest:
     pages_fetched: int
 
 
-def merge_into_state(state: FeedState, incoming: Iterable[PaperRecord], rules: QueryRules) -> CollectionStats:
-    """Filter and merge records while preserving the oldest-first AI work queue."""
+def merge_into_state(
+    state: FeedState,
+    incoming: Iterable[PaperRecord],
+    rules: QueryRules,
+    *,
+    now: datetime | None = None,
+    lookback_days: int = 30,
+) -> CollectionStats:
+    """Filter and merge records while preserving the oldest-first AI work queue.
+
+    Production collection supplies ``now`` to reject historical reindexing and
+    prune stale pending work; callers importing history can omit it explicitly.
+    """
     added = merged = filtered = 0
     explicit_requeue = set(state.pending_ai)
     for record in incoming:
-        if is_repository_artifact(record) or not matches_rules(record, rules):
+        if (is_repository_artifact(record) or not matches_rules(record, rules)
+                or (now is not None and not is_recent_publication(record, now, lookback_days))):
             filtered += 1
             continue
         key = record_key(record)
@@ -58,6 +71,15 @@ def merge_into_state(state: FeedState, incoming: Iterable[PaperRecord], rules: Q
 
         was_empty = not current.abstract.strip()
         state.papers[key] = merge_records(current, record)
+        if "missing_date" in current.categories and "missing_date" not in record.categories:
+            # A verified adapter date replaces an old RSS fetch-time fallback.
+            state.papers[key].published_at = record.published_at
+            state.papers[key].categories = [
+                category for category in state.papers[key].categories if category != "missing_date"
+            ]
+            if current.ai_relevant is None and key not in state.pending_ai:
+                # Missing-date work may have been pruned before its true date arrived.
+                state.pending_ai.append(key)
         merged += 1
         is_processed = current.ai_relevant is not None
         if is_processed and was_empty and state.papers[key].abstract.strip() and key not in state.pending_ai:
@@ -81,6 +103,8 @@ def merge_into_state(state: FeedState, incoming: Iterable[PaperRecord], rules: Q
             new_pending.append(key)
     state.papers = {key: record for key, (record, _) in groups.items()}
     state.pending_ai = sorted(new_pending, key=lambda key: (state.papers[key].published_at, key))
+    if now is not None:
+        prune_stale_pending(state, now, lookback_days)
     return CollectionStats(added=added, merged=merged, filtered=filtered)
 
 
@@ -278,7 +302,10 @@ def main(argv: list[str] | None = None, *, now: Callable[[], datetime] | None = 
     if not successful_sources and not scholarly_progress:
         return 2
 
-    merge_into_state(state, records, rules)
+    merge_into_state(
+        state, records, rules,
+        now=current_time, lookback_days=config.collection.lookback_days,
+    )
     for source_name in successful_sources:
         state.source_watermarks[source_name] = current_time.isoformat()
     xml = render_rss(list(state.papers.values()), config.publication.title, config.publication.base_url, config.collection.raw_feed_max_items)

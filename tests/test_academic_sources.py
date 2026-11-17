@@ -42,12 +42,12 @@ def test_json_source_urls_request_work_type_for_nonpaper_filtering():
     assert "type" in crossref_query["select"][0].split(",")
 
 
-def test_crossref_discovers_recently_indexed_work_independent_of_publication_date():
+def test_crossref_recovers_late_indexed_recent_work_without_reimporting_historical_papers():
     query = parse_qs(
         urlparse(crossref.build_url("diamond", date(2026, 10, 16), 50)).query
     )
 
-    assert query["filter"] == ["from-index-date:2026-10-16"]
+    assert query["filter"] == ["from-index-date:2026-10-16,from-pub-date:2026-10-16"]
 
 
 def test_json_source_page_sizes_are_capped_at_public_api_limits():

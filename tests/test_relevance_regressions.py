@@ -22,7 +22,7 @@ def test_cross_source_duplicates_are_screened_and_published_once(tmp_path, diamo
     records = copies(diamond_records[0])
     state_path = tmp_path / "state.json"
     save_state(state_path, FeedState(papers={record_key(p): p for p in records}, pending_ai=[record_key(p) for p in records]))
-    stats = run_summary(app_config, state_path, fake_deepseek_client, datetime.now(timezone.utc), output_dir=tmp_path)
+    stats = run_summary(app_config, state_path, fake_deepseek_client, records[0].published_at, output_dir=tmp_path)
     assert (stats.candidates, stats.processed, stats.selected) == (1, 1, 1)
     result = load_state(state_path)
     assert not result.pending_ai
@@ -45,7 +45,7 @@ def test_same_title_distinct_dois_are_not_silently_collapsed(tmp_path, diamond_r
     second = replace(second, title=first.title)
     path = tmp_path / "state.json"
     save_state(path, FeedState(papers={record_key(p): p for p in [first, second]}, pending_ai=[record_key(p) for p in [first, second]]))
-    stats = run_summary(app_config, path, fake_deepseek_client, datetime.now(timezone.utc), output_dir=tmp_path)
+    stats = run_summary(app_config, path, fake_deepseek_client, second.published_at, output_dir=tmp_path)
     assert stats.selected == 2
 
 
@@ -78,11 +78,11 @@ def test_baseline_replay_uses_saved_inputs_not_current_queue(tmp_path, configure
 
 
 def test_arxiv_versions_without_doi_keep_a_persistable_representative(tmp_path, diamond_records, app_config, fake_deepseek_client):
-    first = replace(diamond_records[0], doi=None, url="https://arxiv.org/abs/2608.08152v1", title="Diamond growth", published_at=datetime(2025, 12, 1, tzinfo=timezone.utc))
+    first = replace(diamond_records[0], doi=None, url="https://arxiv.org/abs/2608.08152v1", title="Diamond growth", published_at=datetime(2025, 12, 15, tzinfo=timezone.utc))
     second = replace(first, url="https://arxiv.org/pdf/2608.08152v2.pdf", title="Diamond growth at high temperature", published_at=datetime(2026, 1, 1, tzinfo=timezone.utc))
     path = tmp_path / "state.json"
     save_state(path, FeedState(papers={record_key(p): p for p in [first, second]}, pending_ai=[record_key(p) for p in [first, second]]))
-    stats = run_summary(app_config, path, fake_deepseek_client, datetime.now(timezone.utc), output_dir=tmp_path)
+    stats = run_summary(app_config, path, fake_deepseek_client, datetime(2026, 1, 2, tzinfo=timezone.utc), output_dir=tmp_path)
     assert stats.processed == 1
     assert not load_state(path).pending_ai
 
@@ -111,7 +111,7 @@ def test_figshare_version_aliases_are_quarantined_without_ai(tmp_path, diamond_r
     records = [first, replace(first, doi=first.doi + ".v1"), replace(first, doi="10.6084/m9.figshare.12346")]
     path = tmp_path / "state.json"
     save_state(path, FeedState(papers={record_key(p): p for p in records}, pending_ai=[record_key(p) for p in records]))
-    stats = run_summary(app_config, path, fake_deepseek_client, datetime.now(timezone.utc), output_dir=tmp_path)
+    stats = run_summary(app_config, path, fake_deepseek_client, first.published_at, output_dir=tmp_path)
     assert stats.processed == stats.selected == stats.requests == 0
     result = load_state(path)
     assert not result.pending_ai
@@ -124,7 +124,7 @@ def test_failure_keeps_all_aliases_pending(tmp_path, diamond_records, app_config
     keys = [record_key(p) for p in records]
     save_state(path, FeedState(papers=dict(zip(keys, records)), pending_ai=keys))
     original = path.read_bytes()
-    stats = run_summary(app_config, path, failing_deepseek_client, datetime.now(timezone.utc), output_dir=tmp_path)
+    stats = run_summary(app_config, path, failing_deepseek_client, records[0].published_at, output_dir=tmp_path)
     assert stats.failed and stats.requests == 1
     assert path.read_bytes() == original
 

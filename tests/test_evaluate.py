@@ -53,6 +53,42 @@ def test_evaluation_refuses_reusing_a_run_directory_before_network(
     assert fake_deepseek_client.requests == 0
 
 
+def test_historical_baseline_replay_ignores_live_recency_without_changing_production(
+    tmp_path, configured_state_with_100_pending, app_config, fake_deepseek_client,
+    diamond_records,
+):
+    record = diamond_records[0]
+    baseline = tmp_path / "historical-inputs.json"
+    baseline.write_text(json.dumps({"papers": [{
+        "key": "doi:" + record.doi,
+        "title": record.title,
+        "doi": record.doi,
+        "url": record.url,
+        "authors": record.authors,
+        "published_at": "2016-09-01T00:00:00+00:00",
+        "journal": record.journal,
+        "input_abstract": record.abstract,
+        "ai_relevant": False,
+    }]}), encoding="utf-8")
+    production_before = configured_state_with_100_pending.read_bytes()
+    usage = tmp_path / "ai_usage.json"
+    usage.write_text("[]\n", encoding="utf-8")
+    usage_before = usage.read_bytes()
+
+    report = run_evaluation(
+        app_config, configured_state_with_100_pending, fake_deepseek_client,
+        datetime(2026, 11, 17, tzinfo=timezone.utc),
+        output_dir=tmp_path / "historical-replay", baseline_path=baseline,
+    )
+
+    assert report["stats"]["processed"] == 1
+    assert report["stats"]["selected"] == 1
+    assert report["papers"][0]["published_at"] == "2016-09-01T00:00:00+00:00"
+    assert report["sample"] == "fixed baseline replay"
+    assert configured_state_with_100_pending.read_bytes() == production_before
+    assert usage.read_bytes() == usage_before
+
+
 def test_failed_evaluation_keeps_diagnostics_and_usage(
     tmp_path, configured_state_with_100_pending, app_config, failing_deepseek_client
 ):

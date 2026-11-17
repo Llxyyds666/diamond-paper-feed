@@ -23,6 +23,7 @@ from diamond_feed.models import PaperRecord
 from diamond_feed.normalize import identity_aliases, record_key
 from diamond_feed.notification import NotificationMessage, NotificationPlan, _is_http_url
 from diamond_feed.publication import is_repository_artifact, load_withheld_aliases
+from diamond_feed.recency import is_recent_publication
 from diamond_feed.retry import DEFAULT_RETRY_POLICY
 from diamond_feed.state import FeedState, load_state
 
@@ -296,7 +297,12 @@ def run_screening(
             if key == smoke_paper_key and f"smoke:{key}" not in watch["outbox"]:
                 candidates.append(record)
             continue
-        if is_repository_artifact(record) or not is_ncd_candidate(record) or aliases & (baseline | withheld | seen):
+        if (
+            not is_recent_publication(record, now, config.collection.lookback_days)
+            or is_repository_artifact(record)
+            or not is_ncd_candidate(record)
+            or aliases & (baseline | withheld | seen)
+        ):
             continue
         seen.update(aliases)
         if _existing({k: v for k, v in watch["outbox"].items() if not k.startswith("smoke:")}, aliases):
@@ -349,12 +355,37 @@ def run_screening(
     return ScreeningStats(processed, selected, counter.used, failed)
 
 
-def deliver_pending(watch_path: Path, token: str, now: datetime, *, sender=send_plan) -> DeliveryStats:
+def deliver_pending(
+    watch_path: Path, token: str, now: datetime, *, sender=send_plan,
+    state_path: Path | None = None, lookback_days: int = 30,
+) -> DeliveryStats:
     """Checkpoint each service-accepted message; retry all remaining next run."""
     if not token or not token.strip():
         raise ValueError("BARK_TOKEN is required")
     timestamp = _timestamp(now)
     watch = load_watch(watch_path)
+    if state_path is not None:
+        state_path = Path(state_path)
+        if not state_path.is_file():
+            raise ValueError("NCD delivery requires an existing collection state")
+        state = load_state(state_path)
+        recent_aliases = {
+            alias
+            for record in state.papers.values()
+            if is_recent_publication(record, now, lookback_days)
+            for alias in _aliases(record)
+        }
+        stale_keys = [
+            key for key, item in watch["outbox"].items()
+            if item["sent_at"] is None
+            and not key.startswith("smoke:")
+            and not recent_aliases.intersection(item["aliases"])
+        ]
+        if stale_keys:
+            for key in stale_keys:
+                del watch["outbox"][key]
+            _save_watch(watch_path, watch)
+            print(f"NCD stale unsent messages removed: {len(stale_keys)}")
     accepted = failed = 0
     for key, item in watch["outbox"].items():
         if item["sent_at"] is not None:
@@ -396,7 +427,11 @@ def main(argv: list[str] | None = None) -> int:
             print("NCD history baseline initialized; no model request or notification")
             return 0
         if args.deliver:
-            stats = deliver_pending(args.watch, os.environ.get("BARK_TOKEN", ""), now)
+            config = load_config(args.config)
+            stats = deliver_pending(
+                args.watch, os.environ.get("BARK_TOKEN", ""), now,
+                state_path=args.state, lookback_days=config.collection.lookback_days,
+            )
             print(f"ncd_bark_accepted={stats.accepted} failed={stats.failed}")
             return int(stats.failed > 0)
         key = os.environ.get("DEEPSEEK_API_KEY")

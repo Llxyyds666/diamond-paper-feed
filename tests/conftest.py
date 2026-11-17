@@ -92,7 +92,7 @@ def configured_state_with_100_pending(tmp_path):
             abstract="Diamond material research.",
             authors=["A. Author"],
             journal="Diamond Journal",
-            published_at=datetime(2026, 8, 1, tzinfo=timezone.utc),
+            published_at=datetime(2026, 8, 15, tzinfo=timezone.utc),
             doi=f"10.1000/bootstrap.{index}",
             url=f"https://doi.org/10.1000/bootstrap.{index}",
             sources=["openalex"],

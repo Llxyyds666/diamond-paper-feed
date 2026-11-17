@@ -31,6 +31,7 @@ def paper(diamond_records, index=1, **changes):
             "abstract": "We deposit continuous NCD films and measure their properties.",
             "doi": f"10.1000/ncd.{index}",
             "url": f"https://doi.org/10.1000/ncd.{index}",
+            "published_at": NOW - timedelta(days=1),
             **changes,
         },
     )
@@ -373,3 +374,177 @@ def test_invalid_screening_batch_is_retried_on_next_run_and_usage_survives(tmp_p
     second = client(app_config.ai, ModelTransport())
     assert ncd_module().run_screening(app_config, state_path, watch_path, second, NOW).selected == 1
     assert ncd_module().load_watch(watch_path)["usage"][0]["requests"] == 4
+
+
+def test_newly_discovered_old_or_undated_ncd_papers_do_not_reach_model(
+    tmp_path, diamond_records, app_config,
+):
+    state_path, watch_path, baseline = initialized(tmp_path, diamond_records)
+    stale = [
+        paper(diamond_records, 1, published_at=datetime(2015, 1, 1, tzinfo=timezone.utc)),
+        paper(diamond_records, 2, published_at=datetime(2016, 1, 1, tzinfo=timezone.utc)),
+        paper(diamond_records, 3, published_at=NOW - timedelta(days=31)),
+        paper(diamond_records, 4, published_at=NOW, categories=["missing_date"]),
+    ]
+    current = [
+        paper(diamond_records, 5, published_at=NOW - timedelta(days=30)),
+        paper(diamond_records, 6, published_at=datetime(2027, 1, 1, tzinfo=timezone.utc)),
+    ]
+    store(state_path, [baseline, *stale, *current])
+    transport = ModelTransport()
+
+    stats = ncd_module().run_screening(
+        app_config, state_path, watch_path, client(app_config.ai, transport), NOW,
+    )
+
+    assert (stats.processed, stats.selected, stats.requests, stats.failed) == (2, 2, 1, False)
+    requested = json.loads(transport.calls[0]["messages"][-1]["content"])["papers"]
+    assert {item["key"] for item in requested} == {record_key(p) for p in current}
+    watch = ncd_module().load_watch(watch_path)
+    assert set(watch["reviews"]) == set(watch["outbox"]) == {record_key(p) for p in current}
+
+
+def test_ncd_screening_uses_configured_publication_lookback(
+    tmp_path, diamond_records, app_config,
+):
+    state_path, watch_path, baseline = initialized(tmp_path, diamond_records)
+    config = replace(app_config, collection=replace(app_config.collection, lookback_days=7))
+    stale = paper(diamond_records, 1, published_at=NOW - timedelta(days=8))
+    current = paper(diamond_records, 2, published_at=NOW - timedelta(days=7))
+    store(state_path, [baseline, stale, current])
+    transport = ModelTransport()
+
+    stats = ncd_module().run_screening(
+        config, state_path, watch_path, client(config.ai, transport), NOW,
+    )
+
+    assert stats.processed == stats.selected == 1
+    assert set(ncd_module().load_watch(watch_path)["outbox"]) == {record_key(current)}
+
+
+def test_delivery_removes_stale_unsent_messages_and_preserves_sent_receipts(
+    tmp_path, diamond_records, app_config,
+):
+    state_path, watch_path, baseline = initialized(tmp_path, diamond_records)
+    records = [paper(diamond_records, index) for index in (1, 2, 3, 4)]
+    store(state_path, [baseline, *records])
+    ncd_module().run_screening(
+        app_config, state_path, watch_path, client(app_config.ai, ModelTransport()), NOW,
+    )
+    watch = ncd_module().load_watch(watch_path)
+    receipt_key = record_key(records[2])
+    watch["outbox"][receipt_key]["sent_at"] = NOW.isoformat()
+    receipt = dict(watch["outbox"][receipt_key])
+    watch_path.write_text(json.dumps(watch), encoding="utf-8")
+    store(state_path, [
+        baseline,
+        replace(records[0], published_at=datetime(2015, 1, 1, tzinfo=timezone.utc)),
+        replace(records[1], categories=["missing_date"]),
+        replace(records[2], published_at=datetime(2016, 1, 1, tzinfo=timezone.utc)),
+        records[3],
+    ])
+    calls = []
+
+    def sender(token, plan):
+        calls.extend(plan.messages)
+        return (True,)
+
+    stats = ncd_module().deliver_pending(
+        watch_path, "bark-test-secret", NOW, sender=sender,
+        state_path=state_path, lookback_days=app_config.collection.lookback_days,
+    )
+
+    assert (stats.accepted, stats.failed) == (1, 0)
+    assert [message.url for message in calls] == [records[3].url]
+    saved = ncd_module().load_watch(watch_path)
+    assert set(saved["outbox"]) == {receipt_key, record_key(records[3])}
+    assert saved["outbox"][receipt_key] == receipt
+    assert saved["reviews"] == watch["reviews"]
+    assert saved["baseline_aliases"] == watch["baseline_aliases"]
+
+
+def test_delivery_with_state_does_not_send_messages_without_publication_metadata(
+    tmp_path, diamond_records, app_config,
+):
+    state_path, watch_path, baseline = initialized(tmp_path, diamond_records)
+    record = paper(diamond_records)
+    store(state_path, [baseline, record])
+    ncd_module().run_screening(
+        app_config, state_path, watch_path, client(app_config.ai, ModelTransport()), NOW,
+    )
+    store(state_path, [baseline])
+    calls = []
+
+    stats = ncd_module().deliver_pending(
+        watch_path, "bark-test-secret", NOW, state_path=state_path,
+        sender=lambda token, plan: calls.append(plan) or (True,),
+    )
+
+    assert stats.accepted == stats.failed == 0
+    assert calls == []
+    assert ncd_module().load_watch(watch_path)["outbox"] == {}
+
+
+def test_delivery_missing_collection_state_preserves_outbox(
+    tmp_path, diamond_records, app_config,
+):
+    state_path, watch_path, baseline = initialized(tmp_path, diamond_records)
+    record = paper(diamond_records)
+    store(state_path, [baseline, record])
+    ncd_module().run_screening(
+        app_config, state_path, watch_path, client(app_config.ai, ModelTransport()), NOW,
+    )
+    before = watch_path.read_bytes()
+    calls = []
+
+    with pytest.raises(ValueError, match="collection state"):
+        ncd_module().deliver_pending(
+            watch_path, "bark-test-secret", NOW, state_path=tmp_path / "missing-state.json",
+            sender=lambda token, plan: calls.append(plan) or (True,),
+        )
+
+    assert calls == []
+    assert watch_path.read_bytes() == before
+
+
+@pytest.mark.parametrize("lookback_days, expected", [(7, 0), (30, 1)])
+def test_delivery_uses_configured_lookback_and_doi_upgrade_aliases(
+    tmp_path, diamond_records, app_config, lookback_days, expected,
+):
+    state_path, watch_path, baseline = initialized(tmp_path, diamond_records)
+    record = paper(diamond_records, doi=None, published_at=NOW - timedelta(days=8))
+    store(state_path, [baseline, record])
+    ncd_module().run_screening(
+        app_config, state_path, watch_path, client(app_config.ai, ModelTransport()), NOW,
+    )
+    store(state_path, [baseline, replace(record, doi="10.1000/upgraded-delivery")])
+    calls = []
+
+    stats = ncd_module().deliver_pending(
+        watch_path, "bark-test-secret", NOW, state_path=state_path, lookback_days=lookback_days,
+        sender=lambda token, plan: calls.append(plan) or (True,),
+    )
+
+    assert (stats.accepted, stats.failed) == (expected, 0)
+    assert len(calls) == expected
+    assert len(ncd_module().load_watch(watch_path)["outbox"]) == expected
+
+
+def test_cli_delivery_passes_state_and_configured_publication_lookback(
+    tmp_path, app_config, monkeypatch,
+):
+    module = ncd_module()
+    state_path, watch_path = tmp_path / "state.json", tmp_path / "watch.json"
+    config = replace(app_config, collection=replace(app_config.collection, lookback_days=7))
+    seen = {}
+
+    def deliver(watch, token, now, **kwargs):
+        seen.update(kwargs)
+        return module.DeliveryStats(0, 0)
+
+    monkeypatch.setattr(module, "load_config", lambda path: config)
+    monkeypatch.setattr(module, "deliver_pending", deliver)
+    monkeypatch.setenv("BARK_TOKEN", "bark-test-secret")
+
+    assert module.main(["--deliver", "--state", str(state_path), "--watch", str(watch_path)]) == 0
+    assert seen == {"state_path": state_path, "lookback_days": 7}

@@ -188,7 +188,12 @@ def run_evaluation(config, state_path, client, now, *, output_dir, baseline_path
     with TemporaryDirectory(prefix="diamond-evaluation-") as temporary:
         sample_path = Path(temporary) / "state.json"
         save_state(sample_path, FeedState(papers={k: state.papers[k] for k in keys}, pending_ai=keys))
-        stats = run_summary(config, sample_path, client, now, output_dir=output_dir)
+        # A saved baseline deliberately replays its historical inputs. This
+        # isolated state must not inherit the production rolling-date gate.
+        stats = run_summary(
+            config, sample_path, client, now, output_dir=output_dir,
+            enforce_recency=False,
+        )
         result = load_state(sample_path)
     papers = [
         {"key": key, "canonical_key": canonical[key], "title": p.title, "doi": p.doi, "url": p.url,

@@ -115,6 +115,75 @@ def _save_records(path: Path, records: list[PaperRecord]) -> list[str]:
     return keys
 
 
+def test_old_pending_does_not_consume_daily_candidates_or_remove_history(
+    tmp_path, diamond_records, app_config
+):
+    state_path = tmp_path / "state.json"
+    old, recent = diamond_records
+    old.published_at = datetime(2015, 9, 1, tzinfo=timezone.utc)
+    old.ai_relevant = True
+    old.summary_zh = "先前保留的历史摘要。"
+    keys = _save_records(state_path, [old, recent])
+    client = RecordingClient()
+
+    stats = run_summary(app_config, state_path, client, NOW, output_dir=tmp_path)
+
+    assert (stats.candidates, stats.processed, stats.remaining) == (1, 1, 0)
+    assert [paper["key"] for paper in client.payloads[0]["papers"]] == [keys[1]]
+    saved = load_state(state_path)
+    assert saved.papers[keys[0]].summary_zh == "先前保留的历史摘要。"
+    assert saved.papers[keys[0]].ai_relevant is True
+
+
+@pytest.mark.parametrize("budget_exhausted", [False, True])
+def test_only_stale_pending_is_cleaned_and_saved_without_ai(
+    tmp_path, diamond_records, app_config, budget_exhausted
+):
+    state_path = tmp_path / "state.json"
+    old = diamond_records[0]
+    old.published_at = datetime(2016, 9, 1, tzinfo=timezone.utc)
+    keys = _save_records(state_path, [old])
+    if budget_exhausted:
+        (tmp_path / "ai_usage.json").write_text(json.dumps([{
+            "date": NOW.date().isoformat(), "candidates": 100,
+            "processed": 100, "selected": 0, "requests": 10,
+            "prompt_tokens": 10, "completion_tokens": 10, "total_tokens": 20,
+        }]), encoding="utf-8")
+    client = RecordingClient()
+
+    stats = run_summary(app_config, state_path, client, NOW, output_dir=tmp_path)
+
+    assert (stats.candidates, stats.requests, stats.remaining) == (0, 0, 0)
+    assert client.payloads == []
+    saved = load_state(state_path)
+    assert saved.pending_ai == []
+    assert keys[0] in saved.papers
+
+
+def test_enrichment_can_only_query_recent_records_and_stale_requeue_is_pruned(
+    tmp_path, diamond_records, app_config
+):
+    state_path = tmp_path / "state.json"
+    old, recent = diamond_records
+    old.published_at = datetime(2015, 9, 1, tzinfo=timezone.utc)
+    keys = _save_records(state_path, [old, recent])
+
+    class ScopedEnricher:
+        def enrich(self, state, candidate_keys):
+            assert list(candidate_keys) == [keys[1]]
+            assert keys[0] not in state.papers  # no historical fallback network requests
+            state.pending_ai.append(keys[0])  # simulate a stale persistent requeue
+            return EnrichmentStats(0, 0, 0)
+
+    client = RecordingClient()
+    stats = run_summary(app_config, state_path, client, NOW, output_dir=tmp_path,
+                        enricher=ScopedEnricher())
+
+    assert (stats.candidates, stats.processed, stats.remaining) == (1, 1, 0)
+    assert [paper["key"] for paper in client.payloads[0]["papers"]] == [keys[1]]
+    assert load_state(state_path).pending_ai == []
+
+
 def test_enrichment_runs_before_screening_and_is_published(
     tmp_path, diamond_records, app_config
 ):
@@ -162,7 +231,7 @@ def test_enrichment_requeues_historical_paper_before_candidates_are_finalized(
 ):
     state_path = tmp_path / "state.json"
     current, historical = diamond_records
-    historical.published_at = current.published_at - timedelta(days=30)
+    historical.published_at = NOW - timedelta(days=20)
     keys = [record_key(current), record_key(historical)]
     save_state(
         state_path,
@@ -392,7 +461,7 @@ def test_candidate_limit_processes_all_one_hundred_even_if_queue_order_is_stale(
     state = load_state(configured_state_with_100_pending)
     original_keys = list(state.pending_ai)
     for index, key in enumerate(original_keys):
-        state.papers[key].published_at = NOW - timedelta(days=index)
+        state.papers[key].published_at = NOW - timedelta(hours=index)
     save_state(configured_state_with_100_pending, state)
 
     stats = run_summary(
