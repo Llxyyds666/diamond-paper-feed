@@ -6301,15 +6301,6 @@
       "summary_zh": "该文基于Fe3O4纳米颗粒锚定多壁碳纳米管修饰碳糊电极检测阿苯达唑，未涉及纳米晶金刚石。",
       "reason": "主题为碳纳米管电化学传感器，无NCD/UNCD内容。"
     },
-    "title:corrigendum to detecting gaseous molecular oxygen with fluorescent nanodiamonds at elevated pressures diam relat mater 169 2026 114159:2026": {
-      "aliases": [
-        "title:corrigendum to detecting gaseous molecular oxygen with fluorescent nanodiamonds at elevated pressures diam relat mater 169 2026 114159:2026"
-      ],
-      "fingerprint": "0fa71558b28fde9125ffb1c0a72ed03633fc25046861b673055600e255128969",
-      "is_ncd": false,
-      "summary_zh": "该条目为勘误（Corrigendum），并非原始研究论文，且涉及荧光纳米金刚石颗粒的氧气检测。",
-      "reason": "勘误属于更正性内容，不属于NCD/UNCD研究文章；且主题为纳米金刚石颗粒传感，非NCD材料研究。"
-    },
     "doi:10.1016/j.cartre.2026.100712": {
       "aliases": [
         "doi:10.1016/j.cartre.2026.100712",
@@ -10898,6 +10889,56 @@
       "is_ncd": false,
       "summary_zh": "该研究考察纳米TiC包覆金刚石对金刚石/Al复合材料强度和热导率的影响。",
       "reason": "研究对象为金刚石颗粒增强金属基复合材料，未涉及NCD/UNCD材料。"
+    },
+    "doi:10.17073/1997-308x.2025.580p.1076": {
+      "aliases": [
+        "doi:10.17073/1997-308x.2025.580p.1076",
+        "title:thermal modification of diamond nanoparticles obtained by grinding natural raw materials and detonation synthesis part 1 morphology and structure of nanodiamonds:2026"
+      ],
+      "fingerprint": "ac4de09a9f61178be07524dd32483cd640e85c6b500898c61105bbd99404563f",
+      "is_ncd": false,
+      "summary_zh": "该文比较机械研磨天然金刚石与爆轰合成纳米金刚石颗粒的形貌与晶体结构，属于孤立纳米金刚石颗粒研究。",
+      "reason": "研究对象为纳米金刚石颗粒本身，未涉及NCD/UNCD薄膜、涂层或块体纳米晶材料及其形核生长。"
+    },
+    "doi:10.1016/j.surfin.2026.111259": {
+      "aliases": [
+        "doi:10.1016/j.surfin.2026.111259",
+        "title:chemically coupled boron doped diamond powder tio2 nanotube bundles interfaces through hydroxyl driven c o ti condensation for enhanced electrochemical performance:2026"
+      ],
+      "fingerprint": "f2d30bea80407428c7e7da1d44ab3b92a8e0fa9e597b12b81cd7bfc75fdf58fb",
+      "is_ncd": false,
+      "summary_zh": "标题涉及硼掺杂金刚石粉末与TiO2纳米管复合界面，但缺少摘要，无法确认是否为纳米晶金刚石材料。",
+      "reason": "仅有标题且未出现nanocrystalline/ultrananocrystalline表述，证据不足以判定为NCD/UNCD研究。"
+    },
+    "doi:10.1002/cptc.70349": {
+      "aliases": [
+        "doi:10.1002/cptc.70349",
+        "title:vacuum ultraviolet induced room temperature conversion of solution processed polybutadiene into diamond like carbon thin films with nanoscale wrinkles:2026"
+      ],
+      "fingerprint": "91f07e32f2714e4b9cd27f8c60d453db6dd35ce1331d9b3a2a4705780670af24",
+      "is_ncd": false,
+      "summary_zh": "该文通过真空紫外辐照由聚合物制备类金刚石碳（DLC）薄膜，并研究其纳米褶皱结构。",
+      "reason": "研究对象为DLC而非纳米晶或超纳米晶金刚石，明确排除。"
+    },
+    "doi:10.1364/ol.614876": {
+      "aliases": [
+        "doi:10.1364/ol.614876",
+        "title:1458 nm pulsed second order diamond raman laser:2026"
+      ],
+      "fingerprint": "803b0673dd1e2c9fa2b2984a672ccd913ebb8ef414b9f7457c4b3e81a0c5e17f",
+      "is_ncd": false,
+      "summary_zh": "标题为1458 nm脉冲二阶金刚石拉曼激光，缺少摘要，未提及纳米晶金刚石。",
+      "reason": "仅据标题为金刚石拉曼激光器件研究，无NCD/UNCD材料证据。"
+    },
+    "doi:10.1016/j.diamond.2026.114314": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2026.114314",
+        "title:corrigendum to detecting gaseous molecular oxygen with fluorescent nanodiamonds at elevated pressures diam relat mater 169 2026 114159:2026"
+      ],
+      "fingerprint": "9bfc23495b60b690baed840d15036800972fabcbea92ab4a18d648a67814195c",
+      "is_ncd": false,
+      "summary_zh": "该条目为荧光纳米金刚石检测气态氧论文的勘误，非研究论文。",
+      "reason": "勘误条目，且原研究为孤立纳米金刚石颗粒，不属于NCD/UNCD材料研究。"
     }
   },
   "outbox": {
@@ -13792,10 +13833,10 @@
     },
     {
       "date": "2026-11-17",
-      "requests": 20,
-      "prompt_tokens": 50780,
-      "completion_tokens": 16527,
-      "total_tokens": 67307,
+      "requests": 21,
+      "prompt_tokens": 52460,
+      "completion_tokens": 16974,
+      "total_tokens": 69434,
       "token_usage_complete": true
     }
   ]
