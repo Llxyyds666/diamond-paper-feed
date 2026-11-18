@@ -10939,6 +10939,26 @@
       "is_ncd": false,
       "summary_zh": "该条目为荧光纳米金刚石检测气态氧论文的勘误，非研究论文。",
       "reason": "勘误条目，且原研究为孤立纳米金刚石颗粒，不属于NCD/UNCD材料研究。"
+    },
+    "title:electrostatic screening and nitrogen vacancy charge states in boron doped nitrogen doped diamond junctions:2026": {
+      "aliases": [
+        "arxiv:2611.22074",
+        "title:electrostatic screening and nitrogen vacancy charge states in boron doped nitrogen doped diamond junctions:2026"
+      ],
+      "fingerprint": "42d4b621fcc6ea4d61c5a03cef7a869659bf8e553ea9bf01777ba8eb1dfac5f6",
+      "is_ncd": false,
+      "summary_zh": "该文用自洽泊松-费米计算研究硼掺杂/氮掺杂金刚石结的静电屏蔽与NV色心电荷态，未涉及纳米晶或超纳米晶金刚石材料。",
+      "reason": "摘要仅讨论单晶掺杂金刚石结的静电学，无NCD/UNCD或纳米尺度晶粒描述，故排除。"
+    },
+    "title:frequency multiplexing of purcell enhanced optically coherent nv centers:2026": {
+      "aliases": [
+        "arxiv:2611.23046",
+        "title:frequency multiplexing of purcell enhanced optically coherent nv centers:2026"
+      ],
+      "fingerprint": "1207ee918c554d7cd81e460a02691cd6afd987d4ff65bade01a02c2ac420a36e",
+      "is_ncd": false,
+      "summary_zh": "该文将NV色心集成到单块金刚石光子晶体纳米腔中实现频率复用与Purcell增强，未研究纳米晶金刚石薄膜。",
+      "reason": "摘要聚焦单晶金刚石纳米腔中的NV色心量子光学，无NCD/UNCD材料或纳米晶粒证据。"
     }
   },
   "outbox": {
@@ -13837,6 +13857,14 @@
       "prompt_tokens": 52460,
       "completion_tokens": 16974,
       "total_tokens": 69434,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-18",
+      "requests": 1,
+      "prompt_tokens": 1009,
+      "completion_tokens": 224,
+      "total_tokens": 1233,
       "token_usage_complete": true
     }
   ]
