@@ -10959,6 +10959,16 @@
       "is_ncd": false,
       "summary_zh": "该文将NV色心集成到单块金刚石光子晶体纳米腔中实现频率复用与Purcell增强，未研究纳米晶金刚石薄膜。",
       "reason": "摘要聚焦单晶金刚石纳米腔中的NV色心量子光学，无NCD/UNCD材料或纳米晶粒证据。"
+    },
+    "doi:10.1016/j.diamond.2026.114426": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2026.114426",
+        "title:stepwise surface engineering of single crystal diamond for covalent carbon nanotube integration and durable electrochemical interfaces:2027"
+      ],
+      "fingerprint": "13100691f8e021c1e5a3f53a1c10e863c72d0e236c3979118969b975f7f3ea3f",
+      "is_ncd": false,
+      "summary_zh": "该标题聚焦单晶金刚石的表面工程及其与碳纳米管的共价集成，未涉及纳米晶或超纳米晶金刚石。",
+      "reason": "研究对象为单晶金刚石，缺少NCD/UNCD或纳米尺度晶粒的证据。"
     }
   },
   "outbox": {
@@ -13861,10 +13871,10 @@
     },
     {
       "date": "2026-11-18",
-      "requests": 1,
-      "prompt_tokens": 1009,
-      "completion_tokens": 224,
-      "total_tokens": 1233,
+      "requests": 2,
+      "prompt_tokens": 1488,
+      "completion_tokens": 318,
+      "total_tokens": 1806,
       "token_usage_complete": true
     }
   ]
