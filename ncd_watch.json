@@ -11019,6 +11019,26 @@
       "is_ncd": false,
       "summary_zh": "该文提出用于LiDAR-惯性-视觉SLAM的统一B样条时间框架，其中NCD指某数据集名称。",
       "reason": "NCD为数据集缩写，与纳米晶金刚石无关。"
+    },
+    "doi:10.1186/s12645-026-00444-4": {
+      "aliases": [
+        "doi:10.1186/s12645-026-00444-4",
+        "title:effect of fullerene c60 diamond and graphene oxide on oncolytic properties of herpes simplex virus type 1 against hepatocellular carcinoma:2026"
+      ],
+      "fingerprint": "b7f424b16ba0da8cd7f78c809af5c99de6ce42975b5845542a023aa46fa6e880",
+      "is_ncd": false,
+      "summary_zh": "该研究考察富勒烯C60、纳米金刚石和氧化石墨烯对溶瘤单纯疱疹病毒1型抗肝癌作用的影响，属于纳米金刚石颗粒的生物医学应用。",
+      "reason": "仅涉及孤立纳米金刚石颗粒作为病毒递送/佐剂，未研究NCD/UNCD材料或其形核生长，按规则排除。"
+    },
+    "doi:10.3390/photonics13111089": {
+      "aliases": [
+        "doi:10.3390/photonics13111089",
+        "title:photonics vol 13 pages 1089 spatially modulated femtosecond laser induced 2d lipss on diamond for infrared antireflective windows:2026"
+      ],
+      "fingerprint": "3d22c147c0da188e28c895e5db233883087bb63cac302bbad186d20613520f9f",
+      "is_ncd": false,
+      "summary_zh": "该文利用飞秒激光在金刚石上制备二维LIPSS亚波长结构，用于红外减反射窗口，未提及纳米晶或超纳米晶金刚石。",
+      "reason": "仅泛称金刚石，无纳米晶/超纳米晶表述或纳米尺度晶粒描述，不能确立NCD。"
     }
   },
   "outbox": {
@@ -13929,10 +13949,10 @@
     },
     {
       "date": "2026-11-19",
-      "requests": 1,
-      "prompt_tokens": 2224,
-      "completion_tokens": 442,
-      "total_tokens": 2666,
+      "requests": 2,
+      "prompt_tokens": 3594,
+      "completion_tokens": 656,
+      "total_tokens": 4250,
       "token_usage_complete": true
     }
   ]
