@@ -10969,6 +10969,56 @@
       "is_ncd": false,
       "summary_zh": "该标题聚焦单晶金刚石的表面工程及其与碳纳米管的共价集成，未涉及纳米晶或超纳米晶金刚石。",
       "reason": "研究对象为单晶金刚石，缺少NCD/UNCD或纳米尺度晶粒的证据。"
+    },
+    "doi:10.1103/2r9y-xfmb": {
+      "aliases": [
+        "doi:10.1103/2r9y-xfmb",
+        "title:photoelectrical readout and ramsey interferometry of single shallowly implanted nv centers in diamond:2026"
+      ],
+      "fingerprint": "b497d45750e771376bd285b971655cfc1348825e65431322e37887fa2c40790b",
+      "is_ncd": false,
+      "summary_zh": "该文研究浅层注入NV色心的光电读出与Ramsey干涉，使用单晶金刚石衬底及金刚石覆盖层，未涉及纳米晶或超纳米晶金刚石材料。",
+      "reason": "内容为单晶金刚石中NV色心量子传感，无NCD/UNCD材料或纳米晶粒描述。"
+    },
+    "doi:10.1186/s11671-026-05119-y": {
+      "aliases": [
+        "doi:10.1186/s11671-026-05119-y",
+        "title:heteroepitaxial single crystal diamond on sapphire a review:2026"
+      ],
+      "fingerprint": "65cedbdbd488efbeee3f25848c9075cbe00b4550e953a74c2c1de36d7f60053c",
+      "is_ncd": false,
+      "summary_zh": "该综述讨论蓝宝石上异质外延单晶金刚石的生长、应力缺陷控制及器件应用。",
+      "reason": "主题为单晶金刚石异质外延，未涉及纳米晶/超纳米晶金刚石。"
+    },
+    "title:raman induced kerr effect and heating in diamond:2026": {
+      "aliases": [
+        "arxiv:2611.24856",
+        "title:raman induced kerr effect and heating in diamond:2026"
+      ],
+      "fingerprint": "a239e4cce72f73509f966d56c22a285ed19c75a8f3349bab9ce3919a57e51bbb",
+      "is_ncd": false,
+      "summary_zh": "该文用泵浦-探测光谱表征金刚石晶体的三阶非线性极化率与拉曼加热。",
+      "reason": "研究对象为金刚石晶体光学非线性，无NCD/UNCD或纳米晶粒证据。"
+    },
+    "doi:10.3389/frqst.2026.1940172": {
+      "aliases": [
+        "doi:10.3389/frqst.2026.1940172",
+        "title:methods for traceable scanning magnetometry using single nitrogen vacancy centers in diamond determining orientation distance and localization:2026"
+      ],
+      "fingerprint": "4c4943a9704a482493e0db875c4cee2677f955e1f9d4b15e28994c223dd2ea25",
+      "is_ncd": false,
+      "summary_zh": "该文利用单晶金刚石纳米结构中的单个NV色心进行可溯源扫描磁测量，确定取向、距离与定位。",
+      "reason": "涉及单晶金刚石纳米结构中的NV色心，但未研究NCD/UNCD材料本身。"
+    },
+    "doi:10.3390/s26227300": {
+      "aliases": [
+        "doi:10.3390/s26227300",
+        "title:sensors vol 26 pages 7300 a unified b spline temporal framework for tightly coupled lidar inertial visual slam:2026"
+      ],
+      "fingerprint": "6ae57494eb746efa500bc19d5d717e66884125a73af39b441404fd6f7b8d5b50",
+      "is_ncd": false,
+      "summary_zh": "该文提出用于LiDAR-惯性-视觉SLAM的统一B样条时间框架，其中NCD指某数据集名称。",
+      "reason": "NCD为数据集缩写，与纳米晶金刚石无关。"
     }
   },
   "outbox": {
@@ -13875,6 +13925,14 @@
       "prompt_tokens": 1488,
       "completion_tokens": 318,
       "total_tokens": 1806,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-19",
+      "requests": 1,
+      "prompt_tokens": 2224,
+      "completion_tokens": 442,
+      "total_tokens": 2666,
       "token_usage_complete": true
     }
   ]
