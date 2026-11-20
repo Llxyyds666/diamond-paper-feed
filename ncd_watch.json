@@ -11039,6 +11039,16 @@
       "is_ncd": false,
       "summary_zh": "该文利用飞秒激光在金刚石上制备二维LIPSS亚波长结构，用于红外减反射窗口，未提及纳米晶或超纳米晶金刚石。",
       "reason": "仅泛称金刚石，无纳米晶/超纳米晶表述或纳米尺度晶粒描述，不能确立NCD。"
+    },
+    "doi:10.1021/acsaelm.6c01974": {
+      "aliases": [
+        "doi:10.1021/acsaelm.6c01974",
+        "title:decoupling field and discharge contributions to electrical charge state control in diamond:2026"
+      ],
+      "fingerprint": "63dd5cb472b919cb890d1cfb9133adf3bd5a0a84dc62cc0f605c4c291787cdc5",
+      "is_ncd": false,
+      "summary_zh": "该研究测量多晶CVD金刚石中SiV与NV色心的电荷态在电场与放电作用下的响应，未涉及纳米晶或超纳米晶金刚石材料。",
+      "reason": "标题与摘要仅提及多晶CVD金刚石，无纳米晶/超纳米晶表述或纳米尺度晶粒描述，故不判定为NCD研究。"
     }
   },
   "outbox": {
@@ -13953,6 +13963,14 @@
       "prompt_tokens": 3594,
       "completion_tokens": 656,
       "total_tokens": 4250,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-20",
+      "requests": 1,
+      "prompt_tokens": 821,
+      "completion_tokens": 117,
+      "total_tokens": 938,
       "token_usage_complete": true
     }
   ]
