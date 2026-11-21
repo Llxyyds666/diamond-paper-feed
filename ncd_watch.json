@@ -11049,6 +11049,16 @@
       "is_ncd": false,
       "summary_zh": "该研究测量多晶CVD金刚石中SiV与NV色心的电荷态在电场与放电作用下的响应，未涉及纳米晶或超纳米晶金刚石材料。",
       "reason": "标题与摘要仅提及多晶CVD金刚石，无纳米晶/超纳米晶表述或纳米尺度晶粒描述，故不判定为NCD研究。"
+    },
+    "doi:10.1007/s10854-026-18918-x": {
+      "aliases": [
+        "doi:10.1007/s10854-026-18918-x",
+        "title:multiscale reinforcement of sintered ag joints through ag coated nanodiamond and bimodal filler design:2026"
+      ],
+      "fingerprint": "3347f24579df4dfe4022639b6bdea0b8e3554cc420cb8df5c821f97d36cf808a",
+      "is_ncd": false,
+      "summary_zh": "该文研究Ag包覆纳米金刚石颗粒作为填料增强烧结银接头，属于孤立纳米金刚石颗粒在电子封装中的应用。",
+      "reason": "研究对象为纳米金刚石颗粒填料与烧结银复合材料，未涉及NCD/UNCD薄膜、涂层、块体材料或其形核生长，故排除。"
     }
   },
   "outbox": {
@@ -13971,6 +13981,14 @@
       "prompt_tokens": 821,
       "completion_tokens": 117,
       "total_tokens": 938,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-21",
+      "requests": 1,
+      "prompt_tokens": 794,
+      "completion_tokens": 107,
+      "total_tokens": 901,
       "token_usage_complete": true
     }
   ]
