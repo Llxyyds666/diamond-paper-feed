@@ -11059,6 +11059,36 @@
       "is_ncd": false,
       "summary_zh": "该文研究Ag包覆纳米金刚石颗粒作为填料增强烧结银接头，属于孤立纳米金刚石颗粒在电子封装中的应用。",
       "reason": "研究对象为纳米金刚石颗粒填料与烧结银复合材料，未涉及NCD/UNCD薄膜、涂层、块体材料或其形核生长，故排除。"
+    },
+    "doi:10.1038/s41467-026-79211-3": {
+      "aliases": [
+        "doi:10.1038/s41467-026-79211-3",
+        "title:photocatalytic control of diamond color center charge states via laser induced surface oxidation:2026"
+      ],
+      "fingerprint": "fbd23a6f822e1aecd5cb4faef2275d685ffc75ca5131b05bf64d8a777c6a4ce5",
+      "is_ncd": false,
+      "summary_zh": "该文研究激光诱导氧化调控金刚石纳米柱表面终止态及SiV色心电荷态，未涉及纳米晶或超纳米晶金刚石薄膜材料。",
+      "reason": "研究对象为金刚石纳米结构色心与表面化学，缺少NCD/UNCD材料或纳米晶粒描述的证据。"
+    },
+    "doi:10.1134/s1062873826702679": {
+      "aliases": [
+        "doi:10.1134/s1062873826702679",
+        "title:laser deposition of thin silicon oxide films on diamond:2026"
+      ],
+      "fingerprint": "a813a755f10b116aa298fff57caa424917267e9b18b6f8046d1c56b262096a99",
+      "is_ncd": false,
+      "summary_zh": "该文在金刚石(100)板上激光沉积氧化硅薄膜并研究其结构与减反射性能，未研究纳米晶金刚石材料本身。",
+      "reason": "基底为金刚石板，主题是氧化硅薄膜沉积，无NCD/UNCD或纳米晶粒证据。"
+    },
+    "doi:10.3390/ma19234963": {
+      "aliases": [
+        "doi:10.3390/ma19234963",
+        "title:materials vol 19 pages 4963 the influence of carbon fibers and cavitation synthesized nanodiamonds on the variatropic concrete characteristics:2026"
+      ],
+      "fingerprint": "dc643b25d334ae58742614fbe2c027182db1589829ae9cafec5e1a770e213353",
+      "is_ncd": false,
+      "summary_zh": "该文将纳米金刚石悬浮液与碳纤维用于改性离心混凝土，属孤立纳米金刚石颗粒作为添加剂的应用。",
+      "reason": "仅涉及纳米金刚石颗粒作为混凝土填料，未研究NCD/UNCD材料或其形核生长。"
     }
   },
   "outbox": {
@@ -13989,6 +14019,14 @@
       "prompt_tokens": 794,
       "completion_tokens": 107,
       "total_tokens": 901,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-24",
+      "requests": 1,
+      "prompt_tokens": 1518,
+      "completion_tokens": 284,
+      "total_tokens": 1802,
       "token_usage_complete": true
     }
   ]
