@@ -11089,6 +11089,16 @@
       "is_ncd": false,
       "summary_zh": "该文将纳米金刚石悬浮液与碳纤维用于改性离心混凝土，属孤立纳米金刚石颗粒作为添加剂的应用。",
       "reason": "仅涉及纳米金刚石颗粒作为混凝土填料，未研究NCD/UNCD材料或其形核生长。"
+    },
+    "doi:10.1016/j.optlastec.2026.117107": {
+      "aliases": [
+        "doi:10.1016/j.optlastec.2026.117107",
+        "title:material removal characteristics of diamond cu composite heat sink plate in nanosecond pulsed laser machining:2027"
+      ],
+      "fingerprint": "d3dec33c75c94bf366bdb27068f71fa5b7d215bc1d72772d905932879918edbb",
+      "is_ncd": false,
+      "summary_zh": "该文研究金刚石/Cu复合散热板的纳秒脉冲激光加工去除特性，标题未涉及纳米晶或超纳米晶金刚石。缺少摘要，无法证明其研究NCD/UNCD材料或其形核生长。",
+      "reason": "标题为金刚石/Cu复合材料激光加工，无NCD/UNCD或纳米晶粒证据，且无摘要佐证。"
     }
   },
   "outbox": {
@@ -14023,10 +14033,10 @@
     },
     {
       "date": "2026-11-24",
-      "requests": 1,
-      "prompt_tokens": 1518,
-      "completion_tokens": 284,
-      "total_tokens": 1802,
+      "requests": 2,
+      "prompt_tokens": 2003,
+      "completion_tokens": 407,
+      "total_tokens": 2410,
       "token_usage_complete": true
     }
   ]
