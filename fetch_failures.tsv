@@ -1,4 +1,4 @@
 timestamp	category	url	detail
-2026-11-24T09:57:55.296766+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
-2026-11-24T09:57:56.376763+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
-2026-11-24T09:58:04.950975+00:00	http_401	https://api.openalex.org/works?search=diamond&filter=from_publication_date%3A2026-10-16&per-page=200&cursor=Ils1NC4zOTA3NTUsIDE3OTM1Nzc2MDAwMDAsICdodHRwczovL29wZW5hbGV4Lm9yZy9XNzE2NTM5MDk0MiddIg%3D%3D&select=id%2Cdoi%2Ctitle%2Cdisplay_name%2Ctype%2Cpublication_date%2Cauthorships%2Cprimary_location%2Cabstract_inverted_index	HTTP 401
+2026-11-25T08:39:39.431327+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=10427&sortOrder=newest	feed contained no entries
+2026-11-25T08:39:40.273147+00:00	empty_feed	https://link.springer.com/search.rss?query=*&facet-journal-id=543&sortOrder=newest	feed contained no entries
+2026-11-25T08:39:45.537916+00:00	http_401	https://api.openalex.org/works?search=diamond&filter=from_publication_date%3A2026-10-16&per-page=200&cursor=Ils1NC4zOTA3NTUsIDE3OTM1Nzc2MDAwMDAsICdodHRwczovL29wZW5hbGV4Lm9yZy9XNzE2NTM5MDk0MiddIg%3D%3D&select=id%2Cdoi%2Ctitle%2Cdisplay_name%2Ctype%2Cpublication_date%2Cauthorships%2Cprimary_location%2Cabstract_inverted_index	HTTP 401
