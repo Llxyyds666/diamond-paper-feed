@@ -11099,6 +11099,26 @@
       "is_ncd": false,
       "summary_zh": "该文研究金刚石/Cu复合散热板的纳秒脉冲激光加工去除特性，标题未涉及纳米晶或超纳米晶金刚石。缺少摘要，无法证明其研究NCD/UNCD材料或其形核生长。",
       "reason": "标题为金刚石/Cu复合材料激光加工，无NCD/UNCD或纳米晶粒证据，且无摘要佐证。"
+    },
+    "doi:10.1103/bkfq-z5mt": {
+      "aliases": [
+        "doi:10.1103/bkfq-z5mt",
+        "title:anomalous heat capacity and phonon density of states of superhard nanostructured cubic boron nitride:2026"
+      ],
+      "fingerprint": "323ea3f3445111c094e79cbf56ec48d12175e499ed2f556e63b68b0759082b56",
+      "is_ncd": false,
+      "summary_zh": "该文研究纳米结构多晶立方氮化硼（nano-cBN）的热容与声子态密度，仅在背景中提及金刚石硬度。",
+      "reason": "研究对象为立方氮化硼而非纳米晶金刚石，缺少NCD/UNCD材料证据。"
+    },
+    "title:signatures of kitaev quantum spin liquid states in α rucl 3 revealed by nitrogen vacancy spin noise spectroscopy:2026": {
+      "aliases": [
+        "arxiv:2611.33085",
+        "title:signatures of kitaev quantum spin liquid states in α rucl 3 revealed by nitrogen vacancy spin noise spectroscopy:2026"
+      ],
+      "fingerprint": "0153f7cdf6ec58b60631e475dc4048f9d941760ce9037d0c2f246b9fa42de9e5",
+      "is_ncd": false,
+      "summary_zh": "该文利用金刚石氮-空位色心自旋噪声谱探测α-RuCl3纳米片的量子自旋液体态。",
+      "reason": "金刚石仅作为NV色心探针使用，未研究NCD/UNCD薄膜材料或其形核生长。"
     }
   },
   "outbox": {
@@ -14037,6 +14057,14 @@
       "prompt_tokens": 2003,
       "completion_tokens": 407,
       "total_tokens": 2410,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-25",
+      "requests": 1,
+      "prompt_tokens": 1030,
+      "completion_tokens": 202,
+      "total_tokens": 1232,
       "token_usage_complete": true
     }
   ]
