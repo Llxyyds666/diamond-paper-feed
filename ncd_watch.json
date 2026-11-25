@@ -10920,16 +10920,6 @@
       "summary_zh": "该文通过真空紫外辐照由聚合物制备类金刚石碳（DLC）薄膜，并研究其纳米褶皱结构。",
       "reason": "研究对象为DLC而非纳米晶或超纳米晶金刚石，明确排除。"
     },
-    "doi:10.1364/ol.614876": {
-      "aliases": [
-        "doi:10.1364/ol.614876",
-        "title:1458 nm pulsed second order diamond raman laser:2026"
-      ],
-      "fingerprint": "803b0673dd1e2c9fa2b2984a672ccd913ebb8ef414b9f7457c4b3e81a0c5e17f",
-      "is_ncd": false,
-      "summary_zh": "标题为1458 nm脉冲二阶金刚石拉曼激光，缺少摘要，未提及纳米晶金刚石。",
-      "reason": "仅据标题为金刚石拉曼激光器件研究，无NCD/UNCD材料证据。"
-    },
     "doi:10.1016/j.diamond.2026.114314": {
       "aliases": [
         "doi:10.1016/j.diamond.2026.114314",
@@ -11119,6 +11109,36 @@
       "is_ncd": false,
       "summary_zh": "该文利用金刚石氮-空位色心自旋噪声谱探测α-RuCl3纳米片的量子自旋液体态。",
       "reason": "金刚石仅作为NV色心探针使用，未研究NCD/UNCD薄膜材料或其形核生长。"
+    },
+    "doi:10.1364/ol.614876": {
+      "aliases": [
+        "doi:10.1364/ol.614876",
+        "title:1458 nm pulsed second order diamond raman laser:2026"
+      ],
+      "fingerprint": "8a024ce87a8458805eb9d9e4855178e0e4a855c8dcf4cde31555d641873f6422",
+      "is_ncd": false,
+      "summary_zh": "该文报道1458 nm脉冲二阶金刚石拉曼激光器，使用金刚石晶体作为拉曼增益介质，未涉及纳米晶或超纳米晶金刚石材料。",
+      "reason": "标题和摘要均未提及纳米晶/超纳米晶金刚石或纳米尺度晶粒，仅为金刚石拉曼激光研究。"
+    },
+    "doi:10.1073/pnas.2612349123": {
+      "aliases": [
+        "doi:10.1073/pnas.2612349123",
+        "title:a deep learning boosted framework for quantum sensing with nitrogen vacancy centers in diamond:2026"
+      ],
+      "fingerprint": "38e57567ca272ef2a5e4714fdff150ce0aa1637d265e66f82a8cce4b3ef1c755",
+      "is_ncd": false,
+      "summary_zh": "该文利用金刚石中氮-空位色心进行量子传感，并采用纳米金刚石探针测量细胞内温度，但未研究NCD/UNCD薄膜材料或其形核生长。",
+      "reason": "研究对象为NV色心量子传感与孤立纳米金刚石颗粒，缺少NCD/UNCD材料研究的证据。"
+    },
+    "doi:10.1016/j.diamond.2026.114413": {
+      "aliases": [
+        "doi:10.1016/j.diamond.2026.114413",
+        "title:magnetic nanodiamonds coated with polyethylene glycol diacrylate conjugated poly 2 hydroxypropyl methacrylate co acrylic acid a ph sensitive and temperature dependent platform for palbociclib delivery in breast cancer therapy:2027"
+      ],
+      "fingerprint": "2073b96ccf16b1d12b00f4e9568623fe86523b322437d85e29ed1795bc687a7f",
+      "is_ncd": false,
+      "summary_zh": "该文为磁性纳米金刚石表面聚合物包覆用于乳腺癌药物递送的生物医学研究，缺少摘要且未涉及NCD/UNCD材料或形核生长。",
+      "reason": "仅涉及孤立纳米金刚石颗粒的药物递送应用，无NCD/UNCD材料研究证据。"
     }
   },
   "outbox": {
@@ -14061,10 +14081,10 @@
     },
     {
       "date": "2026-11-25",
-      "requests": 1,
-      "prompt_tokens": 1030,
-      "completion_tokens": 202,
-      "total_tokens": 1232,
+      "requests": 2,
+      "prompt_tokens": 2173,
+      "completion_tokens": 507,
+      "total_tokens": 2680,
       "token_usage_complete": true
     }
   ]
