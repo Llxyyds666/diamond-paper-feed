@@ -11139,6 +11139,36 @@
       "is_ncd": false,
       "summary_zh": "该文为磁性纳米金刚石表面聚合物包覆用于乳腺癌药物递送的生物医学研究，缺少摘要且未涉及NCD/UNCD材料或形核生长。",
       "reason": "仅涉及孤立纳米金刚石颗粒的药物递送应用，无NCD/UNCD材料研究证据。"
+    },
+    "title:nitrogen vacancy nuclear magnetic resonance spectroscopy of 15 n spins in potassium nitrite solution:2026": {
+      "aliases": [
+        "arxiv:2611.33360",
+        "title:nitrogen vacancy nuclear magnetic resonance spectroscopy of 15 n spins in potassium nitrite solution:2026"
+      ],
+      "fingerprint": "c3034392b16e7dac48a058e384ea28605d1fda1ee9639a7a6d1dd25fb4218069",
+      "is_ncd": false,
+      "summary_zh": "该工作利用金刚石中浅层氮-空位（NV）色心对硝酸钾溶液中的15N自旋进行纳米尺度核磁共振探测，研究的是NV量子传感与表面吸附层，而非纳米晶金刚石或超纳米晶金刚石材料。",
+      "reason": "标题与摘要仅涉及金刚石NV色心量子传感，未涉及NCD/UNCD薄膜、生长、成核或晶粒尺度描述。"
+    },
+    "title:infrared absorption magnetometry in a diamond nanocavity demonstration and limits at the nanoscale:2026": {
+      "aliases": [
+        "arxiv:2611.33481",
+        "title:infrared absorption magnetometry in a diamond nanocavity demonstration and limits at the nanoscale:2026"
+      ],
+      "fingerprint": "5833d14f2a450e7574692de72a090be2f9378f8e278167c6e620760e229df523",
+      "is_ncd": false,
+      "summary_zh": "该文演示基于金刚石纳米腔中NV色心单态吸收的磁强计，并建立自旋相关腔响应模型，主题为金刚石量子传感与纳米光子学。",
+      "reason": "摘要聚焦NV色心吸收磁测量，未提及纳米晶/超纳米晶金刚石材料或其生长、成核与晶粒结构。"
+    },
+    "title:on the performance of nanoscale detection methods in nv center spectroscopy:2026": {
+      "aliases": [
+        "arxiv:2611.34321",
+        "title:on the performance of nanoscale detection methods in nv center spectroscopy:2026"
+      ],
+      "fingerprint": "de6b6e9d73bb11894fe103a9bdb52b7aac38168e4c84f0b61d2e0247905a7ba0",
+      "is_ncd": false,
+      "summary_zh": "该文在统一框架下比较Qdyne、CS、MCS与CASR等NV色心纳米尺度核磁共振探测协议的灵敏度，属于量子传感方法学研究。",
+      "reason": "内容为NV色心谱学检测协议性能分析，无NCD/UNCD材料或纳米晶金刚石相关证据。"
     }
   },
   "outbox": {
@@ -14085,6 +14115,14 @@
       "prompt_tokens": 2173,
       "completion_tokens": 507,
       "total_tokens": 2680,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-26",
+      "requests": 1,
+      "prompt_tokens": 1316,
+      "completion_tokens": 364,
+      "total_tokens": 1680,
       "token_usage_complete": true
     }
   ]
