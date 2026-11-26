@@ -11169,6 +11169,16 @@
       "is_ncd": false,
       "summary_zh": "该文在统一框架下比较Qdyne、CS、MCS与CASR等NV色心纳米尺度核磁共振探测协议的灵敏度，属于量子传感方法学研究。",
       "reason": "内容为NV色心谱学检测协议性能分析，无NCD/UNCD材料或纳米晶金刚石相关证据。"
+    },
+    "doi:10.1016/j.surfin.2026.111409": {
+      "aliases": [
+        "doi:10.1016/j.surfin.2026.111409",
+        "title:bias polarity driven evolution from nanocrystalline diamond to hierarchical vein like carbon for enhanced electron transport performance:2026"
+      ],
+      "fingerprint": "7cc45a7b4a04e8d43593cc163430d5283702da7912067d541f8bf72eb4903641",
+      "is_ncd": true,
+      "summary_zh": "仅据标题，缺少摘要。标题明确涉及纳米晶金刚石（nanocrystalline diamond）在偏压极性驱动下向分级脉状碳的演变及其电子输运性能。",
+      "reason": "标题明确出现nanocrystalline diamond且研究其演变与电子输运，属NCD材料研究；无摘要故仅据标题判断。"
     }
   },
   "outbox": {
@@ -13978,6 +13988,18 @@
       "created_at": "2026-11-17T08:33:14.380480+00:00",
       "sent_at": "2026-11-17T08:35:03.324240+00:00",
       "delivery_attempts": 1
+    },
+    "doi:10.1016/j.surfin.2026.111409": {
+      "aliases": [
+        "doi:10.1016/j.surfin.2026.111409",
+        "title:bias polarity driven evolution from nanocrystalline diamond to hierarchical vein like carbon for enhanced electron transport performance:2026"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "Bias Polarity-Driven Evolution from Nanocrystalline Diamond to Hierarchical Vein-Like Carbon for Enhanced Electron Transport Performance\n期刊：Surfaces and Interfaces\n题录日期：2026-11-01\n摘要：仅据标题，缺少摘要。标题明确涉及纳米晶金刚石（nanocrystalline diamond）在偏压极性驱动下向分级脉状碳的演变及其电子输运性能。\n入选依据：标题明确出现nanocrystalline diamond且研究其演变与电子输运，属NCD材料研究；无摘要故仅据标题判断。\nDOI：10.1016/j.surfin.2026.111409",
+      "url": "https://doi.org/10.1016/j.surfin.2026.111409",
+      "created_at": "2026-11-26T21:58:29.049258+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
     }
   },
   "usage": [
@@ -14119,10 +14141,10 @@
     },
     {
       "date": "2026-11-26",
-      "requests": 1,
-      "prompt_tokens": 1316,
-      "completion_tokens": 364,
-      "total_tokens": 1680,
+      "requests": 2,
+      "prompt_tokens": 1802,
+      "completion_tokens": 479,
+      "total_tokens": 2281,
       "token_usage_complete": true
     }
   ]
