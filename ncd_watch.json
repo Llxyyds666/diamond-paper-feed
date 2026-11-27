@@ -11179,6 +11179,16 @@
       "is_ncd": true,
       "summary_zh": "仅据标题，缺少摘要。标题明确涉及纳米晶金刚石（nanocrystalline diamond）在偏压极性驱动下向分级脉状碳的演变及其电子输运性能。",
       "reason": "标题明确出现nanocrystalline diamond且研究其演变与电子输运，属NCD材料研究；无摘要故仅据标题判断。"
+    },
+    "doi:10.1016/j.actbio.2026.10.054": {
+      "aliases": [
+        "doi:10.1016/j.actbio.2026.10.054",
+        "title:the evolving role of diamond materials in neuroscience and neuroengineering:2026"
+      ],
+      "fingerprint": "b43f34884f3dffa6436923a1c045c986adfcb8fe836e9adbbe314d5555146b08",
+      "is_ncd": true,
+      "summary_zh": "该综述比较了颗粒纳米金刚石、荧光纳米金刚石、导电及纳米晶金刚石电极和含NV色心金刚石传感器在神经传感、成像、神经化学监测与神经接口中的应用。文中明确讨论纳米晶金刚石电极，并分析合成、表面化学与缺陷结构对性能及生物相互作用的影响。",
+      "reason": "摘要明确提及nanocrystalline diamond electrodes并讨论其合成与性能，属于NCD材料及应用研究。"
     }
   },
   "outbox": {
@@ -14000,6 +14010,18 @@
       "created_at": "2026-11-26T21:58:29.049258+00:00",
       "sent_at": "2026-11-26T21:58:33.825740+00:00",
       "delivery_attempts": 1
+    },
+    "doi:10.1016/j.actbio.2026.10.054": {
+      "aliases": [
+        "doi:10.1016/j.actbio.2026.10.054",
+        "title:the evolving role of diamond materials in neuroscience and neuroengineering:2026"
+      ],
+      "title": "NCD/UNCD 新论文",
+      "body": "The evolving role of diamond materials in neuroscience and neuroengineering\n期刊：Acta Biomaterialia\n题录日期：2026-12-01\n摘要：该综述比较了颗粒纳米金刚石、荧光纳米金刚石、导电及纳米晶金刚石电极和含NV色心金刚石传感器在神经传感、成像、神经化学监测与神经接口中的应用。文中明确讨论纳米晶金刚石电极，并分析合成、表面化学与缺陷结构对性能及生物相互作用的影响。\n入选依据：摘要明确提及nanocrystalline diamond electrodes并讨论其合成与性能，属于NCD材料及应用研究。\nDOI：10.1016/j.actbio.2026.10.054",
+      "url": "https://doi.org/10.1016/j.actbio.2026.10.054",
+      "created_at": "2026-11-27T09:09:10.285808+00:00",
+      "sent_at": null,
+      "delivery_attempts": 0
     }
   },
   "usage": [
@@ -14145,6 +14167,14 @@
       "prompt_tokens": 1802,
       "completion_tokens": 479,
       "total_tokens": 2281,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-27",
+      "requests": 1,
+      "prompt_tokens": 828,
+      "completion_tokens": 130,
+      "total_tokens": 958,
       "token_usage_complete": true
     }
   ]
