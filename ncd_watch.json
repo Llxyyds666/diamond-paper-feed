@@ -11219,6 +11219,16 @@
       "is_ncd": true,
       "summary_zh": "该研究以少层还原氧化石墨烯为界面介质，通过高温高压烧结纳米金刚石制备纳米多晶金刚石，实现力学强化与热导率约两倍提升。摘要明确描述由随机取向纳米尺度金刚石晶粒组成的纳米多晶金刚石及其晶界工程。",
       "reason": "摘要明确涉及纳米尺度晶粒组成的纳米多晶金刚石块体材料的合成、界面工程与性能研究，符合NCD/纳米晶金刚石材料范畴。"
+    },
+    "doi:10.1021/acsphotonics.6c01893": {
+      "aliases": [
+        "doi:10.1021/acsphotonics.6c01893",
+        "title:nanosecond pulsed stokes generation via coherent phonon enhanced four wave mixing in diamond:2026"
+      ],
+      "fingerprint": "38a2919fcbbd60c90689e07871c72837637fe97a636f0d69175bb3beabe56512",
+      "is_ncd": false,
+      "summary_zh": "该文研究金刚石中相干声子增强四波混频实现低阈值斯托克斯光产生，属于金刚石非线性光学，未涉及纳米晶或超纳米晶金刚石材料。",
+      "reason": "标题与摘要均未出现nanocrystalline/ultrananocrystalline或纳米尺度晶粒描述，研究的是金刚石声子非线性光学而非NCD/UNCD材料。"
     }
   },
   "outbox": {
@@ -14229,6 +14239,14 @@
       "prompt_tokens": 1990,
       "completion_tokens": 489,
       "total_tokens": 2479,
+      "token_usage_complete": true
+    },
+    {
+      "date": "2026-11-28",
+      "requests": 1,
+      "prompt_tokens": 781,
+      "completion_tokens": 123,
+      "total_tokens": 904,
       "token_usage_complete": true
     }
   ]
